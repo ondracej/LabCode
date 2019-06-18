@@ -22,6 +22,6 @@ filename =[ '100_CH' num2str(chn) '.continuous'];
 [signal0(:,k)]=downsample(signal,d);  clear signal; k=k+1; 
 end
 % last chanle and TIME
-save('7087_LFP.mat','time','signal0','-v7.3');
+save('7087_LFP_.mat','time','signal0','-v7.3','-nocompression');
 
 
