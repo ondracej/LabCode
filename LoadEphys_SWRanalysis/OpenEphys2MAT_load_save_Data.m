@@ -1,5 +1,5 @@
-function [EEG, EMG, time]=OpenEphys2MAT_load_save_Data()
-
+function [ EEG, EMG, time, eeg_chnl, dataname]=OpenEphys2MAT_load_save_Data()
+%  
 % loading OpenEphys data
 % important note: lines that you may change like file name, are commented
 % with multiple percent signs (%%%%%%%%%%)
@@ -10,6 +10,7 @@ prompt = {'Enter EEG Channels (comma separated):','Enter EMG Channel:'};
 title = 'Data Channels';
 dims = [1 35];
 eeg_emg = inputdlg(prompt,title,dims);
+eeg_chnl=str2num(eeg_emg{1,1});
 % selecting folder
 fs=30000; %%%%%%%%%%%%%%%% sampling rate
 d=20; % downsampling ratio
@@ -38,5 +39,6 @@ bw = wo/55;  [b,a] = iirnotch(wo,bw);
 EEG=filtfilt(b,a,eeg);
 EMG=filtfilt(b,a,emg);
 fname=split(selpath , "\");
-save([selpath '\'  [fname{end-2} '_' fname{end-1} '__' fname{end}] '.mat'], 'time','EEG','EMG','-v7.3','-nocompression');
+dataname=[ fname{end-1} '__' fname{end}];
+save([selpath '\'  dataname '.mat'], 'time','EEG','EMG', 'eeg_chnl','-v7.3','-nocompression');
 end

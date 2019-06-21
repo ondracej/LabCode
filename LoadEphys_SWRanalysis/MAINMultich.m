@@ -8,26 +8,28 @@ addpath('D:\github\matlab-plot-big_fast'); % add library for faster large data p
 todo = questdlg('Load OpenEphys or MAT ?   (NOTE: if you go for OpenEphys, loaded data will be saved as MAT for future faster load)', ...
 	'Pick out File Type', 'OpenEphys' , 'MAT', 'MAT');
 if strcmp(todo,'OpenEphys')==1
-    [EEG, EMG, time]=OpenEphys2MAT_load_save_Data;
+    [ EEG, EMG, time, eeg_chnl, filename]=OpenEphys2MAT_load_save_Data;
 else % load MAT file 
 [file,path] = uigetfile('*.mat');
 load([  path file ]); 
 end
-
+clear todo
 %% raw plot of all channels
+% simple EEG removal
+a=sum(repmat(EMG,1,size(EEG,2)).*EEG) / sum(EMG.^2); % optimal value as a factor of EMG to be subtracted from EEG (Sigma(EMG*EEG)/Sigma(EMG*EMG))
+% EEGn=EEG-repmat(a,length(EEG,1))*repmat(EMG,1,size(EEG,2));
 figure;  
-plot_time;
-title(filename)
-nn=length(eeg_chnl)+length(emg_chnl); % number of all channels for subplot
+plot_time=[2500 3000];
+nn=size(EEG,2)+size(EMG,2); % number of all channels for subplot
 % first plottinhg EEG channels
-for n=1:length(eeg_chnl) 
+for n=1:size(EEG,2) 
 subplot(nn,1,n+1)
-plotredu(@plot,time,EEG(:,n));
+plotredu(@plot,time,EEG(:,n)-a(n)*EMG);  % -a(n)*EMG
 ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });  xlim(plot_time);  xticks([]);
 end
 % then plotting EMG
 subplot(nn,1,1)
-plotredu(@plot,time,EMG);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)')
+plotredu(@plot,time,EMG);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)');  title(filename)
 %% filtering for SWR and figures
 % filtering for sharp wave:
 ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',2,'HalfPowerFrequency2',8, 'SampleRate',fs);
