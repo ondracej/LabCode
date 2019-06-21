@@ -36,6 +36,7 @@ RippSig=filtfilt(RippFilt,signal0);
 beep;
 %% figures
 % Fig 1 (Raw)
+plot_time=[0 600]; %%%%%%%%%
 figure,
 subplot(4,1,1); o1=plotredu(@plot,time/3600,signal0); title('Raw signal ' )
 ylabel('(\muV)'); xlim(plot_time)
