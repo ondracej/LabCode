@@ -13,7 +13,7 @@ eeg_emg = inputdlg(prompt,title,dims);
 eeg_chnl=str2num(eeg_emg{1,1});
 % selecting folder
 fs=30000; %%%%%%%%%%%%%%%% sampling rate
-d=20; % downsampling ratio
+d=15; % downsampling ratio
 fs=fs/d;
 
 % loading EMG channel and timestamps
