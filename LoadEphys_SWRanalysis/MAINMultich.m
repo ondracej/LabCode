@@ -25,18 +25,20 @@ clear todo
 
 %% raw plot of all channels
 
-figure('Position', pixls);  
-plot_time=[5*3600 6*3600];
+figure('Position', pixls); 
+title(['File: ' file '  ,  Time reference: ' num2str(t0)])
+t0=18130;
+plot_time=[0 10];
 nn=size(EEG,2)+size(EMG,2); % number of all channels for subplot
 % first plottinhg EEG channels
-for n=1:size(EEG,2) 
-subplot(nn,1,n+1)
-plotredu(@plot,time,EEG(:,n));  % -a(n)*EMG
+for n=1:nn-1 
+subplot(nn,1,n)
+plotredu(@plot,time-t0,EEG(:,n));  
 ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });  xlim(plot_time);  xticks([]);
 end
 % then plotting EMG
-subplot(nn,1,1)
-plotredu(@plot,time,EMG);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)');  title(filename)
+subplot(nn,1,n+1)
+plotredu(@plot,time-t0,EMG);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)'); 
 
 
 %% filtering for SWR and figures
