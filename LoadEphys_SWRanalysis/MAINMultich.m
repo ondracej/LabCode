@@ -26,15 +26,17 @@ clear todo
 %% raw plot of all channels
 
 figure('Position', pixls); 
-title(['File: ' file '  ,  Time reference: ' num2str(t0)])
-t0=18130;
-plot_time=[0 10];
+t0=0; % 18160;
+plot_time=[0 3600];
 nn=size(EEG,2)+size(EMG,2); % number of all channels for subplot
 % first plottinhg EEG channels
 for n=1:nn-1 
 subplot(nn,1,n)
 plotredu(@plot,time-t0,EEG(:,n));  
 ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });  xlim(plot_time);  xticks([]);
+if n==1
+    title(['File: ' file '  ,  Time reference: ' num2str(t0)]);
+end
 end
 % then plotting EMG
 subplot(nn,1,n+1)
