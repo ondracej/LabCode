@@ -13,7 +13,7 @@ plotredu(@plot,time(samps),PC(:,n));
 ylabel({'PC ' num2str(n) });  xlim(plot_time);  xticks([]);
 end
 
-% PC-data correcfations
+% PC-data correlations
 figure;
 X=reshape(repmat(1:nn,nn,1),nn*nn,1);   
 Y=reshape(repmat((1:nn)',1,nn),nn*nn,1); 

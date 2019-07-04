@@ -27,7 +27,7 @@ clear todo
 
 figure('Position', pixls); 
 t0=0; % 18160;
-plot_time=[0 3600];
+plot_time=[0 time(end)];
 nn=size(EEG,2)+size(EMG,2); % number of all channels for subplot
 % first plottinhg EEG channels
 for n=1:nn-1 

@@ -1,7 +1,7 @@
 %% EEG-EMG from different times
 
-t0=18160; %%%%%%%%%
-plot_time=[0 30]; %%%%%%%%%
+t0=0; %%%%%%%%%
+plot_time=[1 time(end)-1]; %%%%%%%%%
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 n1=1; %%%%%%%%%% EEG channel  
