@@ -1,6 +1,6 @@
 %% Load data
 % loading OpenEphys for the first time or the mat file
-
+clear; clc;
 % preparations fo graphs
 %Sets the units of your root object (screen) to pixels
 set(0,'units','pixels'); 
@@ -21,18 +21,24 @@ else % load MAT file
 [file,path] = uigetfile('*.mat');
 load([  path file ]); 
 end
+time=time-time(1);
 clear todo
 
 %% raw plot of all channels
 
 figure('Position', pixls); 
-t0=0; % 18160;
-plot_time=[0 time(end)];
+t0=3930; % 18160;
+plot_time=[0 30];
+tlim=t0+plot_time;
+t_lim=tlim(1)*fs:tlim(2)*fs;
+x=EEG(t_lim,:);
+y=EMG(t_lim);
+tt=time(t_lim);
 nn=size(EEG,2)+size(EMG,2); % number of all channels for subplot
 % first plottinhg EEG channels
 for n=1:nn-1 
 subplot(nn,1,n)
-plotredu(@plot,time-t0,EEG(:,n));  
+plotredu(@plot,tt-t0,x(:,n));  
 ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });  xlim(plot_time);  xticks([]);
 if n==1
     title(['File: ' file '  ,  Time reference: ' num2str(t0)]);
@@ -40,8 +46,38 @@ end
 end
 % then plotting EMG
 subplot(nn,1,n+1)
-plotredu(@plot,time-t0,EMG);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)'); 
+plotredu(@plot,tt-t0,y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)'); 
 
+%% filtering signal for high frequencies
+% EEG
+eegFilt = designfilt('lowpassiir','FilterOrder',2,'PassbandFrequency',120,'PassbandRipple',0.2,'SampleRate',fs);
+EEGfilt=filtfilt(eegFilt,EEG);
+% EMG
+emgFilt = designfilt('lowpassiir','FilterOrder',2,'PassbandFrequency',500,'PassbandRipple',0.2,'SampleRate',fs);
+EMGfilt=filtfilt(emgFilt,EMG);
+%% showing traces of filtered EEG
+figure('Position', pixls); 
+t0=3930; % 18160;
+plot_time=[0 60];
+tlim=t0+plot_time;
+t_lim=tlim(1)*fs:tlim(2)*fs;
+X=EEGfilt(t_lim,:);
+Y=EMGfilt(t_lim);
+t=time(t_lim);
+
+nn=size(EEG,2)+size(EMG,2); % number of all channels for subplot
+% first plottinhg EEG channels
+for n=1:nn-1 
+subplot(nn,1,n)
+plotredu(@plot,t-t0,X(:,n));  
+ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });  xlim(plot_time);  xticks([]);
+if n==1
+    title(['File: ' file '  ,  Time reference: ' num2str(t0)]);
+end
+end
+% then plotting EMG
+subplot(nn,1,n+1)
+plotredu(@plot,t-t0,Y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)'); 
 
 %% filtering for SWR and figures
 % filtering for sharp wave:
