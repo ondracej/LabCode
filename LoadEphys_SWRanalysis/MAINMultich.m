@@ -11,7 +11,7 @@ addpath(genpath('D:\github'));
 fs=2000; %%%%%%%%%%%%%
 % load OpenEphys fie for the firdt time or load the already-generated MAT
 % file?
-todo = questdlg('Load OpenEphys or MAT ?   (NOTE: if you go for OpenEphys, loaded data will be saved as MAT for future faster load)', ...
+todo = questdlg({'Load OpenEphys or MAT ?'  ; '(NOTE: if you go for OpenEphys, loaded data will be saved as MAT for future faster load)'}, ...
 	'Pick out File Type', 'OpenEphys' , 'MAT', 'MAT');
 if strcmp(todo,'OpenEphys')==1
     tic
@@ -27,14 +27,14 @@ clear todo
 %% raw plot of all channels
 
 figure('Position', pixls); 
-t0=3930; % 18160;
+t0=280; % 18160;
 plot_time=[0 30];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 x=EEG(t_lim,:);
-y=EMG(t_lim);
+y=EMG(t_lim,1);
 tt=time(t_lim);
-nn=size(EEG,2)+size(EMG,2); % number of all channels for subplot
+nn=size(EEG,2)+1; % number of all channels for subplot, EEGs + EMG
 % first plottinhg EEG channels
 for n=1:nn-1 
 subplot(nn,1,n)
@@ -50,22 +50,22 @@ plotredu(@plot,tt-t0,y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel(
 
 %% filtering signal for high frequencies
 % EEG
-eegFilt = designfilt('lowpassiir','FilterOrder',2,'PassbandFrequency',120,'PassbandRipple',0.2,'SampleRate',fs);
+eegFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',.2,'HalfPowerFrequency2',300,'SampleRate',fs);
 EEGfilt=filtfilt(eegFilt,EEG);
 % EMG
-emgFilt = designfilt('lowpassiir','FilterOrder',2,'PassbandFrequency',500,'PassbandRipple',0.2,'SampleRate',fs);
+emgFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',5,'HalfPowerFrequency2',300,'SampleRate',fs);
 EMGfilt=filtfilt(emgFilt,EMG);
 %% showing traces of filtered EEG
 figure('Position', pixls); 
-t0=3930; % 18160;
-plot_time=[0 60];
+t0=10630; % 18160;
+plot_time=[0 100];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 X=EEGfilt(t_lim,:);
-Y=EMGfilt(t_lim);
+Y=EMGfilt(t_lim,1);
 t=time(t_lim);
 
-nn=size(EEG,2)+size(EMG,2); % number of all channels for subplot
+nn=size(EEG,2)+1; % number of all channels for subplot, EEGs + one EMG
 % first plottinhg EEG channels
 for n=1:nn-1 
 subplot(nn,1,n)
