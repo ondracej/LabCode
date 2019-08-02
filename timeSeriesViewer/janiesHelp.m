@@ -1,6 +1,7 @@
 
 dir = 'F:\TUM\SWR-Project\Chick-10\Ephys\2019-04-27_22-20-26'; % dir containing .continuous files
 
+dir = 'F:\Grass\FrogSleep\CubanTreeFrog1\CubanTF1_2019-07-25_20-20-58';
 %%
 dataRecordingObj = OERecordingMF(dir);
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
