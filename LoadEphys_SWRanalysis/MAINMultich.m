@@ -27,8 +27,8 @@ clear todo
 %% raw plot of all channels
 
 figure('Position', pixls); 
-t0=280; % 18160;
-plot_time=[0 30];
+t0=10810; % 18160;
+plot_time=[0 300];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 x=EEG(t_lim,:);
@@ -50,19 +50,20 @@ plotredu(@plot,tt-t0,y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel(
 
 %% filtering signal for high frequencies
 % EEG
-eegFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',.2,'HalfPowerFrequency2',300,'SampleRate',fs);
+eegFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',100,'SampleRate',fs);
 EEGfilt=filtfilt(eegFilt,EEG);
 % EMG
-emgFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',5,'HalfPowerFrequency2',300,'SampleRate',fs);
+emgFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',10,'HalfPowerFrequency2',300,'SampleRate',fs);
 EMGfilt=filtfilt(emgFilt,EMG);
+
 %% showing traces of filtered EEG
 figure('Position', pixls); 
-t0=10630; % 18160;
-plot_time=[0 100];
+t0=13800; % 18160;
+plot_time=[0 15];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 X=EEGfilt(t_lim,:);
-Y=EMGfilt(t_lim,1);
+Y=EMGfilt(t_lim,2);
 t=time(t_lim);
 
 nn=size(EEG,2)+1; % number of all channels for subplot, EEGs + one EMG
@@ -70,14 +71,14 @@ nn=size(EEG,2)+1; % number of all channels for subplot, EEGs + one EMG
 for n=1:nn-1 
 subplot(nn,1,n)
 plotredu(@plot,t-t0,X(:,n));  
-ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });  xlim(plot_time);  xticks([]);
+ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });  xlim(plot_time);  xticks([]); ylim([-120 120])
 if n==1
     title(['File: ' file '  ,  Time reference: ' num2str(t0)]);
 end
 end
 % then plotting EMG
 subplot(nn,1,n+1)
-plotredu(@plot,t-t0,Y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)'); 
+plotredu(@plot,t-t0,Y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)'); ylim([-250 250])
 
 %% filtering for SWR and figures
 % filtering for sharp wave:
