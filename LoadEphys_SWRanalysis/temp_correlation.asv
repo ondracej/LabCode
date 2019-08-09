@@ -6,8 +6,8 @@ bin_size=2; % size of data bin for computing temporal correlations
 step_corr=.1; % time points for computation of temporal correlation 
 
 % time frame of interest
-t0=14902; % 18160;
-plot_time=[0 15];
+t0=14895; % 18160;
+plot_time=[0 30];
 k=1; % counter for loop, sample number for temporal correlations within a block
 for t_corr=t0+plot_time(1):step_corr:t0+plot_time(2)
     t_lim=round((t_corr-bin_size/2)*fs:(t_corr+bin_size/2)*fs);
@@ -32,8 +32,8 @@ nn=size(EEG,2)+2; % number of all channels for subplot, EEGs + EMG + temporal co
 % first plottinhg EEG channels
 for n=1:nn-2 
 subplot(nn,1,n)
-plotredu(@plot,(t-t0),X(:,n));  
-ylabel({'EEG'; ['chnl ' num2str(eeg_chnl(n))] });  xlim(plot_time);  xticks([]); ylim([-120 120])
+plotredu(@plot,(t-t0)/60,X(:,n));  
+ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });  xlim(plot_time/60);  xticks([]); ylim([-120 120])
 if n==1
     title(['File: ' file '  ,  Time reference: ' num2str(t0) ' sec']);
 end
@@ -52,10 +52,10 @@ eeg_dvr_corr=mean(temp_corr(eeg_dvr,:),1);
 dvr_dvr_corr=mean(temp_corr(dvr_dvr,:),1);
 
 subplot(nn,1,n+2)
-plotredu(@plot,(t_corr-t0),eeg_eeg_corr,'c-','linewidth',1.5);    ylabel('temporal corr');    xlim(plot_time); ylim([0 1])
+plotredu(@plot,(t_corr-t0),eeg_eeg_corr,'c-','linewidth',1.5);    ylabel('temporal corr');   xlabel('Time (min)'); xlim(plot_time); ylim([0 1])
 hold on; 
-plotredu(@plot,(t_corr-t0),eeg_dvr_corr,'m--','linewidth',1.5);    ylabel('temporal corr');    xlim(plot_time); ylim([0 1])
-plotredu(@plot,(t_corr-t0),dvr_dvr_corr,'k:','linewidth',1.5);    ylabel('temporal corr');    xlim(plot_time); ylim([0 1])
+plotredu(@plot,(t_corr-t0),eeg_dvr_corr,'m--','linewidth',1.5);    ylabel('temporal corr');   xlabel('Time (sec)'); xlim(plot_time); ylim([0 1])
+plotredu(@plot,(t_corr-t0),dvr_dvr_corr,'k:','linewidth',1.5);    ylabel('temporal corr');   xlabel('Time (sec )'); xlim(plot_time); ylim([0 1])
 legend('EEG-EEG','EEG-DVR','DVR-DVR')
 % line([plot_time],[0 0],'Color','k','LineStyle','--');  
-xlabel('Time (sec)')
+xlabel('Time (min)')

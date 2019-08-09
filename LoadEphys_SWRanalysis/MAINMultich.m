@@ -50,10 +50,10 @@ plotredu(@plot,tt-t0,y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel(
 
 %% filtering signal for high frequencies
 % EEG
-eegFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',100,'SampleRate',fs);
+eegFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',300,'SampleRate',fs);
 EEGfilt=filtfilt(eegFilt,EEG);
 % EMG
-emgFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',10,'HalfPowerFrequency2',300,'SampleRate',fs);
+emgFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',300,'SampleRate',fs);
 EMGfilt=filtfilt(emgFilt,EMG);
 
 %% showing traces of filtered EEG
