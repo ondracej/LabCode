@@ -1,7 +1,7 @@
 %% EEG-EMG from different times
 
-t0=10600; % 18160;
-plot_time=[0 600]; %%%%%%%%%
+t0=4300; % 18160;
+plot_time=[0 500]; %%%%%%%%%
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 n1=1; %%%%%%%%%% EEG/LFP channel , index in EEG variable, not actual channel number (file number)

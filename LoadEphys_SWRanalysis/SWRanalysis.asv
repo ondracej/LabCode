@@ -1,113 +1,131 @@
-%% Load data
-% loading OpenEphys for the first time or the mat file
-clear; clc;
-% preparations for graphs
-%Sets the units of your root object (screen) to pixels
-set(0,'units','pixels'); 
-%Obtains this pixel information
-pixls = get(0,'screensize');
+% loading all channels of a recording
+clear;
+addpath('D:\github\LabCode\LoadEphys_SWRanalysis');
+addpath('D:\github\matlab-plot-big-fast');
+selpath=uigetdir(cd,'Select folder containing channels');  %%%%%%%%% data directory
+addpath(selpath);
+chnl_order=[6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];  %%%%%%%%%%%%% recording channels with their actual location in order
 
-addpath(genpath('D:\github'));
-fs=2000; %%%%%%%%%%%%%
-% load OpenEphys fie for the firdt time or load the already-generated MAT
-% file?
-todo = questdlg({'Load OpenEphys or MAT ?'  ; '(NOTE: if you go for OpenEphys, loaded data will be saved as MAT for future faster load)'}, ...
-	'Pick out File Type', 'OpenEphys' , 'MAT', 'MAT');
-if strcmp(todo,'OpenEphys')==1
-    tic
-    [ EEG, EMG, time, eeg_chnl, filename]=OpenEphys2MAT_load_save_Data;
-    toc
-else % load MAT file 
-[file,path] = uigetfile('*.mat');
-load([  path file ]); 
+% selecting folder
+fs=30000; %%%%%%%%%%%%%%%% sampling rate
+
+% loading EEG channels
+k=1; % loop variable for loading channels
+for chn = chnl_order
+    filename =[ '100_CH' num2str(chn) '.continuous'];
+    [eeg(:,k),~, ~] = load_open_ephys_data(filename);
+    clear signal; k=k+1;
 end
+% for time stamp
+[~,time, ~] = load_open_ephys_data(filename);
 time=time-time(1);
-clear todo
+disp(['Data len: ' num2str(max(time/60)) ' min' ])
+fparts=split(selpath,'\'); % extracting file name from full path name
 
 %% raw plot of all channels
+% preparation for plot
+set(0,'units','pixels');
+%Obtains this pixel information
+pixls = get(0,'screensize');
+figure('Position', pixls);
+t0=1; % 18160;
+plot_time=[0 10];
+tlim=t0+plot_time;
+t_lim=tlim(1)*fs:tlim(2)*fs;
+tt=time(t_lim);
+for k=1:size(eeg,2)
+x=eeg(t_lim,k);
+plotredu(@plot,tt-t0,x-400*(k-1)); hold on
+xlim(plot_time);
+title([fparts{end}  ', chnl: ' num2str(k) ',  Time ref: ' num2str(t0)]); 
+end
+axis tight
+%% downsampling for SW and Ripples detection, fromm 30000 to 3000
+signalraw=downsample(eeg,10);
+t_signal=downsample(time,10);
+fs_=fs/10;
+%% filtering for SWR and figures
+% filtering for sharp wave:
+ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',50, 'SampleRate',fs_);
+ShrpSig=filtfilt(ShFilt,signal);
+% for ripples
+RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',40,'HalfPowerFrequency2',280, 'SampleRate',fs_);
+RippSig=filtfilt(RippFilt,signal);
+%%  Fig 1. Raw and SWR for channel 1
+plot_time=70+[300 320]; %%%%%%%%%
+figure(2),
+subplot(4,1,1); o1=plotredu(@plot,t_signal,signal(:,1)); title('Raw signal ' )
+ylabel('(\muV)'); xlim(plot_time)
+% Fig 1 (SW & R)
+subplot(4,1,2); plotredu(@plot, t_signal,ShrpSig(:,1),'k');
+title('Filtered 1-20Hz (LFP)' ); ylabel('(\muV)'); xlim(plot_time);
+subplot(4,1,3); o3=plotredu(@plot,t_signal,RippSig(:,1),'r');
+title('Filtered 40-280Hz (SWR)' ); ylabel('(\muV)'); xlabel('Time (Sec)')
+xlim(plot_time);
+% Fig 3 ( ShR )
+% here we extract a threshold for SHW detection using Teager enery 
+subplot(4,1,4);
+tig=teager(ShrpSig(:,1),[fs_/10]);
+plotredu(@plot,t_signal,tig,'b'); title('TEO ' ); ylabel('(\muV)'); xlabel('Time (Sec)'); xlim(plot_time);
+thr=median(tig)+5*iqr(tig); % threshold for detection of SHW
+% plotting distribution of TEO values and the threshold for SHW detection
+figure
+hist(tig,300); y=ylim;  hold on; line([thr thr],y,'LineStyle','--')
 
-figure('Position', pixls); 
-t0=1815; % 18160;
+% plot for raw data + SHW detection
+figure(3);
+subplot(2,1,1); 
+plotredu(@plot,t_signal,signal(:,1)); title('Raw signal ' );  ylabel('(\muV)');   xlim(plot_time)
+subplot(2,1,2); 
+plotredu(@plot,t_signal,tig,'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' ); 
+ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
+%% making a template of SHWs for future SHW detection
+up_tresh=abs(tig).*(abs(tig)>thr);
+[~,shw_times] = findpeaks(up_tresh(fs_+1:end-fs),'MinPeakDistance',fs_/2); % Finding spike peaks, while omitting 1st and lastsec, 
+% and considering .5 sec between proceeding SHWs
+shw_times=shw_times+fs_; % shifting 1 sec to the right place for the corresponding time
+SHW1=zeros(length(shw_times),fs_/5+1); % empty spike matrix, length of SHW templates is considered as 200ms
+n=1;
+while n <= length(shw_times)
+    SHW1(n,:)=ShrpSig(shw_times(n)-fs_/10 : shw_times(n)+fs_/10,1); n=n+1;  % SHW in the 1st channel
+end
+% removing upward detected events
+indx=SHW1(:,round(size(SHW1,2)/2))<mean(SHW1(:,[1 end]),2); % for valid SHW, middle point shall occur below the line connecting the two sides
+SHW=SHW1(indx,:);
+shw_time=shw_times(indx);
+% plotting all SHWs
+figure;
+plot((1:fs_/5+1)/fs_*1000,SHW); axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
+figure(3); hold on ; subplot(2,1,1);  plot(shw_time,signal(shw_time),'+r')
+% garbage cleaning
+ clear shw_times up_tresh SHW1 
+%% filtering signal for high frequencies
+% EEG
+eegFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',.1,'HalfPowerFrequency2',3000,'SampleRate',fs);
+EEGfilt=filtfilt(eegFilt,data);
+
+%% showing traces of filtered EEG
+figure('Position', pixls);
+t0=1; % 18160;
 plot_time=[0 30];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
-x=EEG(t_lim,:);
-y=EMG(t_lim,1);
-tt=time(t_lim);
-nn=size(EEG,2)+1; % number of all channels for subplot, EEGs + EMG
-% first plottinhg EEG channels
-for n=1:nn-1 
-subplot(nn,1,n)
-plotredu(@plot,tt-t0,x(:,n));  
-ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });    xticks([]);  xlim(plot_time);
-if n==1
-    title(['File: ' file '  ,  Time reference: ' num2str(t0)]);
-end
-end
-% then plotting EMG
-subplot(nn,1,n+1)
-plotredu(@plot,tt-t0,y);    ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)');  xlim(plot_time);
-
-%% filtering signal for high frequencies
-% EEG
-eegFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',300,'SampleRate',fs);
-EEGfilt=filtfilt(eegFilt,EEG);
-% EMG
-emgFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',300,'SampleRate',fs);
-EMGfilt=filtfilt(emgFilt,EMG);
-
-%% showing traces of filtered EEG
-figure('Position', pixls); 
-t0=4300+1807.2; % 18160;
-plot_time=[0 .5];
-tlim=t0+plot_time;
-t_lim=tlim(1)*fs:tlim(2)*fs;
 X=EEGfilt(t_lim,:);
-Y=EMGfilt(t_lim,2);
 t=time(t_lim);
-
-nn=size(EEG,2)+1; % number of all channels for subplot, EEGs + one EMG
-% first plottinhg EEG channels
-for n=1:nn-1 
-subplot(nn,1,n)
-plotredu(@plot,t-t0,X(:,n));  
-ylabel({'EEG'; ['chnl' num2str(eeg_chnl(n))] });  xlim(plot_time);  xticks([]); ylim([-220 220])
-if n==1
-    title(['File: ' file '  ,  Time reference: ' num2str(t0)]);
-end
-end
+plotredu(@plot,t-t0,X);
+ylabel({'EEG'; ['chnl' num2str(chnl)] });      xlim(plot_time);
+title([fparts{end}  ', chnl: ' num2str(chnl) ',  Time ref: ' num2str(t0)]);
 % then plotting EMG
 subplot(nn,1,n+1)
 plotredu(@plot,t-t0,Y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (sec)'); ylim([-220 220])
 
-%% filtering for SWR and figures
-% filtering for sharp wave:
-ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',2,'HalfPowerFrequency2',8, 'SampleRate',fs);
-ShrpSig=filtfilt(ShFilt,EEG);
-% for ripples
-RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',40,'HalfPowerFrequency2',280, 'SampleRate',fs);
-RippSig=filtfilt(RippFilt,EEG);
-% Fig 1 (Raw)
-plot_time=[0 600]; %%%%%%%%%
-figure,
-subplot(4,1,1); o1=plotredu(@plot,time,signal0); title('Raw signal ' )
-ylabel('(\muV)'); xlim(plot_time)
-% Fig 1 (SW & R)
-subplot(4,1,2); o2=plotredu(@plot, time,ShrpSig,'k');
-title('Filtered 2-8Hz (LFP)' ); ylabel('(\muV)'); xlim(plot_time);
-subplot(4,1,3); o3=plotredu(@plot,time,RippSig,'r');
-title('Filtered 80-300Hz (SWR)' ); ylabel('(\muV)'); xlabel('Time (Sec)')
-xlim(plot_time);
-% Fig 1 ( ShR )
-subplot(4,1,4);
-plotredu(@plot,time,ShrpSig+RippSig,'b'); title('LFP + SWR' ); ylabel('(\muV)'); xlabel('Time (Sec)'); xlim(plot_time);
 %% spike detection
 clear ShrpSig % no need any more
 % filtering for spike band
 SpkFilt = designfilt('bandpassiir','FilterOrder',4, 'HalfPowerFrequency1',300,'HalfPowerFrequency2',3000, 'SampleRate',fs);
 SpkSig=filtfilt(SpkFilt,signal0);
-tr=5*median(abs(SpkSig))/.674; % threshold for spike detection = 4STD of noise
-up_tresh=abs(SpkSig).*(abs(SpkSig)>tr);
+thr=5*median(abs(SpkSig))/.674; % threshold for spike detection = 4STD of noise
+up_tresh=abs(SpkSig).*(abs(SpkSig)>thr);
 [~,spk_times] = findpeaks(up_tresh(fs/1000+1:end),'MinPeakDistance',fs/1000); % Finding spike peaks, while omitting 1st msec, and considering 1 msec recovery
 spk_times=spk_times+fs/1000; % shifting 1 msec to the right place
 spikes=zeros(length(spk_times),2*fs/1000+1); % empty spike matrix
@@ -117,7 +135,7 @@ while n <= length(spk_times)
 end
 
 % deleting artefacts
-AmpOK_ind=max(spikes,[],2)<100; %%%% only accept the detected spikes that their peak is less than 150 uV
+AmpOK_ind=max(spikes,[],2)<100; %%%% only accept the detected spikes that their peak is less than 100 uV
 spikes=spikes(AmpOK_ind,:);
 figure;
 plot((1:2*fs/1000+1)/fs*1000,spikes'); axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
