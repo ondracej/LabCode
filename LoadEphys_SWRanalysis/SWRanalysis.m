@@ -5,7 +5,7 @@ addpath('D:\github\matlab-plot-big-fast');
 selpath=uigetdir(cd,'Select folder containing channels');  %%%%%%%%% data directory
 addpath(selpath);
 chnl_order=[6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];  %%%%%%%%%%%%% recording channels with their actual location in order
-
+% chnl_order=1:16;
 % selecting folder
 fs=30000; %%%%%%%%%%%%%%%% sampling rate
 
@@ -13,8 +13,7 @@ fs=30000; %%%%%%%%%%%%%%%% sampling rate
 k=1; % loop variable for loading channels
 for chn = chnl_order
     filename =[ '100_CH' num2str(chn) '.continuous'];
-    [eeg(:,k),~, ~] = load_open_ephys_data(filename);
-    clear signal; k=k+1;
+    [eeg(:,k),~, ~] = load_open_ephys_data(filename);     k=k+1;
 end
 % for time stamp
 [~,time, ~] = load_open_ephys_data(filename);
@@ -29,76 +28,110 @@ set(0,'units','pixels');
 pixls = get(0,'screensize');
 figure('Position', pixls);
 t0=1; % 18160;
-plot_time=[0 10];
+plot_time=[0 30];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 tt=time(t_lim);
 for k=1:size(eeg,2)
 x=eeg(t_lim,k);
-plotredu(@plot,tt-t0,x-400*(k-1)); hold on
+plotredu(@plot,tt-t0,x+400*(k-1)); hold on
 xlim(plot_time);
 title([fparts{end}  ', chnl: ' num2str(k) ',  Time ref: ' num2str(t0)]); 
 end
 axis tight
 %% downsampling for SW and Ripples detection, fromm 30000 to 3000
-signalraw=downsample(eeg,10);
+signal_raw=downsample(eeg,10);
 t_signal=downsample(time,10);
 fs_=fs/10;
 %% filtering for SWR and figures
 % filtering for sharp wave:
-ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',50, 'SampleRate',fs_);
-ShrpSig=filtfilt(ShFilt,signal);
+ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',100, 'SampleRate',fs_);
+shrpsig=filtfilt(ShFilt,signal_raw);
 % for ripples
 RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',40,'HalfPowerFrequency2',280, 'SampleRate',fs_);
-RippSig=filtfilt(RippFilt,signal);
-%%  Fig 1. Raw and SWR for channel 1
-plot_time=70+[300 320]; %%%%%%%%%
-figure(2),
-subplot(4,1,1); o1=plotredu(@plot,t_signal,signal(:,1)); title('Raw signal ' )
+RippSig=filtfilt(RippFilt,signal_raw);
+%% SHW detection by TEO
+% Fig 1. Raw and SWR for channel 1
+plot_time=100+[300 310]; %%%%%%%%%
+figure,
+subplot(4,1,1); o1=plotredu(@plot,t_signal,signal_raw(:,1)); title(['Raw signal  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec'])
 ylabel('(\muV)'); xlim(plot_time)
 % Fig 1 (SW & R)
-subplot(4,1,2); plotredu(@plot, t_signal,ShrpSig(:,1),'k');
-title('Filtered 1-20Hz (LFP)' ); ylabel('(\muV)'); xlim(plot_time);
+subplot(4,1,2); plotredu(@plot, t_signal,shrpsig(:,1),'k');
+title('Filtered 1-100Hz (LFP)' ); ylabel('(\muV)'); xlim(plot_time);
 subplot(4,1,3); o3=plotredu(@plot,t_signal,RippSig(:,1),'r');
-title('Filtered 40-280Hz (SWR)' ); ylabel('(\muV)'); xlabel('Time (Sec)')
+title('Filtered 40-280Hz (SWR)' ); ylabel('(\muV)');
 xlim(plot_time);
 % Fig 3 ( ShR )
 % here we extract a threshold for SHW detection using Teager enery 
 subplot(4,1,4);
-tig=teager(ShrpSig(:,1),[fs_/10]);
-plotredu(@plot,t_signal,tig,'b'); title('TEO ' ); ylabel('(\muV)'); xlabel('Time (Sec)'); xlim(plot_time);
+tig=teager(shrpsig,[fs_/8]);
+[~,k]=max(var(shrpsig)); % channel to show TEO and SHW detection for  %%%%%%%%%%%%%
+plotredu(@plot,t_signal,tig(:,k),'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
 thr=median(tig)+5*iqr(tig); % threshold for detection of SHW
 % plotting distribution of TEO values and the threshold for SHW detection
-figure
-hist(tig,300); y=ylim;  hold on; line([thr thr],y,'LineStyle','--')
+figure % distribution of TEO values for channel k  %%%%%%%%%%%%%%%
+hist(tig(:,k),300); y=ylim;  hold on; line([thr(k) thr(k)],y,'LineStyle','--')
 
 % plot for raw data + SHW detection
-figure(3);
+figure;
 subplot(2,1,1); 
-plotredu(@plot,t_signal,signal(:,1)); title('Raw signal ' );  ylabel('(\muV)');   xlim(plot_time)
+plotredu(@plot,t_signal,shrpsig(:,k)); title(['Raw signal  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
 subplot(2,1,2); 
-plotredu(@plot,t_signal,tig,'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' ); 
+plotredu(@plot,t_signal,tig(:,k),'b'); hold on; line(plot_time,[thr(k) thr(k)],'LineStyle','--');  title('TEO ' ); 
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 %% making a template of SHWs for future SHW detection
-up_tresh=abs(tig).*(abs(tig)>thr);
-[~,shw_times] = findpeaks(up_tresh(fs_+1:end-fs),'MinPeakDistance',fs_/2); % Finding spike peaks, while omitting 1st and lastsec, 
+up_tresh=tig.*(tig>thr);
+[~,shw_indices] = findpeaks(up_tresh(fs_+1:end-fs,k),'MinPeakDistance',fs_/2); % Finding spike peaks, while omitting 1st and lastsec, 
 % and considering .5 sec between proceeding SHWs
-shw_times=shw_times+fs_; % shifting 1 sec to the right place for the corresponding time
-SHW1=zeros(length(shw_times),fs_/5+1); % empty spike matrix, length of SHW templates is considered as 200ms
+shw_indices=shw_indices+fs_; % shifting 1 sec to the right place for the corresponding time
+SHW1=zeros(fs_/2+1,length(chnl_order),length(shw_indices)); % empty SHW matrix, length of SHW templates is considered as 500ms
 n=1;
-while n <= length(shw_times)
-    SHW1(n,:)=ShrpSig(shw_times(n)-fs_/10 : shw_times(n)+fs_/10,1); n=n+1;  % SHW in the 1st channel
+while n <= length(shw_indices)
+    SHW1(:,:,n)=shrpsig(shw_indices(n)-fs_/4 : shw_indices(n)+fs_/4,:); n=n+1;  % SHW in the 1st channel
 end
 % removing upward detected events
-indx=SHW1(:,round(size(SHW1,2)/2))<mean(SHW1(:,[1 end]),2); % for valid SHW, middle point shall occur below the line connecting the two sides
-SHW=SHW1(indx,:);
-shw_time=shw_times(indx);
-% plotting all SHWs
+indx=SHW1(round(size(SHW1,1)/2),k,:)<mean(SHW1([1 end],k,:),1); % for valid SHW, middle point shall occur below the line connecting the two sides
+SHW=SHW1(:,:,indx);
+shw_indx=shw_indices(indx);
+% plotting all SHWs and the average shape, for channel k which is the one
+% with maximum variance
 figure;
-plot((1:fs_/5+1)/fs_*1000,SHW); axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
-figure(3); hold on ; subplot(2,1,1);  plot(t_signal(shw_time),signal(shw_time),'+r');  xlim(plot_time);
+subplot(1,2,1)
+for i=1:size(SHW,3)
+plot((-fs_/4:fs_/4)/fs_*1000,SHW(:,k,i)); hold on
+end; axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
+title('all SHW for the channel with highest variance')
+subplot(1,2,2)
+plot((-fs_/4:fs_/4)/fs_*1000,mean(SHW,3)); axis tight; xlabel('Time (ms)');  % again fig. 3 but with detected SHWs annotated
+title('average SHW forms for different channels')
+avg_shw=mean(SHW,3)'; % for further use in ''SCD'' analysis
+
+
+
+figure;
+subplot(2,1,1); 
+plotredu(@plot,t_signal,signal_raw(:,1)); title('Raw signal ' );  ylabel('(\muV)'); 
+hold on; plot(t_signal(shw_indx),signal_raw(shw_indx),'+r');  xlim(plot_time)
+subplot(2,1,2); 
+plotredu(@plot,t_signal,tig(:,k),'b'); hold on; line(plot_time,[thr(k) thr(k)],'LineStyle','--');  title('TEO ' ); 
+ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 % garbage cleaning
  clear shw_times up_tresh SHW1 
+ %% analysisng SHW peri-event times
+ % plotting all channels for at a SHW event
+ figure
+ ind0=shw_indx(10);
+tlim=t_signal(ind0)+[-.2 .2];
+t_lim=round(tlim(1)*fs_:tlim(2)*fs_);
+for k=1:size(eeg,2)
+x=signal_raw(t_lim,k);
+plot(t_signal(t_lim),x+400*(k-1)); hold on
+xlim(plot_time);
+title([fparts{end}  ',  Time ref: ' num2str(ind0)]); 
+end
+line([t_signal(ind0)  t_signal(ind0)],[-200 16*400],'LineStyle','--');
+axis tight
 %% filtering signal for high frequencies
 % EEG
 eegFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',.1,'HalfPowerFrequency2',3000,'SampleRate',fs);
@@ -120,7 +153,7 @@ subplot(nn,1,n+1)
 plotredu(@plot,t-t0,Y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (sec)'); ylim([-220 220])
 
 %% spike detection
-clear ShrpSig % no need any more
+clear shrpsig % no need any more
 % filtering for spike band
 SpkFilt = designfilt('bandpassiir','FilterOrder',4, 'HalfPowerFrequency1',300,'HalfPowerFrequency2',3000, 'SampleRate',fs);
 SpkSig=filtfilt(SpkFilt,signal0);
