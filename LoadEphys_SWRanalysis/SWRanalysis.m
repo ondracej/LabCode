@@ -2,10 +2,11 @@
 clear;
 addpath('D:\github\LabCode\LoadEphys_SWRanalysis');
 addpath('D:\github\matlab-plot-big-fast');
+addpath('D:\github\CSD analysis\Laminar Timotty Olsen');
 selpath=uigetdir(cd,'Select folder containing channels');  %%%%%%%%% data directory
 addpath(selpath);
-chnl_order=[6 11 3 14 1 16 2 15 5 12 4 13 7 10 8 9];  %%%%%%%%%%%%% recording channels with their actual location in order
-% chnl_order=1:16;
+chnl_order=[5 4 6 3 9 16 8 1 11 14 12 13 10 15 7 2];  %%%%%%%%%%%%% recording channels with their actual location in order
+% chnl_order=16:-1:1;
 % selecting folder
 fs=30000; %%%%%%%%%%%%%%%% sampling rate
 
@@ -20,15 +21,15 @@ end
 time=time-time(1);
 disp(['Data len: ' num2str(max(time/60)) ' min' ])
 fparts=split(selpath,'\'); % extracting file name from full path name
-
+beep(); pause(.7); beep();
 %% raw plot of all channels
 % preparation for plot
 set(0,'units','pixels');
 %Obtains this pixel information
 pixls = get(0,'screensize');
 figure('Position', pixls);
-t0=1; % 18160;
-plot_time=[0 30];
+t0=401; % 18160;
+plot_time=[0 5.01];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 tt=time(t_lim);
@@ -38,6 +39,7 @@ plotredu(@plot,tt-t0,x+400*(k-1)); hold on
 xlim(plot_time);
 title([fparts{end}  ', chnl: ' num2str(k) ',  Time ref: ' num2str(t0)]); 
 end
+ylabel('channels'); yticks((0:1:length(chnl_order))*400);  yticklabels(num2cell(chnl_order));  xlabel('Time (sec)')
 axis tight
 %% downsampling for SW and Ripples detection, fromm 30000 to 3000
 signal_raw=downsample(eeg,10);
@@ -46,82 +48,108 @@ fs_=fs/10;
 %% filtering for SWR and figures
 % filtering for sharp wave:
 ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',100, 'SampleRate',fs_);
-shrpsig=filtfilt(ShFilt,signal_raw);
+spwsig=filtfilt(ShFilt,signal_raw);
 % for ripples
-RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',40,'HalfPowerFrequency2',280, 'SampleRate',fs_);
+RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',40,'HalfPowerFrequency2',300, 'SampleRate',fs_);
 RippSig=filtfilt(RippFilt,signal_raw);
-%% SHW detection by TEO
+%% spw detection by TEO
 % Fig 1. Raw and SWR for channel 1
-plot_time=100+[300 310]; %%%%%%%%%
+plot_time=400+[0 5.01]; %%%%%%%%%
 figure,
 subplot(4,1,1); o1=plotredu(@plot,t_signal,signal_raw(:,1)); title(['Raw signal  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec'])
-ylabel('(\muV)'); xlim(plot_time)
+ylabel('(\muV)'); xlim(plot_time); ylim([-400 270])
 % Fig 1 (SW & R)
-subplot(4,1,2); plotredu(@plot, t_signal,shrpsig(:,1),'k');
-title('Filtered 1-100Hz (LFP)' ); ylabel('(\muV)'); xlim(plot_time);
+subplot(4,1,2); plotredu(@plot, t_signal,spwsig(:,1),'k');
+title('Filtered 1-100Hz (SPW)' ); ylabel('(\muV)'); xlim(plot_time); ylim([-400 270])
 subplot(4,1,3); o3=plotredu(@plot,t_signal,RippSig(:,1),'r');
-title('Filtered 40-280Hz (SWR)' ); ylabel('(\muV)');
+title('Filtered 40-300Hz (Ripples)' ); ylabel('(\muV)');
 xlim(plot_time);
 % Fig 3 ( ShR )
-% here we extract a threshold for SHW detection using Teager enery 
+% here we extract a threshold for spw detection using Teager enery 
 subplot(4,1,4);
-tig=teager(shrpsig,[fs_/8]);
-[~,k]=max(var(shrpsig)); % channel to show TEO and SHW detection for  %%%%%%%%%%%%%
+tig=teager(spwsig,[fs_/8]);
+[~,k]=max(var(spwsig)); % channel to show TEO and spw detection for  %%%%%%%%%%%%%
 plotredu(@plot,t_signal,tig(:,k),'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
-thr=median(tig)+5*iqr(tig); % threshold for detection of SHW
-% plotting distribution of TEO values and the threshold for SHW detection
+thr=median(tig)+5*iqr(tig); % threshold for detection of spw
+% plotting distribution of TEO values and the threshold for spw detection
 figure % distribution of TEO values for channel k  %%%%%%%%%%%%%%%
 hist(tig(:,k),300); y=ylim;  hold on; line([thr(k) thr(k)],y,'LineStyle','--')
 
-% plot for raw data + SHW detection
+% plot for raw data + spw detection
 figure;
 subplot(2,1,1); 
-plotredu(@plot,t_signal,shrpsig(:,k)); title(['Raw signal  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
+plotredu(@plot,t_signal,spwsig(:,k)); title(['LFP (1-100 Hz)  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
 subplot(2,1,2); 
 plotredu(@plot,t_signal,tig(:,k),'b'); hold on; line(plot_time,[thr(k) thr(k)],'LineStyle','--');  title('TEO ' ); 
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
-%% making a template of SHWs for future SHW detection
+%% making a template of spws for future spw detection
 up_tresh=tig.*(tig>thr);
-[~,shw_indices] = findpeaks(up_tresh(fs_+1:end-fs,k),'MinPeakDistance',fs_/2); % Finding spike peaks, while omitting 1st and lastsec, 
-% and considering .5 sec between proceeding SHWs
-shw_indices=shw_indices+fs_; % shifting 1 sec to the right place for the corresponding time
-SHW1=zeros(fs_/2+1,length(chnl_order),length(shw_indices)); % empty SHW matrix, length of SHW templates is considered as 500ms
+[~,spw_indices] = findpeaks(up_tresh(fs_+1:end-fs,k),'MinPeakDistance',fs_/2); % Finding spike peaks, while omitting 1st and lastsec, 
+% and considering .5 sec between proceeding spws
+spw_indices=spw_indices+fs_; % shifting 1 sec to the right place for the corresponding time
+spw1=zeros(fs_/2+1,length(chnl_order),length(spw_indices)); % empty spw matrix, length of spw templates is considered as 500ms
 n=1;
-while n <= length(shw_indices)
-    SHW1(:,:,n)=shrpsig(shw_indices(n)-fs_/4 : shw_indices(n)+fs_/4,:); n=n+1;  % SHW in the 1st channel
+while n <= length(spw_indices)
+    spw1(:,:,n)=spwsig(spw_indices(n)-fs_/4 : spw_indices(n)+fs_/4,:); n=n+1;  % spw in the 1st channel
 end
 % removing upward detected events
-indx=SHW1(round(size(SHW1,1)/2),k,:)<mean(SHW1([1 end],k,:),1); % for valid SHW, middle point shall occur below the line connecting the two sides
-SHW=SHW1(:,:,indx);
-shw_indx=shw_indices(indx);
-% plotting all SHWs and the average shape, for channel k which is the one
+indx=spw1(round(size(spw1,1)/2),k,:)<mean(spw1([1 end],k,:),1); % for valid spw, middle point shall occur below the line connecting the two sides
+spw=spw1(:,:,indx);
+spw_indx=spw_indices(indx);
+% plotting all spws and the average shape, for channel k which is the one
 % with maximum variance
 figure;
 subplot(1,2,1)
-for i=1:size(SHW,3)
-plot((-fs_/4:fs_/4)/fs_*1000,SHW(:,k,i)); hold on
+for i=1:size(spw,3)
+plot((-fs_/4:fs_/4)/fs_*1000,spw(:,k,i)); hold on
 end; axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
-title('all SHW for the channel with highest variance')
+title('all spw for the channel with highest variance')
 subplot(1,2,2)
-plot((-fs_/4:fs_/4)/fs_*1000,mean(SHW,3)); axis tight; xlabel('Time (ms)');  % again fig. 3 but with detected SHWs annotated
-title('average SHW forms for different channels')
-avg_shw=mean(SHW,3)'; % for further use in ''SCD'' analysis
-
-
-
+plot((-fs_/4:fs_/4)/fs_*1000,mean(spw,3)); axis tight; xlabel('Time (ms)');  % again fig. 3 but with detected spws annotated
+title('average spw forms for different channels')
 figure;
 subplot(2,1,1); 
 plotredu(@plot,t_signal,signal_raw(:,1)); title('Raw signal ' );  ylabel('(\muV)'); 
-hold on; plot(t_signal(shw_indx),signal_raw(shw_indx),'+r');  xlim(plot_time)
+hold on; plot(t_signal(spw_indx),signal_raw(spw_indx),'+r');  xlim(plot_time)
 subplot(2,1,2); 
 plotredu(@plot,t_signal,tig(:,k),'b'); hold on; line(plot_time,[thr(k) thr(k)],'LineStyle','--');  title('TEO ' ); 
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 % garbage cleaning
- clear shw_times up_tresh SHW1 
- %% analysisng SHW peri-event times
- % plotting all channels for at a SHW event
+ clear spw_times up_tresh spw1 
+ %% Current Sourse Density Analysis
+avg_spw=mean(spw,3)*10^-6; % for further use in ''SCD'' analysis, data turns to Volts instead of uV
+spacing=100*10^-6; %%%%%%%%%%% spacing between neiboring electrodes
+CSDoutput = CSD(avg_spw,fs_,spacing,'inverse',5*spacing)';
+figure;
+
+subplot(1,3,1) % CSD
+t_peri=(-fs_/4:fs_/4)./fs_*1000; % peri-SPW time
+y_peri=(1-.5:length(chnl_order)-.5)'; % y values for CSD plot, basically electrode channels , we centered the y cvalues so ...
+% they will be natural numbers + .5
+imagesc(t_peri,y_peri,CSDoutput); yticks(.5:1:length(chnl_order)-.5);  yticklabels(num2cell(chnl_order)); 
+ylabel(' ventral <--                    Electrode                    --> dorsal');  colormap(jet); % blue = sink; red = sourse
+xlabel('peri-SPW time (ms)');      title('CSD (\color{red}sink, \color{blue}source\color{black})');
+
+subplot(1,3,2) % smoothed CSD (spline), we interpolate CSD values in a finer grid
+t_grid=repmat(t_peri,length(y_peri)+2,1); % grid for current t values, to extra rows for beginning (zero), and the last natural full number, just ...
+% greater than last row which includes a .5 portion
+y_grid=repmat([0 ; y_peri ; length(chnl_order)] , 1,length(t_peri)); % grid for current y values
+t_grid_ext=repmat(t_peri,10*length(chnl_order),1); % new fine t grid
+y_grid_ext=repmat((.1:.1:length(chnl_order))',1,size(t_grid,2)); % new fine y grid
+[csd_smoo]=interp2( t_grid , y_grid ,[CSDoutput(1,:) ; CSDoutput ; CSDoutput(end,:)],t_grid_ext,y_grid_ext, 'cubic'); % interpolation of CSD in a finer grid
+imagesc((-fs_/4:fs_/4)./fs_*1000,(.1:.1:length(chnl_order))',csd_smoo); yticks(.5:1:length(chnl_order)-.5);  yticklabels(num2cell(chnl_order)); 
+ylabel('Electrode');  colormap(jet); % blue = sink; red = sourse
+xlabel('peri-SPW time (ms)');      title('smoothed CSD (\color{red}sink, \color{blue}source\color{black})');
+
+subplot(1,3,3) % LFP
+s=imagesc((-fs_/4:fs_/4)./fs_*1000,1:length(chnl_order),flipud(avg_spw)'); yticks(1:1:length(chnl_order)); yticklabels(num2cell(fliplr(chnl_order))); 
+ylabel('Electrode');  colormap('jet');
+xlabel('peri-SPW time (ms)');   title('LFP')
+
+%% analysisng spw peri-event times
+ % plotting all channels for at a spw event
  figure
- ind0=shw_indx(10);
+ ind0=spw_indx(10);
 tlim=t_signal(ind0)+[-.2 .2];
 t_lim=round(tlim(1)*fs_:tlim(2)*fs_);
 for k=1:size(eeg,2)
@@ -153,7 +181,7 @@ subplot(nn,1,n+1)
 plotredu(@plot,t-t0,Y);  xlim(plot_time);  ylabel({'EMG'; '(\muV)'});   xlabel('Time (sec)'); ylim([-220 220])
 
 %% spike detection
-clear shrpsig % no need any more
+clear spwsig % no need any more
 % filtering for spike band
 SpkFilt = designfilt('bandpassiir','FilterOrder',4, 'HalfPowerFrequency1',300,'HalfPowerFrequency2',3000, 'SampleRate',fs);
 SpkSig=filtfilt(SpkFilt,signal0);
