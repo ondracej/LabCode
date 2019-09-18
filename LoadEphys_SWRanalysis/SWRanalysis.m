@@ -6,7 +6,7 @@ addpath('D:\github\CSD analysis\Laminar Timotty Olsen');
 selpath=uigetdir('D:\Janie','Select folder containing channels');  %%%%%%%%% select data directory
 addpath(selpath);
 chnl_order=[2  7  15  10  13  12  14  11  ];  %%%%%%%%%%%%% recording channels with their actual location in order
-% this is the mapping of channels: [2  7  15  10  13  12  14  11  1  8  16 % 9  3  6  4  5], from deepest to most superficial
+% this is the mapping of channels: [2  7  15  10  13  12  14  11  1  8  16  9  3  6  4  5], from deepest to most superficial
 
 fs=30000; %%%%%%%%%%%%%%%% sampling rate
 
@@ -70,6 +70,7 @@ title('Filtered 1-100Hz (SPW)' ); ylabel('(\muV)'); xlim(plot_time); ylim([-400 
 subplot(4,1,3); o3=plotredu(@plot,t_signal,RippSig(:,1),'r');
 title('Filtered 40-300Hz (Ripples)' ); ylabel('(\muV)');
 xlim(plot_time);
+
 % Fig 3 ( ShR )
 % here we extract a threshold for spw detection using Teager enery 
 subplot(4,1,4);
@@ -93,7 +94,7 @@ ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 up_tresh=tig.*(tig>thr);
 [~,spw_indices1] = findpeaks(up_tresh(fs_+1:end-fs,k)); % Finding peaks in the channel with max variance ...
 
-% Now we remove concecutive detected peaks with less than .5 sec interval 
+% Now we remove concecutive detected peaks with less than .3 sec interval 
 spw_interval=[1; diff(spw_indices1)]; % assigning the inter-SPW interval to the very next SPW. If it is longer than a specific time, that SPW is accepted.
 % of course the first SPW is alway accepted so w assign a long enough
 % interval to it (1).
@@ -166,7 +167,7 @@ t_peri=(-fs_/5:fs_/5)./fs_*1000; % peri-SPW time
 y_peri=(1-.5:N-.5)'; % y values for CSD plot, basically electrode channels , we centered the y cvalues so ...
 % they will be natural numbers + .5
 imagesc(t_peri,y_peri,CSDoutput, [-9 6]); yticks(.5:1:N-.5);  yticklabels(num2cell(chnl_order)); 
-ylabel(' ventral <--                    Electrode                    --> dorsal');  colormap(jet); % blue = sink; red = sourse
+ylabel(' ventral <--                    Electrode                    --> dorsal');  colormap(flipud(jet)); % blue = sink; red = sourse
 xlabel('peri-SPW time (ms)');      title('CSD (\color{red}sink, \color{blue}source\color{black})');
 
 subplot(1,3,2) % smoothed CSD (spline), we interpolate CSD values in a finer grid
@@ -178,12 +179,12 @@ y_grid_ext=repmat((.1:.1:N)',1,size(t_grid,2)); % new fine y grid
 [csd_smoo]=interp2( t_grid , y_grid ,[CSDoutput(1,:) ; CSDoutput ; CSDoutput(end,:)],t_grid_ext,y_grid_ext, 'spline'); % interpolation of CSD in a finer grid
 imagesc((-fs_/5:fs_/5)./fs_*1000,(.1:.1:N)',csd_smoo, [-9 6]); % fixing the color range for comparing different data
 yticks(.5:1:N-.5);  yticklabels(num2cell(chnl_order)); 
-ylabel('Electrode');  colormap(jet); % blue = sink; red = sourse
+ylabel('Electrode');  colormap(flipud(jet)); % blue = source; red = sink
 xlabel('peri-SPW time (ms)');      title('smoothed CSD (\color{red}sink, \color{blue}source\color{black})');
 
 subplot(1,3,3) % LFP
 s=imagesc((-fs_/5:fs_/5)./fs_*1000,1:N,flipud(avg_spw)', [-60 6]*1e-5); yticks(1:1:N); yticklabels(num2cell(fliplr(chnl_order))); 
-ylabel('Electrode');  colormap('jet');
+ylabel('Electrode');  colormap(flipud(jet));
 xlabel('peri-SPW time (ms)');   title(['LFP' fparts{end}])
 print(['C:\Users\Spike Sorting\Desktop\Chicken\' [fparts{end} '-CSD']],'-dpng'); % save the plot
 
