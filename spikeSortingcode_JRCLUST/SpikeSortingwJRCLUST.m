@@ -2,8 +2,11 @@
 
 % https://jrclust.readthedocs.io/en/latest/usage/tutorial.html
 
+pathToCodeRepository = 'D:\github\JRCLUST\';
+addpath(genpath(pathToCodeRepository)) 
+
 %pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\Chick-10\Ephys\2019-04-27_19-33-33\dat\2019-04-27_19-33-33.dat';
-pathToDat = 'C:\Users\Janie\Documents\Data\SWR-Project\Chick-10\Ephys\2019-04-27_20-49-27\dat\2019-04-27_20-49-27.dat';
+pathToDat = 'D:\Janie\chick10\Chick10_2019-04-27_19-33-33\dat\Chick10_2019-04-27_19-33-33.dat';
 
 jrc bootstrap
 % use probe silico120_1col_1 - will give 2 peakFeature

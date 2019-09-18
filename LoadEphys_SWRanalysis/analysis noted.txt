@@ -1,0 +1,5 @@
+Notes on analyzed data for SPWs
+
+ZF-60-88
+14-43-33: just 8 deeper channels are used 
+15-02-55: just 8 deeper channels are used
