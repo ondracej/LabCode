@@ -27,7 +27,7 @@ clear todo
 chnl_order=[5 4 6 3  9 16 8 1 11 14 12  13 10 15 7 2];  %%%%%%%%%%%%% recording channels with their actual location in order
 % this is the mapping of channels: [5     4     6     3     9    16     8  1    11    14    12    13    10    15     7     2], ...
 % from most superficial to deepest
-EEG=EEG(:,chnl_order);
+EEG=EEG();
 %% raw plot of all channels
 
 figure('Position', pixls); 
@@ -63,7 +63,7 @@ EMGfilt=filtfilt(emgFilt,EMG);
 
 %% showing traces of filtered EEG
 figure('Position', pixls); 
-t0=8400; % 18160;
+t0=4300+1807.2; % 18160;
 plot_time=[0 15];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;

@@ -1,20 +1,20 @@
-function [] = swr_analysis(selpath)
 % loading all channels of a recording
 addpath('D:\github\LabCode\LoadEphys_SWRanalysis');
 addpath('D:\github\matlab-plot-big-fast');
 addpath('D:\github\CSD analysis\Laminar Timotty Olsen');
+selpath=uigetdir('D:\Janie','Select folder containing channels');
 % %%%%%%%%% select data directory through the popup menu
 addpath(selpath);
 chnl_order=[5     4     6     3     9    16    8    1    11    14    12    13    10    15     7     2];  %%%%%%%%%%%%% recording channels with their actual location in order
 % this is the mapping of channels: [5     4     6     3     9    16     8  1    11    14    12    13    10    15     7     2], ...
 % from most superficial to deepest
-save_dir='D:\Janie\ZF-60-88\zf-60-88-CSD_SPWtimes_plots';  % directory to save results
+add_dir='D:\Janie\ZF-59-15\CSD_SPWtimes_plots'; %%%%%%%%%%%%%%%%%%%%%
 fs=30000; %%%%%%%%%%%%%%%% sampling rate
 
 % loading EEG channels
 kk=1; % loop variable for loading channels
 for chn = chnl_order
-    filename =[selpath '\' '100_CH' num2str(chn) '.continuous'];
+    filename =[ '106_CH' num2str(chn) '.continuous'];
     [eeg(:,kk),~, ~] = load_open_ephys_data(filename);     kk=kk+1;
 end
 % for time stamp
@@ -43,7 +43,7 @@ set(0,'units','pixels');
 %Obtains this pixel information
 pixls = get(0,'screensize');
 figure('Position', pixls);
-t0=1; % 18160;
+t0=100; % 18160;
 plot_time=[0 30.01];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs_:tlim(2)*fs_;
@@ -58,11 +58,11 @@ ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_or
 % since yticks are going upwards, the ytick labels also shall start from
 % buttom to up so they are flipped
 axis tight
-print([save_dir '\' [fparts{end} '-RAW']],'-dpng')
+print([add_dir '\' [fparts{end} '-RAW']],'-dpng')
 
 %% spw detection by TEO
 % Fig 1. Raw and SWR for channel 1
-plot_time=1+[0 30.01]; %%%%%%%%%
+plot_time=100+[0 30.01]; %%%%%%%%%
 figure,
 subplot(4,1,1); o1=plotredu(@plot,t_signal,signal_raw(:,1)); title(['Raw signal  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec'])
 ylabel('(\muV)'); xlim(plot_time); ylim([-400 270])
@@ -119,7 +119,7 @@ spw_indx1=spw_indices(indx); % selected set of indices of SPWs that are downward
 align_err1=min_point-ceil(size(spw_,1)/2); % Error = min_point - mid_point
 align_err=reshape(align_err1,size(spw_indx1)); 
 spw_indx=spw_indx1+align_err; % these indices are time-corrected
-save([save_dir '\' [fparts{end} '-spw_indx']],'spw_indx');
+save([add_dir '\' [fparts{end} '-spw_indx']],'spw_indx');
 
 % repicking SPW events after time alignment
 spw=zeros(2*fs_/5+1,N,length(spw_indx)); % initialization: empty spw matrix, length of spw templates is considered as 500ms
@@ -127,7 +127,7 @@ n=1;
 while n <= length(spw_indx)
     spw(:,:,n)=spwsig(spw_indx(n)-fs_/5 : spw_indx(n)+fs_/5,:); n=n+1;  % spw in the 1st channel
 end
-save([save_dir '\' [fparts{end} '-spw']],'spw');
+save([add_dir '\' [fparts{end} '-spw']],'spw');
 
 % plotting all spws and the average shape, for channel k which is the one
 % with maximum variance
@@ -148,7 +148,7 @@ plot((-fs_/5:fs_/5)/fs_*1000,mean(spw(:,chnl,:),3), ...
 end
 axis([-200 200 -400 50]); xlabel('Time (ms)');  
 title({'mean SPW accross chnls'; ['rate: ' num2str( round(size(spw,3) / max(time)*60 ,1)) '/min  ' fparts{end}]}); ylabel('Amplitude (\muV)')
-print([save_dir '\' [fparts{end} '-SPW']],'-dpng')
+print([add_dir '\' [fparts{end} '-SPW']],'-dpng')
 
 figure;
 subplot(2,1,1); 
@@ -190,11 +190,10 @@ subplot(1,3,3) % LFP
 s=imagesc((-fs_/5:fs_/5)./fs_*1000,1:N,flipud(avg_spw)', [-60 6]*1e-5); yticks(1:1:N); yticklabels(num2cell(fliplr(chnl_order))); 
 ylabel('Electrode');  colormap(flipud(jet));
 xlabel('peri-SPW time (ms)');   title(['LFP' fparts{end}])
-print(['C:\Users\Spike Sorting\Desktop\Chicken\' [fparts{end} '-CSD']],'-dpng'); % save the plot
-print([save_dir '\' [fparts{end} '-CSD']],'-dpng')
+print([add_dir '\' [fparts{end} '-CSD']],'-dpng')
 
 % save CSD matrix for further analysis
-save([save_dir '\' [fparts{end} '-CSD']],'CSDoutput');
+save([add_dir '\' [fparts{end} '-CSD']],'CSDoutput');
 
 % %% analysisng spw peri-event times
 %  % plotting all channels for at a spw event
@@ -404,6 +403,3 @@ save([save_dir '\' [fparts{end} '-CSD']],'CSDoutput');
 % axis([[-T T+.001]*1000, 0 max(freq)]); xlabel('Time (m sec)'); ylabel('Frequency (Hz)');  colorbar off
 % hold on; plot3([0 0], F_([1 end]),max(Prip(:))*[1.1 1.1],'Color','black','LineStyle','--');
 % text(75,max(freq)+12,'LFP spectrogram (SW-R)'), box off
-
-end
-

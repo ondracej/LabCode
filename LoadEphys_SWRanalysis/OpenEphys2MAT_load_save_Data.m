@@ -19,7 +19,7 @@ fs=fs/d;
 % loading EMG channel and timestamps
 k=1; % loop variable for loading channels
 for chn = str2num(eeg_emg{2,:})
-    filename =[ '100_CH' num2str(chn) '.continuous'];
+    filename =[ '106_CH' num2str(chn) '.continuous'];
     [signal,time0, ~] = load_open_ephys_data(filename);
     [emg(:,k)]=downsample(signal,d);  clear signal; k=k+1;
 end
@@ -31,7 +31,7 @@ eeg=zeros( length(time) , length( str2num(eeg_emg{1,:}) ) );
 % loading EEG channels
 k=1; % loop variable for loading channels
 for chn = str2num(eeg_emg{1,:})
-    filename =[ '100_CH' num2str(chn) '.continuous'];
+    filename =[ '106_CH' num2str(chn) '.continuous'];
     [signal,~, ~] = load_open_ephys_data(filename);
     [eeg(:,k)]=downsample(signal,d);  clear signal; k=k+1;
 end

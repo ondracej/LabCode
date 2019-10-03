@@ -1,9 +1,8 @@
 %% band power of bins with overlap
-% this is basically the same as previous feature extraction. The only
-% difference is that now we consider an overlap between concequent bins, in
-% the sense that for a new bin we go 1 sec ahead, not the whole size of a
+% we consider an overlap between concequent bins, in
+% the sense that for a new bin (e.g. 5 s) we go 1 sec ahead, not the whole size of a
 % bin
-bins=10; % bin size in seconds
+bins=5; % bin size in seconds
 feat_smpl=floor(length(EEGfilt)/ fs)-bins+1; % number of bins of data along time
 feat_num=5; % number of frequency bands
 c=size(EEGfilt,2); % number of EEG channels
@@ -22,33 +21,33 @@ t_fit=bins/2 : 1 : bins/2 +feat_smpl-1; % time stamp for the overlapped features
 
 %% computing ratios
 bandname={'\delta', '\theta', '\alpha', '\beta', '\gamma'};
-t0=4300+1770;  plot_time=[0 60]; %%%%%%%%%%%
+t0=5*3600;  plot_time=[0 2*3600]; %%%%%%%%%%%
 figure
-chnls=5; %%%%%%%%%%%%
+chnls=c; 
 mm=1;
-for kk=3:4 % from alpha to beta
+for kk=1:4 % from alpha to beta
     for jj=kk+1:5
-        subplot(3,1,mm); 
-        bands_=feats_(:,(kk-1)*chnls+1:kk*chnls)'./feats_(:,(jj-1)*chnls+1:jj*chnls)';
+        subplot(10,1,mm); 
+        bands_=feats_(:,(kk-1)*chnls+1:kk*chnls)'.\feats_(:,(jj-1)*chnls+1:jj*chnls)';
         bands=filloutliers(bands_,'nearest',2); % outliers are removed
-        imagesc( (t_fit-t0)/60,1:chnls,zscore(bands')');
+        imagesc( (t_fit-t0)/60,1:chnls,zscore(bands')',[-2.5 2.5]);
         colormap(jet); axis tight; 
-        ylabel([bandname(kk) '/' bandname(jj)],'fontsize',12);  yticklabels({})
-        xlim((plot_time)/60) %%%%%%%%%%%%%
+        ylabel([bandname(jj) '/' bandname(kk)],'fontsize',12);  yticklabels({})
+        xlim((plot_time)/3600) %%%%%%%%%%%%%
         if mm==1
-            title(['File: ' file '  ,  Time reference: ' num2str(t0) ' sec']);
+            title(['File: ' file '  ,  Time reference: ' num2str(t0/60) ' min']);
         end
         mm=mm+1;
     end
 end
-xlabel('Time (min)')
-
+xlabel('Time (h)')
+%%
 % line plot of average changes over all channels
 figure
 mm=1;
-for kk=3:4
+for kk=1:4
     for jj=kk+1:5
-        subplot(3,1,mm);
+        subplot(10,1,mm);
         bands_=feats_(:,(kk-1)*chnls+1:kk*chnls)'./feats_(:,(jj-1)*chnls+1:jj*chnls)';
         bands=filloutliers(bands_,'nearest',3); % outliers are removed
         plot(  (t_fit-t0)/60,mean(zscore(bands')'));
