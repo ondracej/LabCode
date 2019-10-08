@@ -4,8 +4,9 @@
 %dir = 'F:\Grass\FrogSleep\CubanTreeFrog1\CubanTF1_2019-07-25_20-20-58';
 
 
-dir = 'F:\Grass\FrogSleep\CubanTreeFrog2\20190728\CubanTF2_2019-07-28_12-01-48';
+dir = 'G:\Data\zf-71-76\17-09-19';
 %%
+dbstop if error
 dataRecordingObj = OERecordingMF(dir);
 dataRecordingObj = getFileIdentifiers(dataRecordingObj); % creates dataRecordingObject
 
