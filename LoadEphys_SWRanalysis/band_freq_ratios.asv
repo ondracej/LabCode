@@ -1,6 +1,4 @@
 %% band power of bins with overlap
-% this code shall be executed after 'spw_analysis_script'
-
 % we consider an overlap between concequent bins, in
 % the sense that for a new bin (e.g. 5 s) we go 1 sec ahead, not the whole size of a
 % bin
@@ -29,7 +27,7 @@ chnls=c;
 mm=1;
 for kk=1:feat_num-1 % from delta to beta
     for jj=kk+1:feat_num
-        subplot(12,1,mm+2); 
+        subplot(10,1,mm); 
         bands_=feats_(:,(kk-1)*chnls+1:kk*chnls)'.\feats_(:,(jj-1)*chnls+1:jj*chnls)';
         bands=filloutliers(bands_,'nearest'); % outliers are removed
         imagesc( (t_fit-t0)/60,1:chnls,zscore(bands')',[-2.5 2.5]);

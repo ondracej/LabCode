@@ -1,4 +1,4 @@
-function [ EEG, time, dataname]=OpenEphys2MAT_load_save_Data(chnl_order)
+function [ eeg, time, dataname, selpath]=OpenEphys2MAT_load_save_Data(chnl_order)
 %  
 % loading OpenEphys data
 % important note: lines that you may change like file name, are commented
@@ -21,18 +21,18 @@ chn = 1;
 eeg=zeros( length(time) , length(chnl_order ) );
 
 % loading EEG channels
-
+k=1; % loop var for channels
 for chn = chnl_order
     filename =[ '106_CH' num2str(chn) '.continuous'];
     [signal,~, ~] = load_open_ephys_data(filename);
-    [eeg(:,k)]=downsample(signal,d);  clear signal;
+    [eeg(:,k)]=downsample(signal,d);  clear signal; k=k+1;
 end
 
 % prefiltering for power-line removal
 wo = 50/(fs/2);
 bw = wo/35;  [b,a] = iirnotch(wo,bw);
-EEG=filtfilt(b,a,eeg);
+eeg=filtfilt(b,a,eeg);
 fname=split(selpath , "\");
 dataname=[ fname{end-1} '__' fname{end}];
-save([selpath '\'  dataname '.mat'], 'time','EEG', 'chnl_order','-v7.3','-nocompression');
+save([selpath '\'  dataname '.mat'], 'time','eeg', 'chnl_order','-v7.3','-nocompression');
 end

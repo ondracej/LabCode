@@ -15,48 +15,51 @@ if strcmp(todo,'OpenEphys')==1
     tic
 % actual location in order
 % this is the mapping of channels: [5     4     6     3     9    16     8  1    11    14    12    13    10    15     7     2], from superficial to deepest
-    [ eeg, time, dataname]=OpenEphys2MAT_load_save_Data(chnl_order);
+    [ eeg, time, dataname, selpath]=OpenEphys2MAT_load_save_Data(chnl_order);
 else % load MAT file 
 [file,path] = uigetfile('*.mat');
 load([  path file ]); 
+selpath=path; % path for data files
 end
 time=time-time(1);
 clear todo
 
-disp(['Data len: ' num2str(max(time/3600)) ' min' ])
+disp(['Data len: ' num2str(max(time/3600)) ' h' ])
 fparts=split(path,'\'); % extracting file name from full path name
 Fname=[fparts{end-2} '__' fparts{end-1}];
-add_dir=[path 'CSD_SPWtimes_plots']; %%%%%%%%%%%%%%%%%%%%% save-result directory
 mkdir(selpath, 'CSD_SPWtimes_plots');
+add_dir=[path 'CSD_SPWtimes_plots']; %%%%%%%%%%%%%%%%%%%%% save-result directory
+
 N=length(chnl_order); % number of electrode for further frequent use
 clear EMG ; %%%%%%%%%%%%%%% clear EMG?
 
 %% Filtering for SPW-R
 % for sharp wave:
-ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',40, 'SampleRate',fs);
+tic
+ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',20, 'SampleRate',fs);
 spwsig=filtfilt(ShFilt,eeg);
-
+toc
 % SPW detection will be done just on the channel with max variance: k
 [~,k]=max(var(spwsig)); % channel to show TEO and spw detection for  %%%%%%%%%%%%%
 
 RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',40,'HalfPowerFrequency2',300, 'SampleRate',fs);
 RippSig=filtfilt(RippFilt,eeg(:,k));
 
-
+clear RippFilt ShFilt
 %% LFP (<100Hz) plot of all channels
 % preparation for plot
 set(0,'units','pixels');
 %Obtains this pixel information
 pixls = get(0,'screensize');
 figure('Position', pixls);
-t0=100; % 18160;
+t0=8000; % 18160;
 plot_time=[0 30.01];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 tt=time(t_lim);
 for chnl=1:N
 x=spwsig(t_lim,chnl);
-plot(time(t_lim),x-500*(chnl-1),'color',[160 chnl*255/N 255-chnl*255/N]/255); % color coded based on channel
+plot(tt-t0,x-500*(chnl-1),'color',[160 chnl*255/N 255-chnl*255/N]/255); % color coded based on channel
 hold on; 
 title([Fname  ', chnl: ' num2str(chnl) ',  Time ref: ' num2str(t0)]); 
 end
@@ -66,10 +69,10 @@ ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_or
 axis tight
 print([add_dir '\' [Fname '-RAW']],'-dpng')
 
-%% spw detection by TEO
+%% Plotsts of SPW-R & threshold for SPW detection (TEO)
 % Fig 1. Raw and SWR for channel 1
-t0=10; % 18160;
-plot_time=[0 30];
+t0=20110; % 18160;
+plot_time=[0 300];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 tt=time(t_lim);
@@ -88,12 +91,11 @@ plot(tt-t0,RippSig(t_lim),'r');
 title('Filtered 40-300Hz (Ripples)' ); ylabel('(\muV)');
 xlim(plot_time);
 
-
 % Fig 3 ( ShR )
 % here we extract a threshold for spw detection using Teager enery 
 % SPW detection will be done just on the channel with max variance: k
 subplot(4,1,4);
-tig=teager(spwsig(:,k),[fs/20]);
+tig=teager(spwsig(:,k),[100]);
 plot(tt-t0,tig(t_lim),'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
 thr=median(tig)+8*iqr(tig); % threshold for detection of spw
 % plotting distribution of TEO values and the threshold for spw detection
@@ -152,7 +154,7 @@ subplot(1,2,1)
 for i=1:size(spw,3)
 plot((-fs/5:fs/5)/fs*1000,spw(:,k,i)); hold on
 end; axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
-axis([-200 200 -750 150]);
+axis([-200 200 -1450 950]);
 title('SPWs in max variance chnl')
 
 % plot of average SPWs across channels
@@ -166,6 +168,7 @@ axis([-200 200 -400 50]); xlabel('Time (ms)');
 title({'mean SPW accross chnls'; ['rate: ' num2str( round(size(spw,3) / max(time)*60 ,1)) '/min  ' Fname]}); ylabel('Amplitude (\muV)')
 print([add_dir '\' [Fname '-SPW']],'-dpng')
 
+% plot of signal with SPWs labeld
 figure;
 subplot(2,1,1); 
 plot(tt-t0,eeg(t_lim,k)); title('Raw signal ' );  ylabel('(\muV)'); 
@@ -175,7 +178,7 @@ plot(tt-t0,tig(t_lim),'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 
 % garbage cleaning
- clear spw_times up_tresh spw1 align_err align_err1
+ clear spw_times up_tresh spw1 align_err align_err1 tig spw_ spw_indices1 spw_indices spw_indx1 spw_interval min_point indx thr y tlim i n 
  %% Current Sourse Density Analysis
 avg_spw=mean(spw,3)*10^-6; % for further use in ''SCD'' analysis, data turns to Volts instead of uV
 spacing=100*10^-6; %%%%%%%%%%% spacing between neiboring electrodes
