@@ -46,7 +46,7 @@ ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'Half
 spwsig=filtfilt(ShFilt,eeg);
 toc
 % SPW detection will be done just on the channel with max variance: k
-best_cnl=6; % channel to show TEO and spw detection for  %%%%%%%%%%%%%
+best_cnl=1; % channel to show TEO and spw detection for  %%%%%%%%%%%%%
 
 RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',100,'HalfPowerFrequency2',300, 'SampleRate',fs);
 RippSig=filtfilt(RippFilt,eeg(:,best_cnl));
@@ -69,7 +69,7 @@ plot((tt-t0)/60,x-500*(chnl-1),'color',[160 chnl*255/N 255-chnl*255/N]/255); % c
 hold on; 
 title([Fname  ', chnl: ' num2str(chnl) ',  Time ref: ' num2str(t0)]); 
 end
-ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_order)));  xlabel('Time (sec)');
+ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_order)));  xlabel('Time (min)');
 % since yticks are going upwards, the ytick labels also shall start from
 % buttom to up so they are flipped
 axis tight
@@ -78,7 +78,7 @@ print([add_dir '\' [Fname '-RAW']],'-dpng')
 %% Plotsts of SPW-R & threshold for SPW detection (TEO)
 % Fig 1. Raw and SWR for channel 1
 t0=4000; % 18160;
-plot_time=[0 1000];
+plot_time=[0 30];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 tt=time(t_lim);
@@ -162,7 +162,7 @@ tt=time(t_lim);
 figure('Position', [460 100 600 600]);
 subplot(1,2,1)
 for i=1:size(spw,3)
-plot((-fs/10:fs/10)/fs*1000,spw(:,best_cnl-1,i)); hold on
+plot((-fs/10:fs/10)/fs*1000,spw(:,best_cnl,i)); hold on
 end; axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
 axis([-100 100 -1200 800]);
 title('SPWs in max variance chnl')
