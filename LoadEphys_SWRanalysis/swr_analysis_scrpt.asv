@@ -46,12 +46,14 @@ ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'Half
 spwsig=filtfilt(ShFilt,eeg);
 toc
 % SPW detection will be done just on the channel with max variance: k
-best_cnl=6; % channel to show TEO and spw detection for  %%%%%%%%%%%%%
+best_chnl=1; % channel to show TEO and spw detection for  %%%%%%%%%%%%%
 
 RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',100,'HalfPowerFrequency2',300, 'SampleRate',fs);
-RippSig=filtfilt(RippFilt,eeg(:,best_cnl));
+RippSig=filtfilt(RippFilt,eeg(:,best_chnl));
 
 clear RippFilt ShFilt
+
+
 %% LFP (<100Hz) plot of all channels
 % preparation for plot
 set(0,'units','pixels');
@@ -69,7 +71,7 @@ plot((tt-t0)/60,x-500*(chnl-1),'color',[160 chnl*255/N 255-chnl*255/N]/255); % c
 hold on; 
 title([Fname  ', chnl: ' num2str(chnl) ',  Time ref: ' num2str(t0)]); 
 end
-ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_order)));  xlabel('Time (sec)');
+ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_order)));  xlabel('Time (min)');
 % since yticks are going upwards, the ytick labels also shall start from
 % buttom to up so they are flipped
 axis tight
@@ -78,18 +80,18 @@ print([add_dir '\' [Fname '-RAW']],'-dpng')
 %% Plotsts of SPW-R & threshold for SPW detection (TEO)
 % Fig 1. Raw and SWR for channel 1
 t0=4000; % 18160;
-plot_time=[0 1000];
+plot_time=[0 300];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 tt=time(t_lim);
 
 figure,
 subplot(4,1,1); 
-plot(tt-t0,eeg(t_lim,best_cnl)); title(['Raw signal  ' Fname  '  Time ref: ' num2str(t0) ' sec'])
+plot(tt-t0,eeg(t_lim,best_chnl)); title(['Raw signal  ' Fname  '  Time ref: ' num2str(t0) ' sec'])
 ylabel('(\muV)'); xlim(plot_time); ylim([-650 450])
 
 subplot(4,1,2); 
-plot(tt-t0,spwsig(t_lim,best_cnl),'k');
+plot(tt-t0,spwsig(t_lim,best_chnl),'k');
 title('Filtered 1-100Hz (SPW)' ); ylabel('(\muV)'); xlim(plot_time); ylim([-400 400])
 
 subplot(4,1,3);
@@ -101,7 +103,7 @@ xlim(plot_time);
 % here we extract a threshold for spw detection using Teager enery 
 % SPW detection will be done just on the channel with max variance: k
 subplot(4,1,4);
-tig=teager(spwsig(:,best_cnl),[100]);
+tig=teager(spwsig(:,best_chnl),[100]);
 plot(tt-t0,tig(t_lim),'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
 thr=median(tig)+6*iqr(tig); % threshold for detection of spw
 % plotting distribution of TEO values and the threshold for spw detection
@@ -111,12 +113,21 @@ hist(tig,300); y=ylim;  hold on; line([thr thr],y,'LineStyle','--')
 % plot for raw data + spw detection threshold
 figure;
 subplot(2,1,1); 
-plot(tt-t0,spwsig(t_lim,best_cnl)); title(['LFP (1-40 Hz)  ' Fname  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
+plot(tt-t0,spwsig(t_lim,best_chnl)); title(['LFP (1-40 Hz)  ' Fname  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
 subplot(2,1,2); 
 plot(tt-t0,tig(t_lim),'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' ); 
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 
+%% Power Spectrum Density (PSD) of raw signal
+
+psdFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',.1,'HalfPowerFrequency2',fs/2, 'SampleRate',fs);
+psdSig=filtfilt(psdFilt,eeg(:,best_chnl));
+[pxx, f]=pwelch(psdSig(t_lim,best_chnl),fs);
+figure;
+plot(f, 10*log10(pxx));  xlabel('Frequency (Hz)');  ylabel('PSD (dB/Hz)');  xlim([0 pi+.5])
+clear Sig
 %% making template of spws based on spw detection
+
 up_tresh=tig.*(tig>thr);
 [~,spw_indices1] = findpeaks(up_tresh(fs+1:end-fs)); % Finding peaks in the channel with max variance, omitting the 1st and last sec ...
 
@@ -134,12 +145,12 @@ while n <= length(spw_indices)
 end
 
 % removing upward detected-events
-indx=spw1(round(size(spw1,1)/2),best_cnl,:)<mean(spw1([1 end],best_cnl,:),1); % for valid spw, middle point shall occur below the line connecting the two sides
+indx=spw1(round(size(spw1,1)/2),best_chnl,:)<mean(spw1([1 end],best_chnl,:),1); % for valid spw, middle point shall occur below the line connecting the two sides
 spw_=spw1(:,:,indx);
 spw_indx1=spw_indices(indx); % selected set of indices of SPWs that are downward 
 % correcting SPW times, all detected events will be aligned to their
 % minimum:
-[~,min_point]=min(spw_(:,best_cnl,:),[],1); % extracting index of the minimum point for any detected event 
+[~,min_point]=min(spw_(:,best_chnl,:),[],1); % extracting index of the minimum point for any detected event 
 align_err1=min_point-ceil(size(spw_,1)/2); % Error = min_point - mid_point
 align_err=reshape(align_err1,size(spw_indx1)); 
 spw_indx=spw_indx1+align_err; % these indices are time-corrected
@@ -162,7 +173,7 @@ tt=time(t_lim);
 figure('Position', [460 100 600 600]);
 subplot(1,2,1)
 for i=1:size(spw,3)
-plot((-fs/10:fs/10)/fs*1000,spw(:,best_cnl-1,i)); hold on
+plot((-fs/10:fs/10)/fs*1000,spw(:,best_chnl,i)); hold on
 end; axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
 axis([-100 100 -1200 800]);
 title('SPWs in max variance chnl')
@@ -181,8 +192,8 @@ print([add_dir '\' [Fname '-SPW']],'-dpng')
 % plot of signal with SPWs labeld
 figure;
 subplot(2,1,1); 
-plot(tt-t0,eeg(t_lim,best_cnl)); title('LFP signal (1-100 Hz)' );  ylabel('(\muV)'); 
-hold on; plot(time(spw_indx)-t0,eeg(spw_indx,best_cnl),'+r');  xlim(plot_time)
+plot(tt-t0,eeg(t_lim,best_chnl)); title('LFP signal (1-100 Hz)' );  ylabel('(\muV)'); 
+hold on; plot(time(spw_indx)-t0,eeg(spw_indx,best_chnl),'+r');  xlim(plot_time)
 subplot(2,1,2); 
 plot(tt-t0,tig(t_lim),'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' ); 
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
@@ -229,10 +240,10 @@ yticks(.5:1:N-.5);  yticklabels(num2cell(chnl_order));
 ylabel('Electrode');  colormap((jet)); % blue = source; red = sink
 xlabel('peri-SPW time (ms)');      title('smoothed CSD (\color{red}sink, \color{blue}source\color{black})');
 % overlaying SPW traces
-dist=abs(max(avg_spw(:))*4); % rescaling factor just for plot
+dist=abs(max(avg_spw(:))*6); % rescaling factor just for plot
 hold on
 for k = 1: N
-plot( (-fs/10:fs/10)./fs*1000 ,avg_spw(:,k)'/dist+k-.5  ,'color',.8*[1 1 1],'linewidth',1.5)
+plot( (-fs/10:fs/10)./fs*1000 ,-avg_spw(:,k)'/dist+k-.5  ,'color',.8*[1 1 1],'linewidth',1.5)
 end
 
 subplot(1,3,3) % LFP

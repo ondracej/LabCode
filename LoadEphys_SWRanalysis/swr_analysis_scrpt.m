@@ -46,12 +46,14 @@ ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'Half
 spwsig=filtfilt(ShFilt,eeg);
 toc
 % SPW detection will be done just on the channel with max variance: k
-best_cnl=1; % channel to show TEO and spw detection for  %%%%%%%%%%%%%
+best_chnl=1; % channel to show TEO and spw detection for  %%%%%%%%%%%%%
 
 RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',100,'HalfPowerFrequency2',300, 'SampleRate',fs);
-RippSig=filtfilt(RippFilt,eeg(:,best_cnl));
+RippSig=filtfilt(RippFilt,eeg(:,best_chnl));
 
 clear RippFilt ShFilt
+
+
 %% LFP (<100Hz) plot of all channels
 % preparation for plot
 set(0,'units','pixels');
@@ -77,19 +79,19 @@ print([add_dir '\' [Fname '-RAW']],'-dpng')
 
 %% Plotsts of SPW-R & threshold for SPW detection (TEO)
 % Fig 1. Raw and SWR for channel 1
-t0=4000; % 18160;
-plot_time=[0 30];
+t0=6000; % 18160;
+plot_time=[0 3600];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 tt=time(t_lim);
 
 figure,
 subplot(4,1,1); 
-plot(tt-t0,eeg(t_lim,best_cnl)); title(['Raw signal  ' Fname  '  Time ref: ' num2str(t0) ' sec'])
+plot(tt-t0,eeg(t_lim,best_chnl)); title(['Raw signal  ' Fname  '  Time ref: ' num2str(t0) ' sec'])
 ylabel('(\muV)'); xlim(plot_time); ylim([-650 450])
 
 subplot(4,1,2); 
-plot(tt-t0,spwsig(t_lim,best_cnl),'k');
+plot(tt-t0,spwsig(t_lim,best_chnl),'k');
 title('Filtered 1-100Hz (SPW)' ); ylabel('(\muV)'); xlim(plot_time); ylim([-400 400])
 
 subplot(4,1,3);
@@ -101,7 +103,7 @@ xlim(plot_time);
 % here we extract a threshold for spw detection using Teager enery 
 % SPW detection will be done just on the channel with max variance: k
 subplot(4,1,4);
-tig=teager(spwsig(:,best_cnl),[100]);
+tig=teager(spwsig(:,best_chnl),[100]);
 plot(tt-t0,tig(t_lim),'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
 thr=median(tig)+6*iqr(tig); % threshold for detection of spw
 % plotting distribution of TEO values and the threshold for spw detection
@@ -111,12 +113,13 @@ hist(tig,300); y=ylim;  hold on; line([thr thr],y,'LineStyle','--')
 % plot for raw data + spw detection threshold
 figure;
 subplot(2,1,1); 
-plot(tt-t0,spwsig(t_lim,best_cnl)); title(['LFP (1-40 Hz)  ' Fname  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
+plot(tt-t0,spwsig(t_lim,best_chnl)); title(['LFP (1-40 Hz)  ' Fname  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
 subplot(2,1,2); 
 plot(tt-t0,tig(t_lim),'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' ); 
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 
 %% making template of spws based on spw detection
+
 up_tresh=tig.*(tig>thr);
 [~,spw_indices1] = findpeaks(up_tresh(fs+1:end-fs)); % Finding peaks in the channel with max variance, omitting the 1st and last sec ...
 
@@ -134,12 +137,12 @@ while n <= length(spw_indices)
 end
 
 % removing upward detected-events
-indx=spw1(round(size(spw1,1)/2),best_cnl,:)<mean(spw1([1 end],best_cnl,:),1); % for valid spw, middle point shall occur below the line connecting the two sides
+indx=spw1(round(size(spw1,1)/2),best_chnl,:)<mean(spw1([1 end],best_chnl,:),1); % for valid spw, middle point shall occur below the line connecting the two sides
 spw_=spw1(:,:,indx);
 spw_indx1=spw_indices(indx); % selected set of indices of SPWs that are downward 
 % correcting SPW times, all detected events will be aligned to their
 % minimum:
-[~,min_point]=min(spw_(:,best_cnl,:),[],1); % extracting index of the minimum point for any detected event 
+[~,min_point]=min(spw_(:,best_chnl,:),[],1); % extracting index of the minimum point for any detected event 
 align_err1=min_point-ceil(size(spw_,1)/2); % Error = min_point - mid_point
 align_err=reshape(align_err1,size(spw_indx1)); 
 spw_indx=spw_indx1+align_err; % these indices are time-corrected
@@ -162,7 +165,7 @@ tt=time(t_lim);
 figure('Position', [460 100 600 600]);
 subplot(1,2,1)
 for i=1:size(spw,3)
-plot((-fs/10:fs/10)/fs*1000,spw(:,best_cnl,i)); hold on
+plot((-fs/10:fs/10)/fs*1000,spw(:,best_chnl,i)); hold on
 end; axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
 axis([-100 100 -1200 800]);
 title('SPWs in max variance chnl')
@@ -181,8 +184,8 @@ print([add_dir '\' [Fname '-SPW']],'-dpng')
 % plot of signal with SPWs labeld
 figure;
 subplot(2,1,1); 
-plot(tt-t0,eeg(t_lim,best_cnl)); title('LFP signal (1-100 Hz)' );  ylabel('(\muV)'); 
-hold on; plot(time(spw_indx)-t0,eeg(spw_indx,best_cnl),'+r');  xlim(plot_time)
+plot(tt-t0,eeg(t_lim,best_chnl)); title('LFP signal (1-100 Hz)' );  ylabel('(\muV)'); 
+hold on; plot(time(spw_indx)-t0,eeg(spw_indx,best_chnl),'+r');  xlim(plot_time)
 subplot(2,1,2); 
 plot(tt-t0,tig(t_lim),'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' ); 
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
@@ -192,16 +195,18 @@ ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
  
 %% spw rate
 % spw rate will be calculated in every spw_bin seconds 
-spw_t=time(spw_indx); % time od SPWs instead of indices
-spw_bin=10; % size of bin for calculation of spw rate
+spw_t=time(spw_indx); % time of SPWs instead of indices
+spw_bin=20; % size of bin for calculation of spw rate
 Nspw=floor(time(end) / (spw_bin/2))-1; % number of SPW time stamps
 t_spw=spw_bin/2:spw_bin/2:time(end);
 spw_rate=zeros(1,Nspw);
 n=1; % index for spw_rate values
 for t_mid=t_spw
-    spw_rate(n)=sum( spw_t>=t_mid-spw_bin/2 & spw_t<t_mid+spw_bin/2 );   n=n+1;
+    spw_rate(n)=sum( spw_t>=t_mid-spw_bin/2 & spw_t<t_mid+spw_bin/2 )/spw_bin;   n=n+1;
 end
-clear t_mid n Nspw
+figure,
+plot(t_spw/3600,spw_rate ); xlabel('Time (h)'); ylabel('SPW/sec (Hz)')
+clear t_mid n Nspw 
  %% Current Sourse Density Analysis
 avg_spw=mean(spw,3)*10^-6; % for further use in ''SCD'' analysis, data turns to Volts instead of uV
 spacing=100*10^-6; %%%%%%%%%%% spacing between neiboring electrodes

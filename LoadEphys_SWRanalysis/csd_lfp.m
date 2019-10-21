@@ -21,7 +21,7 @@ y_grid_ext=repmat((.1:.1:N)',1,size(t_grid,2)); % new fine y grid
 [csd_smoo]=interp2( t_grid , y_grid ,[CSDoutput(1,:) ; CSDoutput ; CSDoutput(end,:)],t_grid_ext,y_grid_ext, 'spline'); % CSD interpolation in a finer grid
 
 figure
-imagesc(t_stamps,(.1:.1:N)',csd_smoo,.8*[min(csd_smoo(:))  max(csd_smoo(:))]); %%%%%%%%%%%%%%%%%  fixing the color range for comparing different data
+imagesc(t_stamps,(.1:.1:N)',csd_smoo, median(csd_smoo(:))+3*[-iqr(csd_smoo(:)) iqr(csd_smoo(:))]); %%%%%%%%%%%%%%%%%  fixing the color range for comparing different data
 yticks(chnl_labels);  % yticklabels(num2cell(chnl_order)); 
 colormap((jet)); % blue = source; red = sink
 xlabel(' time (s)');      title('smoothed CSD (\color{red}sink, \color{blue}source\color{black})');
