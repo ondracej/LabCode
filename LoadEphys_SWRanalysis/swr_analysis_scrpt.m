@@ -34,9 +34,9 @@ mkdir(path, 'CSD_SPWtimes_plots');
 N=length(chnl_order); % number of electrode for further frequent use
 clear EMG ; %%%%%%%%%%%%%%% clear EMG?
 %% data trimming (optional)
-eeg=eeg(4*fs*3600:13*fs*3600,:); % removing wakefulness before and after sleep
+eeg=eeg(2*fs*3600:13*fs*3600,:); % removing wakefulness before and after sleep
 clear EEG
-time=time(4*fs*3600:13*fs*3600,:); 
+time=time(2*fs*3600:13*fs*3600,:); 
 time=time-time(1);
 
 %% Filtering for SPW-R
@@ -52,8 +52,6 @@ RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',100,'
 RippSig=filtfilt(RippFilt,eeg(:,best_chnl));
 
 clear RippFilt ShFilt
-
-
 %% LFP (<100Hz) plot of all channels
 % preparation for plot
 set(0,'units','pixels');
@@ -191,7 +189,7 @@ plot(tt-t0,tig(t_lim),'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 
 % garbage cleaning
- clear spw_times up_tresh spw1 align_err align_err1 spw_ spw_indices1 spw_indices spw_indx1 spw_interval min_point indx y tlim i n 
+ clear spw_times up_tresh spw1 align_err align_err1 spw_ spw_indices1 spw_indices spw_indx1 spw_interval min_point indx y tlim i n tig RippSig
  
 %% spw rate
 % spw rate will be calculated in every spw_bin seconds 
