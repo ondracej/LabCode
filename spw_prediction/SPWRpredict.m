@@ -1,22 +1,22 @@
 % code for prediction of SPWR events
 
 %%% loading data
-addpath('D:\GitHub\LabCode\LoadEphys_SWRanalysis');
-addpath('D:\GitHub\LabCode\spw_prediction');
-addpath('D:\GitHub\LabCode\pairplot');
-dirname='D:\SPWR_prediction\Data\zebra finch 71 76 18_09_2019';
-filename='106_CH5.continuous';
+addpath('D:\github\Lab Code\LoadEphys_SWRanalysis');
+addpath('D:\github\Lab Code\spw_prediction');
+addpath('D:\github\Lab Code\pairplot');
+dirname='D:\Janie\chick10\Chick10_2019-04-27_19-33-33';
+filename='100_CH3.continuous';
 [signal,time0, ~] = load_open_ephys_data([dirname '\' filename]);
 % fs=30000
 
-eeg=downsample(signal,20);
-time=downsample(time0,20);
-fs=1500;
+eeg=downsample(signal,10);
+time=downsample(time0,10);
+fs=3000;
 clear signal time0
 
 %% Filtering for SPW-R
 
-ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',300, 'SampleRate',fs);
+ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',2,'HalfPowerFrequency2',300, 'SampleRate',fs);
 eegsig=filtfilt(ShFilt,eeg);
 clear  ShFilt
 
@@ -59,16 +59,15 @@ plot(t,nonspw.event'), title('random non-SPW events'); ylim([-400 200]); xlabel(
 % mean template and labels
 spw_temp=mean(spw.event); figure, plot(t,spw_temp); 
 
-clear spw_times up_tresh spw1 align_err align_err1 spw_ spw_indices1 spw_indices spw_indx1 spw_interval min_point indx n tig t N spw_indx pre_spw S eeg 
+clear spw_times up_tresh spw1 align_err align_err1 spw_ spw_indices1 spw_indices spw_indx1 spw_interval min_point indx n tig t N spw_indx pre_spw S  
 
 
-% feature extraction 
-
+%% feature extraction 
 
 % Features 1: AR coefficients, 2: entropy of all nodes in a wavelet packet
 % tree
-wav_order=4; %%%%%%%%%%%%%%%%
-ar_order=4; %%%%%%%%%%%%%%%%
+wav_order=4; %%%%%%%%%%%%%%%% 5 was not better than 4
+ar_order=5; %%%%%%%%%%%%%%%%
 spw.feats=spw_feature_extract(spw.pre',ar_order, wav_order);
 nonspw.feats=spw_feature_extract(nonspw.pre',ar_order, wav_order);
 
@@ -84,21 +83,22 @@ xylabels={'WP(1)','WP(2)','WP(3)','WP(4)','WP(5)','WP(6)','WP(7)'};
 feats=[spw.feats.wav1(:,1:5); nonspw.feats.wav1(:,1:5)];
 classes=[1*ones(size(spw.feats.ar,1),1); 2*ones(size(nonspw.feats.ar,1),1)];
 figure;  pairplot(feats, xylabels , num2cell(num2str(classes)), colors, 'both');
+beep
 
 
-
-% classification 
+%% classification 
 % via MultiLayer Perceptron
 
-
+for rep = 1:20 % repeated train-tests
+    
 % features: AR
 % trian
 train_rat=.7;
-net = patternnet([5,2]);
+net = patternnet([3,2]);
+net.trainFcn = 'trainlm';
 train_inp=[ spw.feats.ar(1:floor(train_rat*size(spw.feats.ar,1)),:)' , nonspw.feats.ar(1:floor(train_rat*size(nonspw.feats.ar,1)),:)'];
 train_outp=[repmat([1;0],1,floor(train_rat*size(spw.feats.ar,1))) , repmat([0;1],1,floor(train_rat*size(nonspw.feats.ar,1)))];
 net = train(net, train_inp, train_outp);
-view(net)
 
 % test
 test_inp=[ spw.feats.ar(ceil(train_rat*size(spw.feats.ar,1)):end,:)' , nonspw.feats.ar(ceil(train_rat*size(nonspw.feats.ar,1)):end,:)'];
@@ -106,15 +106,16 @@ test_true=[repmat([1;0],1,ceil((1-train_rat)*size(spw.feats.ar,1))) , repmat([0;
 net_outp_ = round(net(test_inp));
 net_outp = vec2ind(net_outp_);
 true_label=vec2ind(test_true);
-spw_classification.ar.confusion=confusion_mat(true_label-1, net_outp-1);
+spw_classification.ar.confusion(:,:,rep)=confusion_mat(true_label-1, net_outp-1);
+clear net
 
 % features: wavp Entrop
 % trian
-net = patternnet([5,2]);
+net = patternnet([7,2]);
+net.trainFcn = 'trainlm';
 train_inp=[ spw.feats.wav1(1:floor(train_rat*size(spw.feats.wav1,1)),:)' , nonspw.feats.wav1(1:floor(train_rat*size(nonspw.feats.wav1,1)),:)'];
 train_outp=[repmat([1;0],1,floor(train_rat*size(spw.feats.wav1,1))) , repmat([0;1],1,floor(train_rat*size(nonspw.feats.wav1,1)))];
 net = train(net, train_inp, train_outp);
-view(net)
 
 % test
 test_inp=[ spw.feats.wav1(ceil(train_rat*size(spw.feats.wav1,1)):end,:)' , nonspw.feats.wav1(ceil(train_rat*size(nonspw.feats.wav1,1)):end,:)'];
@@ -122,11 +123,36 @@ test_true=[repmat([1;0],1,ceil((1-train_rat)*size(spw.feats.wav1,1))) , repmat([
 net_outp_ = round(net(test_inp));
 net_outp = vec2ind(net_outp_);
 true_label=vec2ind(test_true);
-spw_classification.wav1.confusion=confusion_mat(true_label-1, net_outp-1);
+spw_classification.wav1.confusion(:,:,rep)=confusion_mat(true_label-1, net_outp-1);
+clear net
+
+% features: wav1+AR
+net = patternnet([3,2]);
+net.trainFcn = 'trainlm';
+train_inp=[ spw.feats.ar(1:floor(train_rat*size(spw.feats.ar,1)),:)' , nonspw.feats.ar(1:floor(train_rat*size(nonspw.feats.ar,1)),:)' ;
+    spw.feats.wav1(1:floor(train_rat*size(spw.feats.wav1,1)),:)' , nonspw.feats.wav1(1:floor(train_rat*size(nonspw.feats.wav1,1)),:)'];
+train_outp=[repmat([1;0],1,floor(train_rat*size(spw.feats.ar,1))) , repmat([0;1],1,floor(train_rat*size(nonspw.feats.ar,1)))];
+net = train(net, train_inp, train_outp);
+
+% test
+test_inp=[ spw.feats.ar(ceil(train_rat*size(spw.feats.ar,1)):end,:)' , nonspw.feats.ar(ceil(train_rat*size(nonspw.feats.ar,1)):end,:)';
+    spw.feats.wav1(ceil(train_rat*size(spw.feats.wav1,1)):end,:)' , nonspw.feats.wav1(ceil(train_rat*size(nonspw.feats.wav1,1)):end,:)'];
+test_true=[repmat([1;0],1,ceil((1-train_rat)*size(spw.feats.ar,1))) , repmat([0;1],1,ceil((1-train_rat)*size(nonspw.feats.ar,1)))];
+net_outp_ = round(net(test_inp));
+net_outp = vec2ind(net_outp_);
+true_label=vec2ind(test_true);
+spw_classification.ar_wav1.confusion(:,:,rep)=confusion_mat(true_label-1, net_outp-1);
+
+end
+
+% averaging through reps
+spw_classification.ar.confusion=mean(spw_classification.ar.confusion,3);
+spw_classification.wav1.confusion=mean(spw_classification.wav1.confusion,3);
+spw_classification.ar_wav1.confusion=mean(spw_classification.ar_wav1.confusion,3);
 
 
 
-clear xylabels wav_order true_label train_rst train_outp trin_inp test_true test_inp spw_temp pre_len net_outp_ net_outp net colors classes best_chnl ar_order
 
+clear xylabels wav_order true_label train_rst train_outp trin_inp test_true test_inp spw_temp pre_len net_outp_ net_outp net colors  best_chnl ar_order
 
 
