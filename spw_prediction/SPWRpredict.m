@@ -4,8 +4,8 @@
 GitDir='D:\GitHub\LabCode';
 addpath([GitDir '\LoadEphys_SWRanalysis']);
 addpath([GitDir '\spw_prediction']);
-addpath([GitDir '\pairplot']);
-dirname='D:\SPWR_prediction\Data\Chicken 10\Chick10_2019-04-27_20-49-27';
+addpath(genpath([GitDir '\pairplot']));
+dirname='D:\SPWR_prediction\Data\zebra finch 60 88\exp1_2019-04-29_15-02-55';
 filename='100_CH9.continuous';
 [signal,time0, ~] = load_open_ephys_data([dirname '\' filename]);
 % fs=30000
@@ -67,7 +67,7 @@ clear spw_times up_tresh spw1 align_err align_err1 spw_ spw_indices1 spw_indices
 
 % Features 1: AR coefficients, 2: entropy of all nodes in a wavelet packet
 % tree
-wav_order=8; %%%%%%%%%%%%%%%% 5 was not better than 4
+wav_order=3; %%%%%%%%%%%%%%%% 5 was not better than 4
 ar_order=5; %%%%%%%%%%%%%%%%
 spw.feats=spw_feature_extract(spw.pre',ar_order, wav_order);
 nonspw.feats=spw_feature_extract(nonspw.pre',ar_order, wav_order);
@@ -84,7 +84,12 @@ xylabels={'WP(1)','WP(2)','WP(3)','WP(4)','WP(5)','WP(6)','WP(7)'};
 feats=[spw.feats.wav1(:,1:5); nonspw.feats.wav1(:,1:5)];
 classes=[1*ones(size(spw.feats.ar,1),1); 2*ones(size(nonspw.feats.ar,1),1)];
 figure;  pairplot(feats, xylabels , num2cell(num2str(classes)), colors, 'both');
-beep
+
+% plot of entropy of wavelet packet
+xylabels={'PC(1)','PC(2)','PC(3)','PC(4)','PC(5)','PC(6)','PC(7)'};
+feats=[spw.feats.pca(:,1:7); nonspw.feats.pca(:,1:7)];
+classes=[1*ones(size(spw.feats.pca,1),1); 2*ones(size(nonspw.feats.pca,1),1)];
+figure;  pairplot(feats, xylabels , num2cell(num2str(classes)), colors, 'both');
 
 
 %% feature selection
@@ -92,20 +97,18 @@ beep
 
 %% classification 
 % via MultiLayer Perceptron
-n=2^4-1;
-m=2^5-2;
+
 
 for rep = 1:20 % repeated train-tests
     
 % features: AR
 % trian
 train_rat=.7;
-net = patternnet([3,2]);
+net = patternnet([4,2]);
 net.trainFcn = 'trainlm';
 train_inp=[ spw.feats.ar(1:floor(train_rat*size(spw.feats.ar,1)),:)' , nonspw.feats.ar(1:floor(train_rat*size(nonspw.feats.ar,1)),:)'];
 train_outp=[repmat([1;0],1,floor(train_rat*size(spw.feats.ar,1))) , repmat([0;1],1,floor(train_rat*size(nonspw.feats.ar,1)))];
 net = train(net, train_inp, train_outp);
-
 % test
 test_inp=[ spw.feats.ar(ceil(train_rat*size(spw.feats.ar,1)):end,:)' , nonspw.feats.ar(ceil(train_rat*size(nonspw.feats.ar,1)):end,:)'];
 test_true=[repmat([1;0],1,ceil((1-train_rat)*size(spw.feats.ar,1))) , repmat([0;1],1,ceil((1-train_rat)*size(nonspw.feats.ar,1)))];
@@ -115,16 +118,16 @@ true_label=vec2ind(test_true);
 spw_classification.ar.confusion(:,:,rep)=confusion_mat(true_label-1, net_outp-1);
 clear net
 
+
 % features: wavp Entrop
 % trian
-net = patternnet([7,2]);
+net = patternnet([4,2]);
 net.trainFcn = 'trainlm';
-train_inp=[ spw.feats.wav1(1:floor(train_rat*size(spw.feats.wav1,1)),n:m)' , nonspw.feats.wav1(1:floor(train_rat*size(nonspw.feats.wav1,1)),n:m)'];
+train_inp=[ spw.feats.wav1(1:floor(train_rat*size(spw.feats.wav1,1)),:)' , nonspw.feats.wav1(1:floor(train_rat*size(nonspw.feats.wav1,1)),:)'];
 train_outp=[repmat([1;0],1,floor(train_rat*size(spw.feats.wav1,1))) , repmat([0;1],1,floor(train_rat*size(nonspw.feats.wav1,1)))];
 net = train(net, train_inp, train_outp);
-
 % test
-test_inp=[ spw.feats.wav1(ceil(train_rat*size(spw.feats.wav1,1)):end,n:m)' , nonspw.feats.wav1(ceil(train_rat*size(nonspw.feats.wav1,1)):end,n:m)'];
+test_inp=[ spw.feats.wav1(ceil(train_rat*size(spw.feats.wav1,1)):end,:)' , nonspw.feats.wav1(ceil(train_rat*size(nonspw.feats.wav1,1)):end,:)'];
 test_true=[repmat([1;0],1,ceil((1-train_rat)*size(spw.feats.wav1,1))) , repmat([0;1],1,ceil((1-train_rat)*size(nonspw.feats.wav1,1)))];
 net_outp_ = round(net(test_inp));
 net_outp = vec2ind(net_outp_);
@@ -132,22 +135,39 @@ true_label=vec2ind(test_true);
 spw_classification.wav1.confusion(:,:,rep)=confusion_mat(true_label-1, net_outp-1);
 clear net
 
+
 % features: wav1+AR
-net = patternnet([3,2]);
+net = patternnet([4,2]);
 net.trainFcn = 'trainlm';
 train_inp=[ spw.feats.ar(1:floor(train_rat*size(spw.feats.ar,1)),:)' , nonspw.feats.ar(1:floor(train_rat*size(nonspw.feats.ar,1)),:)' ;
-    spw.feats.wav1(1:floor(train_rat*size(spw.feats.wav1,1)),n:m)' , nonspw.feats.wav1(1:floor(train_rat*size(nonspw.feats.wav1,1)),n:m)'];
+    spw.feats.wav1(1:floor(train_rat*size(spw.feats.wav1,1)),:)' , nonspw.feats.wav1(1:floor(train_rat*size(nonspw.feats.wav1,1)),:)'];
 train_outp=[repmat([1;0],1,floor(train_rat*size(spw.feats.ar,1))) , repmat([0;1],1,floor(train_rat*size(nonspw.feats.ar,1)))];
 net = train(net, train_inp, train_outp);
-
 % test
 test_inp=[ spw.feats.ar(ceil(train_rat*size(spw.feats.ar,1)):end,:)' , nonspw.feats.ar(ceil(train_rat*size(nonspw.feats.ar,1)):end,:)';
-    spw.feats.wav1(ceil(train_rat*size(spw.feats.wav1,1)):end,n:m)' , nonspw.feats.wav1(ceil(train_rat*size(nonspw.feats.wav1,1)):end,n:m)'];
+    spw.feats.wav1(ceil(train_rat*size(spw.feats.wav1,1)):end,:)' , nonspw.feats.wav1(ceil(train_rat*size(nonspw.feats.wav1,1)):end,:)'];
 test_true=[repmat([1;0],1,ceil((1-train_rat)*size(spw.feats.ar,1))) , repmat([0;1],1,ceil((1-train_rat)*size(nonspw.feats.ar,1)))];
 net_outp_ = round(net(test_inp));
 net_outp = vec2ind(net_outp_);
 true_label=vec2ind(test_true);
 spw_classification.ar_wav1.confusion(:,:,rep)=confusion_mat(true_label-1, net_outp-1);
+
+
+% features: pca
+% trian
+net = patternnet([4,2]);
+net.trainFcn = 'trainlm';
+train_inp=[ spw.feats.pca(1:floor(train_rat*size(spw.feats.wav1,1)),:)' , nonspw.feats.pca(1:floor(train_rat*size(nonspw.feats.wav1,1)),:)'];
+train_outp=[repmat([1;0],1,floor(train_rat*size(spw.feats.pca,1))) , repmat([0;1],1,floor(train_rat*size(nonspw.feats.pca,1)))];
+net = train(net, train_inp, train_outp);
+% test
+test_inp=[ spw.feats.pca(ceil(train_rat*size(spw.feats.pca,1)):end,:)' , nonspw.feats.pca(ceil(train_rat*size(nonspw.feats.pca,1)):end,:)'];
+test_true=[repmat([1;0],1,ceil((1-train_rat)*size(spw.feats.pca,1))) , repmat([0;1],1,ceil((1-train_rat)*size(nonspw.feats.pca,1)))];
+net_outp_ = round(net(test_inp));
+net_outp = vec2ind(net_outp_);
+true_label=vec2ind(test_true);
+spw_classification.pca.confusion(:,:,rep)=confusion_mat(true_label-1, net_outp-1);
+clear net
 
 end
 
@@ -155,11 +175,13 @@ end
 spw_classification.ar.confusion=mean(spw_classification.ar.confusion,3);
 spw_classification.wav1.confusion=mean(spw_classification.wav1.confusion,3);
 spw_classification.ar_wav1.confusion=mean(spw_classification.ar_wav1.confusion,3);
+spw_classification.pca.confusion=mean(spw_classification.pca.confusion,3);
 
 figure
-subplot(1,3,1), imagesc(spw_classification.ar.confusion,[0,1]), xlabel('using AR'), axis square
-subplot(1,3,2), imagesc(spw_classification.wav1.confusion,[0,1]), xlabel('usung wav1'), axis square
-subplot(1,3,3), imagesc(spw_classification.ar_wav1.confusion,[0,1]), xlabel('using AR+wav1'), axis square
+subplot(1,4,1), imagesc(spw_classification.ar.confusion,[0,1]), xlabel('using AR'), axis square
+subplot(1,4,2), imagesc(spw_classification.wav1.confusion,[0,1]), xlabel('usung wav1'), axis square
+subplot(1,4,3), imagesc(spw_classification.ar_wav1.confusion,[0,1]), xlabel('using AR+wav1'), axis square
+subplot(1,4,4), imagesc(spw_classification.pca.confusion,[0,1]), xlabel('using pca'), axis square
 
 
 clear xylabels wav_order true_label train_rst train_outp trin_inp test_true test_inp spw_temp pre_len net_outp_ net_outp net colors  best_chnl ar_order
