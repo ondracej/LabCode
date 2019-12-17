@@ -16,7 +16,7 @@ spw_indices=spw_indices+fs; % shifting 1 sec to the right place for the correspo
 spw1=zeros(fs/5+1,length(spw_indices)); % initialization: empty spw matrix
 n=1;
 while n <= length(spw_indices)
-    spw1(:,n)=eegsig(spw_indices(n)-fs/10 : spw_indices(n)+fs/10,:); n=n+1;  % spw in the 1st channel
+    spw1(:,n)=eegsig(spw_indices(n)-fs/10 : spw_indices(n)+fs/10,best_chnl); n=n+1;  % spw in the 1st channel
 end
 
 % removing upward detected-events
