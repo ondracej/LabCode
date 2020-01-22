@@ -1,4 +1,4 @@
-function [spwT, spws, rippT, ripps] = spw_r_detect(selpath)
+selpath='D:\Janie\chick10\Chick10_2019-04-27_21-58-36';
 % loading all channels of a recording
 addpath('D:\github\LabCode\LoadEphys_SWRanalysis');
 addpath('D:\github\matlab-plot-big-fast');
@@ -32,7 +32,7 @@ fs_=fs/10;
 ShFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',1,'HalfPowerFrequency2',40, 'SampleRate',fs_);
 spwsig=filtfilt(ShFilt,signal_raw);
 % for ripples:
-RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',80,'HalfPowerFrequency2',300, 'SampleRate',fs_);
+RippFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',50,'HalfPowerFrequency2',300, 'SampleRate',fs_);
 RippSig=filtfilt(RippFilt,signal_raw);
 
 %% LFP  plot 
@@ -63,104 +63,6 @@ axis tight
 % definput = {'2','hsv'};
 % dinp = inputdlg(prompt,dlgtitle,dims,definput);   k=str2num(dinp{1});
 k=5;
-%% spw detection , TEO
-% Fig 1. Raw and SWR for channel 1
-plot_time=1+[0 30.01]; %%%%%%%%%
-figure,
-subplot(4,1,1); o1=plotredu(@plot,t_signal,signal_raw(:,k)); title(['Raw signal  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec'])
-ylabel('(\muV)'); xlim(plot_time); ylim([-400 270])
-% Fig 1 (SW & R)
-subplot(4,1,2); plotredu(@plot, t_signal,spwsig(:,1),'k');
-title('Filtered 1-100Hz (SPW)' ); ylabel('(\muV)'); xlim(plot_time); ylim([-400 270])
-subplot(4,1,3); o3=plotredu(@plot,t_signal,RippSig(:,1),'r');
-title('Filtered 40-300Hz (Ripples)' ); ylabel('(\muV)');
-xlim(plot_time);
-
-% here we extract a threshold for spw detection using Teager enery 
-subplot(4,1,4);
-tig=teager(spwsig,[fs_/20]);
-plotredu(@plot,t_signal,tig(:,k),'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
-thr=median(tig)+5*median(abs(tig))/.67; % threshold for detection of spw
-
-% plotting distribution of TEO values and the threshold for spw detection
-figure % distribution of TEO values for channel k  %%%%%%%%%%%%%%%
-hist(tig(:,k),300); y=ylim;  hold on; line([thr(k) thr(k)],y,'LineStyle','--')
-
-% plot for raw data + spw detection threshold
-figure;
-subplot(2,1,1); 
-plotredu(@plot,t_signal,spwsig(:,k)); title(['LFP (1-100 Hz)  ' fparts{end}  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
-subplot(2,1,2); 
-plotredu(@plot,t_signal,tig(:,k),'b'); hold on; line(plot_time,[thr(k) thr(k)],'LineStyle','--');  title('TEO ' ); 
-ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
-
-%% Sharp wave detection
-up_tresh=tig.*(tig>thr);
-[~,spw_indices1] = findpeaks(up_tresh(fs_+1:end-fs,k)); % Finding peaks in the channel with max variance, omitting the 1st and last sec ...
-
-% Now we remove concecutive detected peaks with less than .1 sec interval 
-spw_interval=[1; diff(spw_indices1)]; % assigning the inter-SPW interval to the very next SPW. If it is longer than a specific time, that SPW is accepted.
-% of course the first SPW is alway accepted so w assign a long enough
-% interval to it (1).
-spw_indices=spw_indices1(spw_interval>.1*fs_);
-
-spw_indices=spw_indices+fs_; % shifting 1 sec to the right place for the corresponding time (removal of 1st second is compensared)
-spw1=zeros(2*fs_/5+1,N,length(spw_indices)); % initialization: empty spw matrix, length of spw templates is considered as 400ms
-n=1;
-while n <= length(spw_indices)
-    spw1(:,:,n)=spwsig(spw_indices(n)-fs_/5 : spw_indices(n)+fs_/5,:); n=n+1;  % spw in the 1st channel
-end
-
-% removing upward detected-events
-indx=spw1(round(size(spw1,1)/2),k,:)<mean(spw1([1 end],k,:),1); % for valid spw, middle point shall occur below the line connecting the two sides
-spw_=spw1(:,:,indx);
-spw_indx1=spw_indices(indx); % selected set of indices of SPWs that are downward 
-
-% correcting SPW times, all detected events will be aligned to their
-% minimum:
-[~,min_point]=min(spw_(:,k,:),[],1); % extracting index of the minimum point for any detected event 
-align_err1=min_point-ceil(size(spw_,1)/2); % Error = min_point - mid_point
-align_err=reshape(align_err1,size(spw_indx1)); 
-spw_indx=spw_indx1+align_err; % these indices are time-corrected
-spwT=time(spw_indx);
-
-% repicking SPW events after time alignment
-spws=zeros(2*fs_/5+1,N,length(spw_indx)); % initialization: empty spw matrix, length of spw templates is considered as 200ms
-n=1;
-while n <= length(spw_indx)
-    spws(:,:,n)=spwsig(spw_indx(n)-fs_/5 : spw_indx(n)+fs_/5,:); n=n+1;  % spw in the 1st channel
-end
-
-%% plotting all spws and the average shape, for channel k which is the one
-% with maximum variance
-figure('Position', [460 100 600 600]);
-subplot(1,2,1)
-for i=1:size(spws,3)
-plot((-fs_/5:fs_/5)/fs_*1000,spws(:,k,i)); hold on
-end; axis tight; xlabel('Time (ms)'); ylabel('Amplitude (\muV)')
-axis([-200 200 -750 150]);
-title('SPWs in max variance chnl')
-
-% plot of average SPWs across channels
-subplot(1,2,2)
-hold on
-for chnl=1:N
-plot((-fs_/5:fs_/5)/fs_*1000,mean(spws(:,chnl,:),3), ...
-    'color',[220 chnl*255/N 255-chnl*255/N]/255); % color coded based on channel
-end
-axis([-200 200 -400 50]); xlabel('Time (ms)');  
-title({'mean SPW accross chnls'; ['rate: ' num2str( round(size(spws,3) / max(time)*60 ,1)) '/min  ' fparts{end}]}); ylabel('Amplitude (\muV)')
-
-figure;
-subplot(2,1,1); 
-plotredu(@plot,t_signal,signal_raw(:,k)); title('Raw signal ' );  ylabel('(\muV)'); 
-hold on; plot(t_signal(spw_indx),signal_raw(spw_indx),'+r');  xlim(plot_time)
-subplot(2,1,2); 
-plotredu(@plot,t_signal,tig(:,k),'b'); hold on; line(plot_time,[thr(k) thr(k)],'LineStyle','--');  title('TEO ' ); 
-ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
-
-% garbage cleaning
- clear spw_times up_tresh spw1 align_err align_err1
 
 %% Ripple detection
 uniRip=abs(RippSig(:,k)); % ripple signal rectified for one-sided thresholding
@@ -221,5 +123,3 @@ end
 ylabel('channels'); yticks((-N+1:1:0)*500);  yticklabels(num2cell(fliplr(chnl_order)));  xlabel('Time (sec)');
 % since yticks are going upwards, the ytick labels also shall start from
 % buttom to up so they are flipped
-
-end
