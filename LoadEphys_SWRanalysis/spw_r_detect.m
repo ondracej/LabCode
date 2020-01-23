@@ -81,19 +81,19 @@ dinp = inputdlg(prompt,dlgtitle,dims,definput);   k=str2num(dinp{1});
 % Fig 1. Raw and SWR for channel 1
 plot_time=1+[0 30.01]; %%%%%%%%%
 figure,
-subplot(4,1,1); o1=plotredu(@plot,t_signal,signal_raw(:,k)); title(['Raw signal  ' fname  '  Time ref: ' num2str(t0) ' sec'])
+subplot(4,1,1); plot(t_signal,signal_raw(:,k)); title(['Raw signal  ' fname  '  Time ref: ' num2str(t0) ' sec'])
 ylabel('(\muV)'); xlim(plot_time); ylim([-400 270])
 % Fig 1 (SW & R)
-subplot(4,1,2); plotredu(@plot, t_signal,spwsig(:,1),'k');
+subplot(4,1,2); plot(t_signal,spwsig(:,1),'k');
 title('Filtered 1-100Hz (SPW)' ); ylabel('(\muV)'); xlim(plot_time); ylim([-400 270])
-subplot(4,1,3); o3=plotredu(@plot,t_signal,RippSig(:,1),'r');
+subplot(4,1,3); plot(t_signal,RippSig(:,1),'r');
 title('Filtered 40-300Hz (Ripples)' ); ylabel('(\muV)');
 xlim(plot_time);
 
 % here we extract a threshold for spw detection using Teager enery
 subplot(4,1,4);
 tig=teager(spwsig(:,k),[fs_/20]);
-plotredu(@plot,t_signal,tig,'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
+plot(t_signal,tig,'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
 thr=median(tig)+4*median(abs(tig))/.67; % threshold for detection of spw
 
 % plotting distribution of TEO values and the threshold for spw detection
@@ -103,9 +103,9 @@ hist(tig,300); y=ylim;  hold on; line([thr thr],y,'LineStyle','--')
 % plot for raw data + spw detection threshold
 figure;
 subplot(2,1,1);
-plotredu(@plot,t_signal,spwsig(:,k)); title(['LFP (1-100 Hz)  ' fname  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
+plot(t_signal,spwsig(:,k)); title(['LFP (1-100 Hz)  ' fname  '  Time ref: ' num2str(t0) ' sec']);  ylabel('(\muV)');   xlim(plot_time)
 subplot(2,1,2);
-plotredu(@plot,t_signal,tig,'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' );
+plot(t_signal,tig,'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' );
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 
 %% Sharp wave detection
@@ -161,10 +161,10 @@ title({'mean SPW accross chnls'; ['rate: ' num2str( round(size(spws,3) / max(tim
 
 figure;
 subplot(2,1,1);
-plotredu(@plot,t_signal,signal_raw(:,k)); title('Raw signal ' );  ylabel('(\muV)');
+plot(t_signal,signal_raw(:,k)); title('Raw signal ' );  ylabel('(\muV)');
 hold on; plot(t_signal(spw_indx),signal_raw(spw_indx),'+r');  xlim(plot_time)
 subplot(2,1,2);
-plotredu(@plot,t_signal,tig,'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' );
+plot(t_signal,tig,'b'); hold on; line(plot_time,[thr thr],'LineStyle','--');  title('TEO ' );
 ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time); axis tight
 
 % garbage cleaning
