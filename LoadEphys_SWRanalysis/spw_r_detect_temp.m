@@ -1,18 +1,16 @@
-function [spwT, spws, rippT, ripps, eeg, time] = spw_r_detect(varargin)
-% function for automatic detection of sharp waves and ripples, input
-% depends on the on if you already have loaded the data to Matlab or not.
-% If not: 3 inputs: an address to files to upload (.continuous) plus the channel map, plus factor for SPW detection (default=4)
-% for already-uploaded data inputs are: (time, eeg, fime name, channel map, factor for SPW detection (default=4))
+function [spwT, spws, rippT, ripps, eeg, time] = spw_r_detect_temp(varargin)
+% function for automatic detection of sharp waves and ripples, input is
+% either an address to files to upload (.continuous) plus the channel map, or the variables name
+% for data (time, eeg, fime name, channel map), if they are already loaded. 
 
 addpath('D:\github\LabCode\LoadEphys_SWRanalysis');
 addpath('D:\github\matlab-plot-big-fast');
 
 fs=30000; %%%%%%%%%%%%%%%% sampling rate
 
-if nargin==3 % then load the data, the only argument is files path
+if nargin==2 % then load the data, the only argument is files path
     selpath=varargin{1}; % full path to data file
     chnl_order=varargin{2};
-    spw_det_coeff=varargin{3}; % coefficient for detection of SPW. Default=4
     % loading all channels of a recording
     % loading EEG channels
     addpath(selpath);
@@ -28,12 +26,11 @@ if nargin==3 % then load the data, the only argument is files path
     disp(['Data len: ' num2str(max(time/60)) ' min' ])
     fparts=split(selpath,'\'); % extracting file name from full path name
     fname=fparts{end};
-elseif nargin==5
+elseif nargin==4
     time=varargin{1};
     eeg=varargin{2};
     fname=varargin{3};
-    chnl_order=varargin{4}; % mapping of channel numbers to physical locations 
-    spw_det_coeff=varargin{5}; % coefficient for detection of SPW. Default=4
+    chnl_order=varargin{4};
 else 
     error('Not enough inputs: either enter just the data path, or enter loaded variables for time, eeg, and file name.')
 end
@@ -97,7 +94,7 @@ xlim(plot_time);
 subplot(4,1,4);
 tig=teager(spwsig(:,k),[fs_/20]);
 plot(t_signal,tig,'b'); title('TEO ' ); ylabel('(\muV^2)'); xlabel('Time (Sec)'); xlim(plot_time);
-thr=median(tig)+spw_det_coeff*median(abs(tig))/.67; % threshold for detection of spw
+thr=median(tig)+4*median(abs(tig))/.67; % threshold for detection of spw
 
 % plotting distribution of TEO values and the threshold for spw detection
 figure % distribution of TEO values for channel k  %%%%%%%%%%%%%%%
