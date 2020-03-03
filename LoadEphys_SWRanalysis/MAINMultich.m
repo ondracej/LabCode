@@ -7,8 +7,8 @@ set(0,'units','pixels');
 % Obtains this pixel information
 pixls = get(0,'screensize');
 
-addpath(genpath('D:\github'));
-add_dir='D:\Janie\ZF-59-15\CSD_SPWtimes_plots'; %%%%%%%%%%%%%%%%%%%%% save-result directory
+addpath(genpath('D:\github\Lab Code'));
+add_dir='G:\Hamed\zf\plots'; %%%%%%%%%%%%%%%%%%%%% save-result directory
 
 fs=2000; %%%%%%%%%%%%% final Fs after downsampling
 % load OpenEphys file for the first time or load the already-generated MAT
@@ -17,13 +17,13 @@ todo = questdlg({'Load OpenEphys or MAT ?'  ; '(NOTE: if you go for OpenEphys, l
 	'Pick out File Type', 'OpenEphys' , 'MAT', 'MAT');
 if strcmp(todo,'OpenEphys')==1
     tic
-chnl_order=[5     4     6     3     9    16    8    1    11    14    12    13    10    15     7     2];  %%%%%%%%%%%%% recording channels with their ...
+chnl_order=[9:14];  %%%%%%%%%%%%% recording channels with their ...
 % actual location in order
 % this is the mapping of channels: [5     4     6     3     9    16     8  1    11    14    12    13    10    15     7     2], from superficial to deepest
-    [ EEG, time, dataname]=OpenEphys2MAT_load_save_Data(chnl_order);
-    disp(['time elapsed to load data: ' num2str(toc) ' sec'])
+    [ EEG, time, dataname]=OpenEphys2MAT_load_save_Data(chnl_order, '127_CH');
+    disp(['time elapsed to load data: ' num2str(toc/60) ' min'])
 else % load MAT file 
-[file,path] = uigetfile('*.mat');
+[file,path] = uigetfile('*.mat','Select Folder','G:\Hamed\zf');
 load([  path file ]); 
 end
 time=time-time(1);
@@ -33,30 +33,27 @@ disp(['Data len: ' num2str(max(time/60)) ' min' ])
 fparts=split(path,'\'); % extracting file name from full path name
 Fname=[fparts{end-2} '__' fparts{end-1}];
 clear EMG ; %%%%%%%%%%%%%%% clear EMG?
-
+file='71-15 18-02-2020';
 %% raw plot of all channels
 
 figure('Position', pixls); 
-t0=1825; % 18160;
+t0=7*3600; % 18160;
 plot_time=[0 20];
 tlim=t0+plot_time;
 t_lim=tlim(1)*fs:tlim(2)*fs;
 x=EEG(t_lim,:);
-y=EMG(t_lim,1);
 tt=time(t_lim);
-nn=size(EEG,2)+1; % number of all channels for subplot, EEGs + EMG
+nn=size(EEG,2); % number of all channels for subplot, EEGs + EMG
 % first plottinhg EEG channels
-for n=1:nn-1 
+for n=1:nn
 subplot(nn,1,n)
-plotredu(@plot,tt-t0,x(:,n));  
+plot(tt-t0,x(:,n));  
 ylabel({'EEG'; ['chnl' num2str(chnl_order(n))] });    xticks([]);  xlim(plot_time);
 if n==1
     title(['File: ' file '  ,  Time reference: ' num2str(t0)]);
 end
 end
-% then plotting EMG
-subplot(nn,1,n+1)
-plotredu(@plot,tt-t0,y);    ylabel({'EMG'; '(\muV)'});   xlabel('Time (min)');  xlim(plot_time);
+
 %% filtering signal for high frequencies
 % EEG
 eegFilt = designfilt('bandpassiir','FilterOrder',2, 'HalfPowerFrequency1',.5,'HalfPowerFrequency2',300,'SampleRate',fs);
