@@ -1,143 +1,85 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-close all
-clear all
+% This script read video in MATLAB. Lets you select some specific part of
+% it, define the ROI. Finally tracks some specific points.
+% lines that zou maz change manually are commented by a couple of '%' signs
+% like:  x=3; %%%%%%%%
+% Execute the crop cell only if you need to make a cropped video out of the
+% original video because it may take ours
 
-pathToCodeRepository = 'C:\Users\Administrator\Documents\code\GitHub\code2018\';
-addpath(genpath(pathToCodeRepository)) 
-%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% loading the video 
+folder_path='G:\Hamed\zf\71_15';
+fname='18_02_2020'; %%%%%%%%%%%%
+vid=VideoReader([folder_path '\' fname '.avi']);
+%% selecting frame range for processig
+n=vid.NumFrames;
+f0=721564; % 1st frame
+fn=n; % last frame
+% display the first frame:
+im=read(vid,950000);
+imshow(im)
+% defining ROI
+% starting from upper left side of original image
+x=512;  y=309;  w=768;  h=514;  %%%%%%%%%%%
+imcrop(im,[x,y,w,h]);
 
-vidsToAnalyze = {'F:\Grass\DataShare\Overview_20190714_00032_converted.avi'};
+%% cropping the video to the ROI and frames of interest (it will take several hours)
+% Attentiion: Execute the crop cell only if you need to make a cropped video out of the
+% original video because it may take ours
+writerObj1 = VideoWriter([folder_path '\' fname  '_ROI.avi']);
+open(writerObj1);
+for i=f0: fn-100
+  im=read(vid,i);
+  imc=imcrop(im,[x,y,w,h]);% The dimention of the new video
+  writeVideo(writerObj1,imc);  
+ end
 
-videoDirectory=[];
+close(writerObj1)
+clear vid f0 x y w h imc im 
+%% reading ROI video and computing consecutive differences
+vidroi=VideoReader([folder_path '\' fname  '_ROI.avi']);
+im1=double(rgb2gray(read(vidroi,1))); % x_old (in comparison)
+acc_dif=zeros(size(im1)); % contains accumulated absolute value of consecutive differences 
 
-V_OBJ = videoAnalysis_OBJ(vidsToAnalyze);
-%% % Loads the video and gets the number of frames, time consuming for big videos
-V_OBJ = testVideos(V_OBJ);
- 
-%% load two videos and make syncronized video
-loadTwoVidsMakePlaybackVideo(V_OBJ)
-
-%% Rename files in directory
-
-renameFilesinDir(V_OBJ)
-
-%% Convert video file
-%startFrame = 1;
-% endFrame = nan;
-startFrame = 1900;
-endFrame = 2150;
-FrameRateOverride = 10;
- 
-videoName = '20190710_09-Overview_20190714_00032_converted-short';
-
-convertWMVToAVI(V_OBJ, startFrame, endFrame, videoName, FrameRateOverride )
- 
- %% Loading and downsampling a movie
- 
- doDS = 1;
- dsFrameRate = 1;
- FrameRateOverride = 10;
- convert_and_compress_video_files(V_OBJ, FrameRateOverride, doDS, dsFrameRate)
- 
- %% make 1 movie from images
- imageDir = {'F:\Grass\DataShare\20190705_12-22_10tadpoles-grp2\'};
- movieName = 'Basler_acA1300-60gmNIR__23037905__20190720_143455075';
- saveDir = {'F:\Grass\Tadpoles\'};
- makeMoviesFromImages(V_OBJ, imageDir, movieName, saveDir)
- 
- %% make multiple movies from images
- 
- imageDir = {'F:\Grass\DataShare\10-Tadpoles_20190731_15-27\'};
- movieName = '10-Tadpoles_20190731_15-27';
- saveDir = {'F:\Grass\DataShare\'};
- VideoFrameRate = 10;
- makeMultipleMoviesFromImages(V_OBJ, imageDir, movieName, saveDir, VideoFrameRate)
- 
- disp('Finished making movies...')
- %% make one movie from two sets of video images
- fileFormat = 2;  % (1)- tif, (2) -.jpg
- ImgDirs = {'F:\Grass\eBUSData\20190619\20190619_16-22\Cricket2a', 'F:\Grass\eBUSData\20190619\20190619_16-22\Cricket2b'};
- makeMovieFromImages_2Videos(V_OBJ, ImgDirs, fileFormat)
- 
- %% create a photo montage from video
- createMontageFromVideo(V_OBJ)
- 
- %% crom image and make a photo montage
- fileFormat = 2;  % (1)- tif, (2) -.jpg
- ImgDir = {'F:\Grass\eBUSData\20190619\20190619_17-09\editedVids\Eyes\'};
- cropImageCreateMontage(V_OBJ, ImgDir, fileFormat)
-
- %% make a movie with a clock 
- startFrame = 120;
- endFrame = (60*60*60)/2;
- clockRate_s = 10*30;
- makeFastMoviesWithClock(V_OBJ, startFrame, endFrame, clockRate_s)
- %% calculate OF on a defined ROI (every frame)
- 
- calcOFOnDefinedRegion(V_OBJ)
- 
- %% Downsampled OF calculation (downsampled)
- dsFrameRate = 2;
- FrameRateOverride = 2;
- 
- calcOFOnDefinedRegion_DS(V_OBJ, dsFrameRate, FrameRateOverride)
- 
- disp('Finished calculating OF...')
- close all
- 
- %% calculate OF, downsampled, and on multiple videos
- 
- vidDir = 'F:\Grass\Tadpoles\10Tadpoles_Grp2\20190705_12-22_10tadpoles-grp2\Videos\';
- dsFrameRate = 1;
- vidFrameRate = 10;
- saveTag = '_ROI-1';
- 
- calcOFOnDefinedRegion_DS_multipleFilesInDir(V_OBJ, dsFrameRate, vidDir, vidFrameRate, saveTag)
- 
- %% Plotting OF detections
-
- vidsToAnalyze = {'F:\Grass\FrogSleep\CubanTreeFrog1\20190702\20190702_17-03\Videos\00000000_000000003880EE37.mp4'};
- detectionsDir = 'F:\Grass\FrogSleep\CubanTreeFrog1\20190702\20190702_17-03\Videos\editedVids\OF_DS-00000000_000000003880EE37\';
- StartingAlignmentTime  = '18:00:00'; % Must be the next even time
- StartingClockTime = '17:03:00'; % Must be the next even time
-
-dsFrameRate = 1;
-V_OBJ = videoAnalysis_OBJ(vidsToAnalyze);
-loadOFDetectionsAndMakePlot(V_OBJ, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime)
-
-
- %% Load multiple OF detections and compare over nights
+% loop through frames
+% difining some variables that are used in the loop
+y_pixls=1:size(im1,1);  y_pixls_sum=sum(y_pixls); 
+x_pixls=(1:size(im1,2))';  x_pixls_sum=sum(x_pixls); 
+clear r_dif
+frames=20: 30;
+for i=frames
+  im2=double(rgb2gray(read(vidroi,i))); % x_new
+  dif=abs(im2-im1);   % difference computation
+  y_dif=sum(dif,2); % difference along vertical axis
+  x_dif=sum(dif,1); % difference along horizontal axis
+  % computing the weighted average of moved pixels (dif) along y and x
+  y_dif_mean=y_pixls*y_dif/y_pixls_sum;
+  x_dif_mean=x_dif*x_pixls/x_pixls_sum;
   
- detectionsDir = {'F:\Grass\FrogSleep\CubanTreeFrog1\20190620\20190620_21-27\Videos\editedVids\006858C4_OF_DSs1_fullFile.mat';
-                  'F:\Grass\FrogSleep\CubanTreeFrog1\20190620\20190620_21-27\Videos\editedVids\00685891_OF_DSs1_fullFile.mat'}; 
- dsFrameRate = 1;
- StartingAlignmentTime  = '23:00:00'; % Must be the next even time
- StartingClockTime = '22:58:00'; % Must be the next even time
- 
- loadMultipleOFDetectionsAndMakePlot(V_OBJ, detectionsDir, dsFrameRate, StartingClockTime, StartingAlignmentTime)
- 
- %% Load OF detections and make plots
- 
-OFdir = 'F:\Grass\FrogSleep\OFNights\';
-% OFdir = 'F:\Grass\FrogSleep\OFDays\';
- dsFrameRate = 1;
- loadDetectionsAcrossDaysAndMakePlots(V_OBJ, OFdir, dsFrameRate)
- 
- %% calculating mvmnt, not working
-  
-OFdir = 'F:\Grass\FrogSleep\OFNights\';
-% OFdir = 'F:\Grass\FrogSleep\OFDays\';
-dsFrameRate = 1;
+  r_dif(i-frames(1)+1)=sqrt(0*x_dif_mean^2 + y_dif_mean^2);
+  dif_thresh=median(dif(:)-dif_old(:)) + 8*iqr(dif(:)-dif_old(:));
+  mask=(dif-dif_old>dif_thresh); % to make sure that these points are constantly changing, ...
+  % not speckle noise spots
+  acc_dif=acc_dif+mask.*abs(dif); % accumulated absolute value of consecutive differences
+  im1=im2; % consider x_new as x_old for the next comparison
+  dif_old=dif;
+end
+  % plotting the moving area of the footage
+  figure
+  subplot(1,3,1) 
+  imshow(uint8(im1)); title('Original frame')
+  subplot(1,3,2)
+  faint_im1=.4*im1+100; % mapping to confinding the pixel intensities to 200-250 instead of ...
+  % full range (0-255)
+  difim = cat(3, faint_im1, faint_im1-5*dif, faint_im1-5*dif); % the difference just depics in Red
+  imshow(uint8(difim)); title('Consecutive difference')
+  subplot(1,3,3)
+  acc_difim = cat(3, faint_im1, faint_im1-1*acc_dif, faint_im1-1*acc_dif); % the difference just depics in Red 
+  imshow(uint8(acc_difim)); title('Overall absolute difference')
 
-loadDetectionsCalcMvmtAcrossDaysAndMakePlots(V_OBJ, OFdir, dsFrameRate)
+  figure
+  plot(frames/20,r_dif); xlabel('Time (s)') ; ylim([1200 2000]) ; ylabel('Absolute body movements')
 
- 
-%% calc OF with two ROIs and make video
- 
- calcOFandMakeVideo_2ROIs(V_OBJ)
- disp('Finished...')
- 
- %% calc OF with one ROIs and make video
- calcOFandMakeVideo_1ROIs(V_OBJ)
- 
- %%
+
+
