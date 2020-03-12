@@ -1,4 +1,4 @@
-function [] = calcDifferenceFrameandMakeVideoOri()
+function [] = calcDifferenceFrameandMakeVideoOri_matlab2019()
 
 dbstop if error
 
@@ -9,14 +9,14 @@ elseif ispc
 end
 
 %% Input video data
-VidDir = 'C:\Users\user\Documents\TUM_BIOLOGIE_STUDIUM_BACHELOR\Bachelor_Thesis\Matlab_test_optical_flow\';
-videoToAnalyze = 'turtletest.avi';
+VidDir = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Videos\';
+videoToAnalyze = 'ZF-71-76__17-51-54__547923_Zoom2_00011.avi';
 addpath(VidDir)
 AnalysisNumber = 1; % in case you want to analyze several versions
 
 %% Define Analysis Directory
 
-OFDir = 'C:\Users\user\Documents\TUM_BIOLOGIE_STUDIUM_BACHELOR\Bachelor_Thesis\Matlab_test_optical_flow\';
+OFDir = 'D:\TUM\SWR-Project\ZF-71-76\20190919\17-51-46\Videos\';
 
 if exist(OFDir, 'dir') == 0
     mkdir(OFDir);
