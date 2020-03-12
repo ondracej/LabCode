@@ -14,7 +14,6 @@ y_pixls=1:size(im1,1);  y_vals=y_pixls'/sum(y_pixls); % a vector of values from 
 % a length equal to the height of the image. Also the same for length
 x_pixls=1:size(im1,2);  x_vals=x_pixls'/sum(x_pixls); 
 % loop through frames
-im1=double(rgb2gray(read(vidroi, frames(1)))); % first x_old (in comparison)
 for i=frames(2:end)
   % this section of the lop generates the r_dif variable, 
   im2=double(rgb2gray(read(vidroi,i))); % x_new
