@@ -72,7 +72,7 @@ x_pixls=1:size(im1,2);  x_vals=x_pixls'/sum(x_pixls);
 [b,a] = butter(2,.5/(20/2)); % filter for smoothing the extracted respiration ...
 % inputs: cutoff , and sampling frequency
 
-frames=6100: 6300; %%%%%%% frames to be analyzed
+frames=6100: 6500; %%%%%%% frames to be analyzed
 
 for i=frames(2:end)
     % this section of the lop generates the r_dif variable,

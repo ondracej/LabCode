@@ -1,8 +1,9 @@
 function [spwT, spws, rippT, ripps, eeg, time] = spw_r_detect(varargin)
 % function for automatic detection of sharp waves and ripples, input
-% depends on the on if you already have loaded the data to Matlab or not.
-% If not: 3 inputs: an address to files to upload (.continuous) plus the channel map, plus factor for SPW detection (default=4)
-% for already-uploaded data inputs are: (time, eeg, fime name, channel map, factor for SPW detection (default=4))
+% depends if you already have loaded the data to Matlab or not.
+% If not: 3 inputs: an address to files to be uploaded (.continuous) plus the channel map, ...
+% plus a factor for SPW detection (default=4). For already-uploaded data inputs are: ...
+% (time, eeg, fime name, channel map, factor for SPW detection (default=4))
 
 addpath('D:\github\LabCode\LoadEphys_SWRanalysis');
 addpath('D:\github\matlab-plot-big-fast');
