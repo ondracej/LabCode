@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% This script read video in MATLAB. Lets you select some specific part of
+% This script reads video in MATLAB, lets you select some specific part of
 % it, define the ROI. Finally tracks some specific points.
 % lines that you must change manually are commented by a couple of '%' signs
 % like:  x=3; %%%%%%%%
@@ -33,18 +33,20 @@ frames=f0:f0+100;
 birdvid_crop( vid, f_path_roi, ROI, frames );
 clear vid f0 x y w h 
 %% reading ROI video and computing consecutive differences
-f_path=f_path_roi;
+
+f_path='G:\Hamed\zf\71_15\18_02_2020_ROI.avi'; %%%%%%%%%%%%%%%
+
 frames=1000: 1200; %%%%%%% frames to be analyzed
-[r_dif,acc_dif] = birdvid_move_extract(f_path,frames);
+[r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames);
 
 % plotting the moving area of the footage
 figure
 subplot(1,3,1)
-imshow(uint8(im1)); title('Original frame')
+imshow(uint8(last_im)); title('Original frame')
 subplot(1,3,2)
-faint_im1=.4*im1+100; % mapping to confinding the pixel intensities to 200-250 instead of ...
+faint_im1=.4*last_im+100; % mapping to confinding the pixel intensities to 200-250 instead of ...
 % full range (0-255)
-difim = cat(3, faint_im1, faint_im1-5*dif, faint_im1-5*dif); % the difference just depics in Red
+difim = cat(3, faint_im1, faint_im1-5*last_dif, faint_im1-5*last_dif); % the difference just depics in Red
 imshow(uint8(difim)); title('Consecutive difference')
 subplot(1,3,3)
 acc_difim = cat(3, faint_im1, faint_im1-1*acc_dif, faint_im1-1*acc_dif); % the difference just depics in Red

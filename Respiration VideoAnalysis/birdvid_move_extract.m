@@ -1,4 +1,4 @@
-function [r_dif,acc_dif] = birdvid_move_extract(f_path,frames)
+function [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function gives the position (the r in polar coordinates) of the
 % center of differences in two consecutive frames and also the overall
@@ -47,5 +47,7 @@ for i=frames(2:end)
   im1=im2; % consider x_new as x_old for the next comparison
   dif_old=dif;
 end
+last_im=im1;
+last_dif=dif;
 end
 
