@@ -9,34 +9,33 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% loading the video
-folder_path='G:\Hamed\zf\71_15';
-fname='18_02_2020'; %%%%%%%%%%%%
+folder_path='G:\Hamed\zf\73 03';
+fname='09_03_2020_00090_converted'; %%%%%%%%%%%%
 vid=VideoReader([folder_path '\' fname '.avi']);
-%% selecting frame range for processig
+
+% selecting frame range for processig
 n=vid.NumFrames; % this is an estimation of number of frame, to be safe consider ...
 % something like 100 fewer frames as the last frame
 f0=1; % 1st frame %%%%%%%%%
-fn=n-100; % last frame %%%%%%%%%%
-% display the first frame:
-im=read(vid,1);
-imshow(im)
+fn=n-500; % last frame %%%%%%%%%%
+
 
 %% cropping the video to the ROI and frames of interest (it will take several hours)
 % Attentiion: Execute the this cell only if you need to make a cropped video out of the
 % original video because it may take ours
 % defining ROI for cropping
 % coordinates starting from upper left side of original image in pixels
-x=512;  y=309;  w=768;  h=514;  %%%%%%%%%%%
+x=830;  y=300;  w=450;  h=624;  %%%%%%%%%%%
 ROI=[x,y,w,h]; % The ROI for the new video
 f_path_roi=[folder_path '\' fname  '_ROI.avi']; % file name for the cropped video %%%%%%%
-frames=f0:f0+100;
+frames=f0:fn;
 birdvid_crop( vid, f_path_roi, ROI, frames );
-clear vid f0 x y w h
+clear x y w h
 %% reading ROI video and computing consecutive differences
 
 f_path='G:\Hamed\zf\71_15\18_02_2020_ROI.avi'; %%%%%%%%%%%%%%%
 
-frames=1000: 1200; %%%%%%% frames to be analyzed
+frames=800: 1800; %%%%%%% frames to be analyzed
 [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames);
 
 % plotting the moving area of the footage
@@ -54,7 +53,7 @@ imshow(uint8(acc_difim)); title('Overall absolute difference')
 
 figure
 plot(frames(2:end)/20,r_dif(frames(2:end))); xlabel('Time (s)') ;  ylabel('Absolute body movements')
-ylim([1200 2000]) ;
+ylim([1400 4000]) ;
 
 %% a movie shows the frames as well as extracted respiration
 figure,
@@ -69,10 +68,10 @@ im1=double(rgb2gray(read(vidroi, frames(1)))); % first x_old (in comparison)
 y_pixls=1:size(im1,1);  y_vals=y_pixls'/sum(y_pixls); % a vector of values from 0 to 1 with ...
 % a length equal to the height of the image. Also the same for length
 x_pixls=1:size(im1,2);  x_vals=x_pixls'/sum(x_pixls); 
-[b,a] = butter(2,.5/(20/2)); % filter for smoothing the extracted respiration ...
+[b,a] = butter(2,9/(20/2)); % filter for smoothing the extracted respiration ...
 % inputs: cutoff , and sampling frequency
 
-frames=6100: 6500; %%%%%%% frames to be analyzed
+frames=6100: 6400; %%%%%%% frames to be analyzed
 
 for i=frames(2:end)
     % this section of the lop generates the r_dif variable,
@@ -103,7 +102,7 @@ for i=frames(2:end)
     plot(51:250, -interp_r_f,'linewidth',2,'color','g');
     frame = getframe(gcf);
     writeVideo(vid,frame); % save frame
-    pause(.01)
+    pause(.1)
     im1=im2; % consider x_new as x_old for the next comparison
     dif_old=dif;
 end
