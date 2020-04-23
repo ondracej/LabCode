@@ -1,12 +1,16 @@
-function [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames)
+function [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames, roi_y, roi_x)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function gives the position (the r in polar coordinates) of the
 % center of differences in two consecutive frames and also the overall
-% accumulated differences across all frames
+% accumulated differences across all frames.
+% the input roi_range determines the area ([rows,columns]) of interest
+% the values in the output var r_dif are zero for the frames number 1 to
+% frames(1), and nonzero for frames(2) to frames(end)
 % written by Hamed Yeganegi, yeganegih@gmail.com
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 vidroi=VideoReader(f_path); 
-im1=double(rgb2gray(read(vidroi, frames(1)))); % first x_old (in comparison)
+im1_=double(rgb2gray(read(vidroi, frames(1)))); % first x_old (in comparison)
+im1=im1_(roi_y,roi_x);
 acc_dif=zeros(size(im1)); % contains accumulated absolute value of consecutive differences 
 
 % difining some variables that are used in the loop
@@ -16,7 +20,8 @@ x_pixls=1:size(im1,2);  x_vals=x_pixls'/sum(x_pixls);
 % loop through frames
 for i=frames(2:end)
   % this section of the lop generates the r_dif variable, 
-  im2=double(rgb2gray(read(vidroi,i))); % x_new
+  im2_=double(rgb2gray(read(vidroi,i))); % x_new
+  im2=im2_(roi_y,roi_x);
   dif=abs(im2-im1);   % difference computation
   y_dif=sum(dif,2); % difference along vertical axis
   x_dif=sum(dif,1); % difference along horizontal axis
@@ -38,7 +43,7 @@ for i=frames(2:end)
   % matrices
   if i==frames(2), dif_old=zeros(size(dif)); end
   avg_dif=(dif+dif_old)/2;
-  dif_thresh=median(avg_dif) + 8*iqr(avg_dif); % threshold for considering a point as..
+  dif_thresh=median(avg_dif) + 8*iqr(abs(avg_dif)); % threshold for considering a point as..
   % a consistant difference
   mask=avg_dif>dif_thresh; % to make sure that these points are constantly changing, ...
   % at least in 2 consecutive frames, not just speckle noise spots

@@ -17,7 +17,7 @@ vid=VideoReader([folder_path '\' fname '.avi']);
 n=vid.NumFrames; % this is an estimation of number of frame, to be safe consider ...
 % something like 100 fewer frames as the last frame
 f0=1; % 1st frame %%%%%%%%%
-fn=n-500; % last frame %%%%%%%%%%
+fn=n-1000; % last frame %%%%%%%%%%
 
 
 %% cropping the video to the ROI and frames of interest (it will take several hours)
@@ -32,11 +32,12 @@ frames=f0:fn;
 birdvid_crop( vid, f_path_roi, ROI, frames );
 clear x y w h
 %% reading ROI video and computing consecutive differences
+tic
+f_path=[folder_path '\' fname '.avi']; %%%%%%%%%%%%%%%
 
-f_path='G:\Hamed\zf\71_15\18_02_2020_ROI.avi'; %%%%%%%%%%%%%%%
-
-frames=800: 1800; %%%%%%% frames to be analyzed
-[r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames);
+frames=f0: fn; %%%%%%% frames to be analyzed
+roi_y=300:924;  roi_x=800:1280; %%%%%%%%%%%%% where is the region of interest?
+[r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames,roi_y,roi_x);
 
 % plotting the moving area of the footage
 figure
@@ -53,15 +54,48 @@ imshow(uint8(acc_difim)); title('Overall absolute difference')
 
 figure
 plot(frames(2:end)/20,r_dif(frames(2:end))); xlabel('Time (s)') ;  ylabel('Absolute body movements')
-ylim([1400 4000]) ;
+ylim([0 3000]) ;
+toc
+
+%% Detrending concequtive difference signal for extraction of respiration
+% cutting a piece of data 
+k0=1;
+samps=k0:k0+1+3000*20;
+d1=r_dif(samps)'; % some part of trhe r_diff signal
+d2=detrend(d1);
+s=circshift(d1,1,1);
+L  = 60; % filter length
+mu = .005; % learning ratio
+blmsf = dsp.LMSFilter('Length',L,'StepSize',mu,'Method','Normalized LMS' );
+[y,e] = blmsf(s,d1);
+
+figure
+y_lim=[-1000 3000];
+x_lim=[k0 k0+1500*20]/20;
+subplot(2,1,1)
+plot(samps/20,d1,'b'), ylim(y_lim); xlim(x_lim)
+title('Overall absolute difference')
+subplot(2,1,2) % show frames of the bird position
+vidroi=VideoReader(f_path); % the video to read from
+n_im=3; % number of frames
+f_im=round(linspace(x_lim(1)*20,x_lim(end)*20,n_im))
+for num_im=1:n_im
+    im1=double(rgb2gray(read(vidroi, frames(f_im(num_im))))); % first x_old (in comparison)
+    if num_im==1
+        im_row=im1; 
+    else
+    im_row=[im_row im1];
+    end
+    imshow(uint8(im_row),'Border','tight');
+end
 
 %% a movie shows the frames as well as extracted respiration
 figure,
 vidroi=VideoReader(f_path); % the video to read from
-f_path_resp='G:\Hamed\zf\71_15\18_02_2020_RESPIRATION1.avi'; % address for the putput video
+f_path_resp=[folder_path '\' fname  '_ROI_RESPIRATION1.avi']; % address for the putput video
 vid = VideoWriter(f_path_resp); % the video to be generated for depiction purpose
-vid.FrameRate=10;
-% vid.LosslessCompression=true; 
+vid.FrameRate=20;
+frames=50000: 51000; %%%%%%% frames to be analyzed
 open(vid);
 im1=double(rgb2gray(read(vidroi, frames(1)))); % first x_old (in comparison)
 % difining some variables that are used in the loop
@@ -71,7 +105,6 @@ x_pixls=1:size(im1,2);  x_vals=x_pixls'/sum(x_pixls);
 [b,a] = butter(2,9/(20/2)); % filter for smoothing the extracted respiration ...
 % inputs: cutoff , and sampling frequency
 
-frames=6100: 6400; %%%%%%% frames to be analyzed
 
 for i=frames(2:end)
     % this section of the lop generates the r_dif variable,
@@ -102,7 +135,7 @@ for i=frames(2:end)
     plot(51:250, -interp_r_f,'linewidth',2,'color','g');
     frame = getframe(gcf);
     writeVideo(vid,frame); % save frame
-    pause(.1)
+    pause(.0)
     im1=im2; % consider x_new as x_old for the next comparison
     dif_old=dif;
 end

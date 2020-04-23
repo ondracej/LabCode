@@ -1,4 +1,5 @@
-function [ eeg, time, dataname, selpath]=OpenEphys2MAT_load_save_Data(chnl_order, f_prename)
+function [ eeg, time, dataname, selpath]=OpenEphys2MAT_load_save_Data(...
+    chnl_order, f_prename, downsamp_ratio)
 %  
 % loading OpenEphys data
 % important note: lines that you may change like file name, are commented
@@ -8,7 +9,7 @@ selpath=uigetdir('G:\Hamed\zf','Select folder containing channels');
 addpath(selpath);
 
 fs=30000; %%%%%%%%%%%%%%%% sampling rate
-d=15; % downsampling ratio
+d=downsamp_ratio; % downsampling ratio
 fs=fs/d;
 
 % loading time stamps 
