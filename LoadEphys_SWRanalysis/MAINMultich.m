@@ -284,3 +284,4 @@ surf((T_-nsmpl/fs)*1000,F_,10*log10(Prip)); colormap('jet'); shading interp; vie
 axis([[-T T+.001]*1000, 0 max(freq)]); xlabel('Time (m sec)'); ylabel('Frequency (Hz)');  colorbar off
 hold on; plot3([0 0], F_([1 end]),max(Prip(:))*[1.1 1.1],'Color','black','LineStyle','--');
 text(75,max(freq)+12,'LFP spectrogram (SW-R)'), box off
+
