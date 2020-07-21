@@ -1,11 +1,11 @@
 function [ eeg, time, dataname, selpath]=OpenEphys2MAT_load_save_Data(...
-    chnl_order, f_prename, downsamp_ratio)
+    chnl_order, f_prename, downsamp_ratio, defpath)
 %  
 % loading OpenEphys data
 % important note: lines that you may change like file name, are commented
 % with multiple percent signs (%%%%%%%%%%)
 % f_prename is the firs part of file names, e.g.: 127_CH
-selpath=uigetdir('G:\Hamed\zf','Select folder containing channels');
+selpath=uigetdir(defpath,'Select folder containing channels');
 addpath(selpath);
 
 fs=30000; %%%%%%%%%%%%%%%% sampling rate

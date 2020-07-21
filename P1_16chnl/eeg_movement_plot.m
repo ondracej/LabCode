@@ -4,21 +4,16 @@ addpath(genpath('D:\github\Lab Code\Respiration VideoAnalysis'));
 addpath(genpath('D:\github\Lab Code\LoadEphys_SWRanalysis'));
 
 % loading OpenEphys file:
-chnl_order=[1 2 3 4 5 7 6 8 9 10 11 12 16 13 15 14];  %%%%%%%%%%%%% recording channels with their ...
+% Based on the 'default order', enter the chnls
+chnl_order=[1 2 3 4 5 6 8 7 10 9 11 12 13 16 14 15];  %%%%%%%%%%%%% recording channels with their ...
 % actual location in order
 % this is the mapping of channels: [5     4     6     3     9    16     8  1    11    14    12    13    10    15     7     2], from superficial to deepest
-openephysORmat=1; %%%%%%%%%%%%% loading openephys = 1, loading mat = 0
-if openephysORmat
-    [ EEG, time, dataname]=OpenEphys2MAT_load_save_Data(chnl_order, '133_CH',15); % downsample ...
-    % with a factor of 15
-    % or already-loaded mat file
-else
-    [file,path] = uigetfile('*.mat','Select Folder','G:\Hamed\zf');%%%%%%%%%%%
-    load([  path file ]);
-end
+
+[ EEG,time,dataname]=OpenEphys2MAT_load_save_Data(chnl_order, '133_CH',15,'Z:\zoologie\HamedData\P1'); % downsample ...
+% with a factor of 15
 
 % loading synchroniying ADC channel
-[ ADC, time_adc, ~]=OpenEphys2MAT_load_save_Data(1, '133_ADC',1);
+[ ADC, time_adc, ~]=OpenEphys2MAT_load_save_Data(1, '133_ADC',1,'Z:\zoologie\HamedData\P1');
 
 fs=2000;
 
@@ -29,36 +24,42 @@ unique_peak_indx=peak_indx(jumps_to_new_frame_indx);
 t_frames=time_adc(unique_peak_indx);
 clear ADC time_adc peak_indx unique_peak_indx
 %% loading video data
-folder_path='G:\Hamed\zf\72-00\26-03-2020'; %%%%%%%%%% video folder
-fname='26_03_2020_00110_converted'; %%%%%%%%%%%% video file name
+folder_path='G:\Hamed\zf\P1\73 03\2020-03-11'; %%%%%%%%%% video folder
+fname='11_03_2020_00092_converted'; %%%%%%%%%%%% video file name
 vid=VideoReader([folder_path '\' fname '.avi']);
 
 % selecting frame range for processig
 % n=vid.NumFrames; % this is an estimation of number of frame, to be safe consider ...
 % something like 500 fewer frames as the last frame
-f0=1; % 1st frame %%%%%%%%%
 n=vid.NumFrames; % this is an estimation of number of frame, to be safe consider ...
+f0=floor(1); % 1st frame %%%%%%%%%
 
 fn=floor(n)-1000; % last frame %%%%%%%%%%
-f_path=[folder_path '\' fname '.avi']; %%%%%%%%%%%%%%%
-frames=f0: fn; %%%%%%% frames to be analyzed
-roi_y=1:760;  roi_x=1:1280; %%%%%%%%%%%%% ROI (starting from top left)
+f_path=[folder_path '\' fname '.avi'];
+frames=f0: fn; % frames to be analyzed
+roi_y=1:500;  roi_x=1:1280; %%%%%%%%%%%%% ROI (starting from top left)
 [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames,roi_y,roi_x);
 t_frame=t_frames(f0:fn);
+r_dif=r_dif(f0:fn); % cut the zeroes at the beginning so it matches t_frame
+
 % load handel.mat;sound(y, Fs); % notifying the end of video computation
-%% raw plot of all channels to select best representative L and R chnls
+
+%% filterong data 
+%  [b,a]= butter(2,100/fs);
+%  eeg=filtfilt(b,a,EEG);
+%%  raw plot of all channels to select best representative L and R chnls
 
 figure;
 set(gcf, 'Position',  [100, 50, 1700, 900])
-t0=3800; %%%%%%%%%%  starting time for plot in secinds
-t_limm=t0 + [0 300]; 
+t0=9100; %%%%%%%%%%  starting time for plot in secinds
+t_limm=t0 + [0 30]; 
 eegs=EEG((t_limm(1)-time(1))*fs+1:(t_limm(2)-time(1))*fs , :);
 t_eegs=time((t_limm(1)-time(1))*fs+1:(t_limm(2)-time(1))*fs);
-dist=1*std( EEG(randi(length(eegs),1,10000),1));
+dist=.6*std( EEG(randi(length(EEG),1,10000),1));
 for n=1:size(eegs,2)
 plot(t_eegs,eegs(:,n)+(n-1)*dist);  hold on
 if n==1
-    title(['File: ' folder_path '\' fname ]);
+    title(['File: ' folder_path '\' ]);
 end
 end
 t_limm=t0 + [0 30]; 
@@ -74,10 +75,10 @@ movingwin=[2 , winstep]; % [winsize winstep]
 params.tapers=[5 10]; % [W*T , (tapers < 2W*T-1)]
 params.fpass=[.5 100];
 params.Fs=fs;
-t_lim=900+[0 2*3600]; %%%%%%%%%%%%    time snippet for plottings
+t_lim=18500+[0 3000]; %%%%%%%%%%%%    time snippet for plottings
 eegL=EEG((t_lim(1)-time(1))*fs+1:(t_lim(2)-time(1))*fs , 5); %%%%%%%%%
 [SL,t,f] = mtspecgramc( eegL, movingwin, params );
-eegR=EEG((t_lim(1)-time(1))*fs+1:(t_lim(2)-time(1))*fs , 11); %%%%%%%%%%
+eegR=EEG((t_lim(1)-time(1))*fs+1:(t_lim(2)-time(1))*fs , 13); %%%%%%%%%%
 [SR,~,~] = mtspecgramc( eegR, movingwin, params );
 t_eeg=time((t_lim(1)-time(1))*fs+1:(t_lim(2)-time(1))*fs);
 % band powers
@@ -93,7 +94,7 @@ figure;
 set(gcf, 'Position',  [100, 400, 1800, 500])
 ax1 = axes('Position',[0.1 0.84 0.85 0.14]);
 SL_plot=20*log10(abs(SL))';
-color_range=median(SL_plot(:))+[-3*iqr(SL_plot(:)) 3*iqr(SL_plot(:))];
+color_range=median(SL_plot(:))+[-5*iqr(SL_plot(:)) 5*iqr(SL_plot(:))];
 imagesc(ax1,'xdata',(t+t_lim(1))/3600,'ydata',f,'cdata',SL_plot,color_range); 
 shading interp; 
 ylabel(ax1,{'Power (dB)', 'Hz'}); xlim(t_lim/3600);  ylim([0 30]);  colormap('jet')
@@ -192,7 +193,7 @@ subplot(6,1,5)
 plot( t_eeg/3600, mean(sig_bandR(:,theta)./sig_bandR(gamma),2) ); xlim(t_lim/3600);
 title('R \theta / \gamma'); ylim([0.2 2])
 subplot(6,1,6)
-plot(t_frame/3600,r_dif_med_removed); xlim(t_lim/3600); ylim(median(r_dif_med_removed)+[-100 750]);
+plot(t_frame/3600,r_dif_med_removed); xlim(t_lim/3600); 
 title('Movement'); xlabel('Time (h)'); ylim([0 200])
 
 %% correlation over time (calculation) just between 2 chnls
@@ -230,67 +231,66 @@ title('Movement'); xlabel('Time (h)')
 
 %% extracting brain regional modules
 %correlation matrix for long period
-t_limm=2700+[0 2*3600]; %%%%%%%% time snippet for plottings
+t_limm=floor(8.3*1.5*3600 : 9*1.5*3600); %%%%%%%% time snippet for correlation calc, sleep time coming ...
+%from video
+
+
 eeg_corr=zscore(EEG((t_limm(1)-time(1))*fs+1:(t_limm(2)-time(1))*fs , :));
 c=corr(eeg_corr,'type','spearman');
 
 s1=c>.75; % depict higher correlations
-s=s1-diag(diag(s1));
 figure
 subplot(1,2,1)
-ax = gca;  ncolor=(length(c)*(length(c)-1)/2); % determining number of colors in the color map
-imagesc(ax,c,[0 1]); colorbar; axis square,  title('Correlation'); colormap(ax,parula(ncolor)); 
-xticks([4 12]); xticklabel1s({'L' , 'R'});  yticks([4 12]); yticklabels({'L' , 'R'})
-cmap=colormap(ax);
+ncolor=(length(c)*(length(c)-1)/2); % extracting number of colors in the color map
+imagesc(c,[0 1]); colorbar; axis square,  title('Correlation'); cmap=colormap(parula); 
+xticks([4.5 12.5]); xticklabels({'L' , 'R'});  yticks([4.5 12.5]); yticklabels({'L' , 'R'})
+% getting theindexes of colors in the imagesc plot for the graph that will follow
+Cindex = ceil(c*length(cmap)); % index for each entry *****
+
 subplot(1,2,2)
-imagesc(s1.*c,[.2 1]); colorbar; axis square, colormap('parula'); title('Corr Coef > 0.75')
-xticks([4 12]); xticklabels({'L' , 'R'});  yticks([4 12]); yticklabels({'L' , 'R'})
-% displaying co-active clusters
+imagesc(s1.*c,[0 1]); colorbar; axis square, colormap(parula(ncolor)); title('Corr Coef > 0.75')
+xticks([4.5 12.5]); xticklabels({'L' , 'R'});  yticks([4.5 12.5]); yticklabels({'L' , 'R'})
+% displaying co-active clusters:
+
 % reading and displaying the layout of electrode placements
-im=imread('G:\Hamed\zf\73 03\electrode_placement.jpg');
+im=imread('G:\Hamed\zf\P1\73 03\electrode_placement.jpg'); %%%%%%%%%
 im=.5*double(rgb2gray(im));
 figure,
 imshow(int8(im)); hold on
 % position of chnls (nodes)
-xy_chnl=[285 498; 195 541; 223 444; 144 449; 152 372; 201 279; 275 237 ; ...
-    276 304; 403 306; 409 236; 503 285; 545 386; 494 447; 410 492; 518 534; 568 458];
-xy=xy_chnl(chnl_order,:);
-% plot the whole graph
-% totNet = graph(c,'lower','omitselfloops');
-% h=plot(totNet,'EdgeAlpha',.3,'LineWidth',2); 
-% XData=xy(:,1);  YData=xy(:,2);
-% h.XData=xy(:,1);  h.YData=xy(:,2);
-% h.NodeLabel = {};  
+xy=round([285 498; 195 541; 223 444; 144 449; 152 372; 201 279; 275 237 ; ...
+    276 304; 403 306; 409 236; 503 285; 545 386; 494 447; 568 458; 410 492; 518 534]*1); % the coeff is for...
+% differenct images (diff birds). Basically electrode sites shall difer
+% just in a scale coefficient:
+% 1.24 for 72-00
 
 % for plotting the whole corr matrix as a graph:
 C = graph(c,'lower','omitselfloops'); % graph object of c for plotting
-vals_in_s=c(logical(tril(c,-1))); % extract all the non-repetative values in c
-sorted_c=sort(vals_in_s); % sorting the values of the matrix so they are corresponding to cmap values
 for i=2:length(c)
     for j=1:i-1
         edgeij=subgraph(C,[i j]);
         % color for ij edge
-        g=plot(edgeij,'EdgeAlpha',.99, 'EdgeColor',cmap( c(i,j)==sorted_c,:));
+        g=plot(edgeij,'EdgeAlpha',.99, 'EdgeColor',cmap(Cindex(i,j),:)); % ******
     g.XData=xy([i j],1);  g.YData=xy([i j],2);
-    g.NodeLabel = {};     g.LineWidth = 2;
+    g.NodeLabel = {};     g.LineWidth = 1.5;
     
     end 
 end
 
-% making the graph
-Gcorr = graph(s,'lower','omitselfloops');
-[ MC ] = maximalCliques( s ); % extract fully-connected subgrapohs (brain modules)
-modules=MC(:,sum(MC)>2)
-for k =1:size(modules,2)
-    sub=subgraph(Gcorr,logical(modules(:,k)))
-    h=plot(sub,'EdgeAlpha',.6); 
-    XData=xy(logical(modules(:,k)),1);  YData=xy(logical(modules(:,k)),2);
-    h.XData=XData+randi([-6,6],size(XData));  h.YData=YData+randi([-6,6],size(YData));
-    h.NodeLabel = {};  
-    h.LineWidth = 7;
-
-pause(.3)
-end
+% % making the graph
+% s=s1-diag(diag(s1)); % removing self loops
+% Gcorr = graph(s,'lower','omitselfloops');
+% [ MC ] = maximalCliques( s ); % extract fully-connected subgrapohs (brain modules)
+% modules=MC(:,sum(MC)>2)
+% for k =1:size(modules,2)
+%     sub=subgraph(Gcorr,logical(modules(:,k)))
+%     h=plot(sub,'EdgeAlpha',.6); 
+%     XData=xy(logical(modules(:,k)),1);  YData=xy(logical(modules(:,k)),2);
+%     h.XData=XData+randi([-6,6],size(XData));  h.YData=YData+randi([-6,6],size(YData));
+%     h.NodeLabel = {};  
+%     h.LineWidth = 7;
+% 
+% end
     
 %% feature extraction for  sleep staging
 clear t_feats se
