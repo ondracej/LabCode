@@ -5,11 +5,11 @@
 % initiation
 % name of video file:
 tic
-
-add=strsplit(folder_path,filesep);
+selpath = uigetdir('Select files for connectivity analysis');
+add=strsplit(folder_path,'\');
 savename=[add{end-1},' ' ,add{end} ];
 stat=mkdir([savename ' connectivity movie']);
-t_dark=floor((3/60+20/3600)*1.5*3600 : (7+45/60+16/3600)*1.5*3600); %%%%%%%%%% time of light off/on
+t_dark=floor((17/60+14/3600)*1.5*3600 : (8+13/60+59/3600)*1.5*3600); %%%%%%%%%% time of light off/on
 save_dir=['D:\github\Lab Code\'  savename ' connectivity movie']; %%%%%%%%%%
 % loop for making a video every 30 minutes
 vid_num=0; % counter for the video files
@@ -48,7 +48,7 @@ for t_vid_start=time(1):patch_time:time(end)-patch_time %time(end)-patch_time
         % 2nd plot, highly correlated chnls
         subplot(7,2,[2 4])
         s1=c_int>.75; % depict higher correlations
-        imagesc(s1.*c_int,[0 1]); colorbar; axis square, colormap(parula(ncolor)); title('Corr Coef > 0.75')
+        imagesc(s1.*c_int,[0 1]); colorbar; axis square, colormap(parula); title('Corr Coef > 0.75')
         xticks([4.5 12.5]); xticklabels({'L' , 'R'});  yticks([4.5 12.5]); yticklabels({'L' , 'R'})
         
         % 3rd plot,

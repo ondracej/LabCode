@@ -1,4 +1,5 @@
 %% Loading EEG
+clear all
 addpath(genpath('D:\github\Lab Code\P1_16chnl'));
 addpath(genpath('D:\github\Lab Code\Respiration VideoAnalysis'));
 addpath(genpath('D:\github\Lab Code\LoadEphys_SWRanalysis'));
@@ -24,8 +25,8 @@ unique_peak_indx=peak_indx(jumps_to_new_frame_indx);
 t_frames=time_adc(unique_peak_indx);
 clear ADC time_adc peak_indx unique_peak_indx
 %% loading video data
-folder_path='G:\Hamed\zf\P1\73 03\2020-03-11'; %%%%%%%%%% video folder
-fname='11_03_2020_00092_converted'; %%%%%%%%%%%% video file name
+folder_path='G:\Hamed\zf\P1\73 03\2020-03-09'; %%%%%%%%%% video folder
+fname='09_03_2020_00090_converted'; %%%%%%%%%%%% video file name
 vid=VideoReader([folder_path '\' fname '.avi']);
 
 % selecting frame range for processig
@@ -39,8 +40,9 @@ f_path=[folder_path '\' fname '.avi'];
 frames=f0: fn; % frames to be analyzed
 roi_y=1:500;  roi_x=1:1280; %%%%%%%%%%%%% ROI (starting from top left)
 [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames,roi_y,roi_x);
-t_frame=t_frames(f0:fn);
+t_frame=t_frames(f0:fn);  clear t_frames;
 r_dif=r_dif(f0:fn); % cut the zeroes at the beginning so it matches t_frame
+r_dif_med_removed=movmean(r_dif-movmedian(r_dif,.5*20),.5*20); % smooth data for .5 sec
 
 % load handel.mat;sound(y, Fs); % notifying the end of video computation
 
@@ -120,7 +122,6 @@ plot( t_eeg/3600, rat2 ); xlim(t_lim/3600);
 title(ax4,'R \theta / \gamma'); ylim(median(rat2)+iqr(rat2)*[-1.5 2.7])
 
 ax5=axes('Position',[0.1 0.05 0.85 0.15]); %%%%%%%%% smothed for 5 sec
-r_dif_med_removed=movmean(r_dif-movmedian(r_dif,.5*20),.5*20); % smooth data for .5 sec
 plot(t_frame/3600,r_dif_med_removed); xlim(t_lim/3600); 
 ylim(ax5,median(r_dif_med_removed)+[-20 200]);
 title(ax5,'Movement'); xlabel('Time (h)')
