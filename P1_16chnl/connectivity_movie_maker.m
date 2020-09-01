@@ -2,17 +2,18 @@ function [] = connectivity_movie_maker(dir_add, t_off, t_on, fs, image_layout, x
     r_dif_med_removed, t_frame)
 
 % video of continuous correlation matrix for long period
-% we make a directory, and make movies for every 1 min of data (variable patch_time in seconds), then we
-% stich them together
+% we make a directory, and make movies for every 1 min of data (variable patch_time in seconds ...
+% for smal movies), then we stich them together
 
 % initiation
 % name of video file:
-
+save_dir='D:\github\Lab Code\'; %%%%%%%%%%
 add=strsplit(dir_add,'\');
-savename=[add{end-1},' ' ,add{end} ];
-stat=mkdir([savename ' connectivity movie']);
+savename=[add{5},'  ', add{end-1} ];
+stat=mkdir([save_dir  savename '-connectivity movie'])
+disp(['directory created: ' save_dir  savename '-connectivity movie']);
 t_dark=floor([(t_off(1) + t_off(2)/60+ t_off(3)/3600)*1.5*3600 , (t_on(1)+t_on(2)/60+t_on(3)/3600)*1.5*3600]); %%%%%%%%%% time of light off/on
-save_dir=['D:\github\Lab Code\'  savename ' connectivity movie']; %%%%%%%%%%
+save_dir=[save_dir  savename '-connectivity movie']; %%%%%%%%%%
 % loop for making a video every 30 minutes
 vid_num=0; % counter for the video files
 patch_time=300;
@@ -20,7 +21,7 @@ for t_vid_start=time(1):patch_time:time(end)-patch_time %time(end)-patch_time
     close all; % close previous figures
     figure('Renderer', 'painters', 'Position', [100 100 1300 850])
     vid_num=vid_num+1;
-    v = VideoWriter([save_dir '\' savename '-' num2str(vid_num) '.avi'],'Motion JPEG AVI');
+    v = VideoWriter([save_dir  savename '-' num2str(vid_num) '.avi'],'Motion JPEG AVI');
     v.FrameRate=4;
     open(v);
     % main loop, for each minute of data
@@ -35,8 +36,8 @@ for t_vid_start=time(1):patch_time:time(end)-patch_time %time(end)-patch_time
     for t_int=t_vid_start:60:t_vid_start+patch_time-60 %  t_interval, taking one minute of data in a loop
         
         % filtering EEG
-        [b,a]= butter(2,100/fs);
-        EEG_filt=filtfilt(b,a,EEG((t_int-time(1))*fs+1:(t_int+60-time(1))*fs , :));
+        [b,a]= butter(2,49/fs); %%%%%%%%%%%%%
+        EEG_filt=filtfilt(b,a,EEG(round((t_int-time(1))*fs+1:(t_int+60-time(1))*fs) , :));
         eeg_corr_int=zscore(EEG_filt);
         c_int=corr(eeg_corr_int,'type','spearman');
         
@@ -58,13 +59,9 @@ for t_vid_start=time(1):patch_time:time(end)-patch_time %time(end)-patch_time
         % 3rd plot,
         subplot(7,2,[5 7 9 11])
         % reading and displaying the layout of electrode placements
-        im=imread(image_layout); %%%%%%%%% 'G:\Hamed\zf\P1\73 03\electrode_placement.jpg'
+        im=imread(image_layout); 
         im=.6*double(rgb2gray(imresize(im,.3)));
         imshow(int8(im)); hold on
-        
-        % differenct images (diff birds). Basically electrode sites shall difer
-        % just in a scale coefficient:
-        % 1.24 for 72-00
         
         % for plotting the whole corr matrix as a graph:
         C = graph(c_int,'lower','omitselfloops'); % graph object of c for plotting

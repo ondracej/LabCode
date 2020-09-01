@@ -1,9 +1,9 @@
 %%%%%%%%%% if you already know the coordinates and u want toi multiply by a
 %%%%%%%%%% scale
 
-image_layout='C:\Users\Spike Sorting\Desktop\w0009-3.jpg';
-xy=round([285 498; 195 541; 223 444; 144 449; 152 372; 201 279; 275 237 ; ...
-          276 304; 403 306; 409 236; 503 285; 545 386; 494 447; 568 458; 410 492; 518 534]*1.21*.3); % the coeff is for...
+image_layout='G:\Hamed\zf\P1\73 03\electrode_placement.jpg'; %%%%%%%%%%%%%%
+% xy=[95,190;85,205;67,162;60,180;61,135;109,105;77,106;112,84;156,82;156,106;188,99;200,130;...
+%     193,164;205,177;166,182;178,203]; %%%%%%%%%%%%%%%%
 figure
       im=imread(image_layout); %%%%%%%%% 'G:\Hamed\zf\P1\73 03\electrode_placement.jpg'
         im=.6*double(rgb2gray(imresize(im,.3)));
@@ -15,11 +15,11 @@ figure
    %%
    %%%%%%%%%%% if u want to get the coordinates by curser clicks
    
-  image_layout='C:\Users\Spike Sorting\Desktop\w0009-3.jpg';
+  image_layout=data_info.image_layout;% 'G:\Hamed\zf\P1\73 03\electrode_placement.jpg';
   figure
   im=imread(image_layout); %%%%%%%%% 'G:\Hamed\zf\P1\73 03\electrode_placement.jpg'
   im=.6*double(rgb2gray(imresize(im,.3)));
   imshow(int8(im)); hold on
-%   [x,y]=ginput(16);
+  [x,y]=ginput(16);
   xy(:,1)=x; xy(:,2)=y;
   plot(x,y,'*');
