@@ -1,0 +1,7 @@
+the purpose is to have the following values for the data, calculated in 5-sec windows, with 50% overlap:
+overall movement
+EEG power in these bands: delta, theta, Alpha, Beta, Gamma1(30-48Hz), Gamma2(52-100)
+Correlation matrix for all the frequency bands mentioned
+
+identification of sleep: based on 90% lower values of sleep during light-off, and 50% higher values of movement during light-on
+also the same for some EEG bands: especially Gamma1, and theta
