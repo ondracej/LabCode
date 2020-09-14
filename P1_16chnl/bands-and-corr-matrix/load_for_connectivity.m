@@ -4,8 +4,9 @@ function [EEG, time, r_dif_med_removed, t_frame] = load_for_connectivity(chnl_or
 %% loading video data
 
 % loading synchroniying ADC channel
+disp('reading times of frame acquisition...')
 [ ADC, time_adc, ~]=OpenEphys2MAT_load_save_Data(1, '133_ADC',1,dir_add);
-disp('EEG and time stamps loaded.')
+disp('time stamps loaded.')
 %Extracting synchroniying times of frames
 [peak_indx]=find(ADC.*(ADC>4));
 jumps_to_new_frame_indx=[diff(peak_indx)>5; true];
@@ -37,10 +38,11 @@ disp('r_dif calculated.');
 addpath(genpath('D:\github\Lab Code\P1_16chnl'));
 addpath(genpath('D:\github\Lab Code\Respiration VideoAnalysis'));
 addpath(genpath('D:\github\Lab Code\LoadEphys_SWRanalysis'));
-
+disp('loading EEG channels started...')
 % loading OpenEphys file:
 [ EEG,time,~]=OpenEphys2MAT_load_save_Data(chnl_order, '133_CH',15,dir_add); % downsample ...
 % with a factor of 15
+disp('loading EEG channels finished.')
 
 %%  raw plot of all channels 
 figure;
@@ -55,6 +57,6 @@ for n=1:size(eegs,2)
 end
 t_limm=t0 + [0 30]; 
 xlim(t_limm); ylim([-1 17]*dist)
-title(dir_add_general)
+title([dir_add_general '  sample EEG'])
 end
 

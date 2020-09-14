@@ -19,14 +19,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
 clear, clc
-metadata=load('G:\Hamed\zf\P1\73 03\2020-03-09\metadata'); %%%%%%%%%
+% adding some dependencies
+addpath('D:\github\Lab Code\Respiration VideoAnalysis');
+addpath('D:\github\Lab Code\P1_16chnl');
+addpath('D:\github\Lab Code\LoadEphys_SWRanalysis');
+
+metadata=load('G:\Hamed\zf\P1\73 03\metadata'); %%%%%%%%%% metadata file
+
 data_info=metadata.data_info; clear metadata
 for k= 1:length(data_info)
-     try % in case there was an eror in reading a specific file, the code goes on to the nxt ...
-         %recording night
-        
-        % reading vari
-        ables from metadata file
+
+        % reading variables from metadata file
         chnl_order= data_info(k).chnl_order; %%%%%%%%%%%%
         dir_add= data_info(k).dir_add;
         vid_fname= data_info(k).vid_fname;
@@ -38,20 +41,23 @@ for k= 1:length(data_info)
         image_layout= data_info(k).image_layout; %%%%
         
         % loading EEG and video
-        [EEG, time, r_dif_med_removed, t_frame] = load_for_connectivity(chnl_order,dir_add,...
+        [EEG, time, r_dif, t_frame] = load_for_connectivity(chnl_order,dir_add,...
             vid_fname, roi, fs);
         
         % computing band powers and corr matrix at different bands
-        [t_bin, light_on, band_power, corr_mat ]=frq_band_and_corr_mat_builder(dir_add, t_off, t_on, fs, EEG, time);
+        [res.t_bin, res.light_on, res.band_power, res.corr_mat ]=frq_band_and_corr_mat_builder(dir_add, t_off, t_on, fs, EEG, time);
+        
+        % save results
+        [dir_night, ~, ~] = fileparts(dir_add); % directory for saving results
+        res.EEG=EEG; clear EEG; res.r_dif=r_dif; clear r_dif
+        save([dir_night '\analysis_res'],'res');
         % t_bin is the time point at the center of the bin, light-on is a 0/1 label, indicating ...
         % the state of lights being on/off, band_power is a structure
         % containing power of EEG at different bands, corr_mat is a
         % structure containing the corr_mat off EEG channels filtered at
         % different frequncy bands
         % also output is saved in a file
-    catch
-        disp(['There was an error reading data in data: ' data_info.date] );
-    end
+
     disp('processing a night of data completed. Time elapsed: ')
     toc
 end
