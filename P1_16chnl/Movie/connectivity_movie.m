@@ -5,12 +5,15 @@
 % initiation
 % name of video file:
 tic
-selpath = uigetdir('Select files for connectivity analysis');
+selpath = uigetdir('Select files for connectivity analysis'); % where to save files
 add=strsplit(folder_path,'\');
 savename=[add{end-1},' ' ,add{end} ];
 stat=mkdir([savename ' connectivity movie']);
-t_dark=floor((17/60+14/3600)*1.5*3600 : (8+13/60+59/3600)*1.5*3600); %%%%%%%%%% time of light off/on
+t_dark=floor((t_off(1)+t_off(2)/60+t_off(3)/3600)*1.5*3600 : ...
+    (t_on(1)+t_on(2)/60+t_on(3)/3600)*1.5*3600); %%%%%%%%%% time of light off/on
 save_dir=['D:\github\Lab Code\'  savename ' connectivity movie']; %%%%%%%%%%
+
+
 % loop for making a video every 30 minutes
 vid_num=0; % counter for the video files
 patch_time=300;
@@ -43,7 +46,7 @@ for t_vid_start=time(1):patch_time:time(end)-patch_time %time(end)-patch_time
         imagesc(c_int,[0 1]); colorbar; axis square,  title('Correlation'); cmap=colormap(parula);
         xticks([4.5 12.5]); xticklabels({'L' , 'R'});  yticks([4.5 12.5]); yticklabels({'L' , 'R'})
         % getting the indexes of colors in the imagesc plot for the graph that will follow
-        Cindex = ceil(c_int*length(cmap)); % index for each entry 
+        Cindex = ceil(abs(c_int)*length(cmap)); % index for each entry 
         
         % 2nd plot, highly correlated chnls
         subplot(7,2,[2 4])
@@ -54,12 +57,9 @@ for t_vid_start=time(1):patch_time:time(end)-patch_time %time(end)-patch_time
         % 3rd plot,
         subplot(7,2,[5 7 9 11])
         % reading and displaying the layout of electrode placements
-        im=imread('G:\Hamed\zf\P1\73 03\electrode_placement.jpg'); %%%%%%%%%
+        im=imread(image_layout); %%%%%%%%%
         im=.6*double(rgb2gray(imresize(im,.3)));
         imshow(int8(im)); hold on
-        % position of chnls (nodes)
-        xy=round([285 498; 195 541; 223 444; 144 449; 152 372; 201 279; 275 237 ; ...
-            276 304; 403 306; 409 236; 503 285; 545 386; 494 447; 568 458; 410 492; 518 534]*1*.3); % the coeff is for...
         
         % differenct images (diff birds). Basically electrode sites shall difer
         % just in a scale coefficient:
@@ -97,12 +97,12 @@ for t_vid_start=time(1):patch_time:time(end)-patch_time %time(end)-patch_time
         subplot(7,2,13:14)
         % the lines indicating the lights-off, time of the calculation of corr
         % matix, and lights-on time
-        line([ t_dark(1)+t_frames(1) t_dark(1)+t_frames(1)]/3600,[0 1],'color','k','linewidth' , 2);
+        line([ t_dark(1)+t_frame(1) t_dark(1)+t_frame(1)]/3600,[0 1],'color','k','linewidth' , 2);
         line([t_int t_int]/3600,[0 .1],'linewidth' , 1,'color','r');
-        line([t_dark(end)+t_frames(1) t_dark(end)+t_frames(1)]/3600,[0 1],'color','y','linewidth' , 2);
+        line([t_dark(end)+t_frame(1) t_dark(end)+t_frame(1)]/3600,[0 1],'color','y','linewidth' , 2);
         xlim([0 time(end)]/3600);      ylim([0 1]);    xlabel('Time (h)')
         yticks([]);
-        [xtick_sorted,xtick_ind]=sort([ (t_dark(1)+t_frames(1))/3600 2:2:12 (t_dark(end)+t_frames(1))/3600]);
+        [xtick_sorted,xtick_ind]=sort([ (t_dark(1)+t_frame(1))/3600 2:2:12 (t_dark(end)+t_frame(1))/3600]);
         xticklabel={'light OFF', '2','4','6','8','10', '','light ON' };
         xticks(xtick_sorted);
         xticklabels(xticklabel(xtick_ind));
