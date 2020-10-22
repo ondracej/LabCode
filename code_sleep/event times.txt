@@ -1,8 +1,0 @@
-v6 -b:
-k-complex:
-
-
-spindle:
-
-
-slow wave:
