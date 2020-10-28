@@ -1,0 +1,1 @@
+spectrum for each channel,it may be the spectrum from the raw signal or the signal filtered for 1/f spectral adjustment
