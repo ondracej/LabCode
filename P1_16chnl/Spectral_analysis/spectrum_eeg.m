@@ -1,73 +1,53 @@
 %% loaing data
 addpath(genpath('D:\Part 1 PhD\Code\LabCode\LoadEphys_SWRanalysis'));
-bird='w0009 02_05_2020'; %%%%%%%%
+bird='73_03 12_03_2020'; %%%%%%%% name of the folder containing ephys
 dir_add=['D:\Part 1 PhD\Data\' bird]; %%%%%%% to read data from
 save_res_dir='D:\Part 1 PhD\Res\Spectrum\'; %%%%%%% directory to save figures
-chnl_order=[1 2 3 4 5 7 6 8 9 10 11 12 13 16 14 15]; %%%%%%%%  
-[ EEG,time,~]=OpenEphys2MAT_load_save_Data(chnl_order, '133_CH',15,dir_add); %%%%%%
+chnl_order=[1 2 3 4 5 6 8 7 10 9 11 12 13 16 14 15]; %%%%%%%%  
+[EEG,time,~]=OpenEphys2MAT_load_save_Data(chnl_order, '133_CH',15,dir_add); %%%%%%
 % indicate the sleep time from the movie
-t1=[0 10]; %%%%%% definite time of the inset of sleep (on the video)
-t2=[7 45]; %%%%%%%% definite time when still being in sleep -10 min
-%% save variables
+t1=[0 20]; %%%%%% definite time of the inset of sleep (on the video)
+t2=[7 50]; %%%%%%%% definite time when still being in sleep -10 min
+
+% save variables
 save(dir_add,'EEG', 'time', 'chnl_order','t1','t2','-v7.3');
+%% or load the MAT file data
+save_res_dir='D:\Part 1 PhD\Res\Spectrum\'; %%%%%%% directory to save figures
+eeg_data=load([dir_add '\' bird]);
+EEG=eeg_data.EEG;  time=eeg_data.time;  chnl_order=eeg_data.chnl_order;
+t1=eeg_data.t1;  t2=eeg_data.t2;
+clear eeg_data
 %% normal spectrum with plot
+% input parameters:
+% save_fig,  save the figures? (1=yes, 0=no)
+% spectrum_epoches  number of time snippets to calculate spectrum
+% bootmax: number of resampled averages in bootstrap
+% qf: coefficient for nutch filter
+% chnl=channels to consider for spectrum %1:size(EEG,2) 
 
+spectrum_epoches=100; % default: 1000
+bootmax=200; % default: 2000
+qf=50; % range: from 20 to 1500 depending on the SNR
 fs=2000;
-n_epoches=1000; %%%%%% number of time snippets to calculate spectrum
-bootmax=2000; %%%%%%% number of resampled averages in bootstrap
+chnls=3; % default: 1:16
+save_fig=0; 
+[spec,lower_bound_pxx,upper_bound_pxx] = ...
+    spectrum_multitaper_bootstrap(EEG,t1,t2,spectrum_epoches,bootmax,qf,fs,chnls,...
+    save_fig,save_res_dir, bird, chnl_order);
 
-ind1=(t1(1)*3600+t1(2)*60)*1.5*2000; % time to index considering fs and playback ...
-% speed of movie
+%% fitting a c*1/f to ther spectrogram
+% one_over_f=@(c,f) c/f;  % the fitting function, a multiple if 1/f
+% spec_fit=fit(f(2:end),20*log(spec(2:end)),one_over_f);
 
-% notch filter
-wo = 50/(fs/2);  
-bw = wo/1500;
-[b,a] = iirnotch(wo,bw);
+figure
+%  coefficient for 1/f to fit the spectrum the best, least square fit:
+samps=2:500; % samples of spectrum that matter for fitting
+c=sum(log(spec(samps)).*log(1./f(samps)))/sum(log(1./f(samps)).^2);  
+plot(f(2:end),20*log(spec(2:end)),'b'); hold on
+plot(f(2:end),c*20*log(1./f(2:end)),'r-' ); xlim([0 100]); ylim([-170 -30])
+xlabel('Frequency (Hz)'); ylabel('Power (dB)')
+title(bird)
 
-ind2=(t2(1)*3600+t2(2)*60)*1.5*2000;
-ind=randsample((ind2-ind1),n_epoches)+ind1; 
-ind=sort(ind);
-clear pxx sample_avg_pxx sorted_pxx; 
-mkdir([save_res_dir bird]); % directory to save the resultant plots
-for chnl=1:size(EEG,2) %%%%%%%%%%%
-
-% extracting n_epoches spectrums for the channel chnl
-for k=1:n_epoches
-eegg=zscore(EEG(ind(k)+1:ind(k)+2000*3,chnl)); %%%%%%% length of data for PSD ...
-% and the chnl
-
-% removing 50Hz harmonic
-eegg=filtfilt(b,a,eegg);
-
-% spectrum 
-nwin=length(eegg);
-nfft=2^(nextpow2(nwin));
-T=3; TW=1.5; % 2W=1; % I want to have 1 Hz resoluted
-[pxx(:,k),f] = pmtm(eegg,TW,nfft,fs);
-end
-m=mean(pxx,2);
-
-% conf intervals with bootstrapping
-for j=1:bootmax % bootstrap main loop
-    % Sample with replacement 1000 epoches and compute the average
-    sel_epoches=randsample(n_epoches, 1000,1); 
-    sample_avg_pxx(:,j)=mean(pxx(:,sel_epoches),2);
-end
-% For each time point sort the values, find the values that are corresponding ...
-% to the 2.5% smallest and 2.5% largest
-sorted_pxx=sort(sample_avg_pxx,2);
-lower_bound_pxx=sorted_pxx(:,bootmax*0.025); upper_bound_pxx=sorted_pxx(:,bootmax*0.975);
-
-H=figure;
-plot(f,10*log10(m),'b','linewidth',1); hold on
-plot(f,10*log10(lower_bound_pxx),'color',[.5 .5 .5]);
-plot(f,10*log10(upper_bound_pxx),'color',[.5 .5 .5]);
-xlim([0 100]); ylim([-35 -5])
-xlabel('Frequency (Hz)'); ylabel('Spectrum (dB)')
-title(['Spectrum by Multitaper (' num2str(n_epoches) ' epoches), data: ' bird ...
-    ' chnl: ' num2str(chnl_order(chnl))]); 
-savefig(H,[save_res_dir bird '\' num2str(chnl_order(chnl))],'compact'); % save as fig
-saveas(H,[save_res_dir bird '\' num2str(chnl_order(chnl)) '.png']); % save as png
-
-end % for each chnl
-
+%% 1/f removal using differentiator filter
+dFilt = designfilt('differentiatorfir','FilterOrder',3);
+fvtool(dFilt,'MagnitudeDisplay','Zero-phase')
