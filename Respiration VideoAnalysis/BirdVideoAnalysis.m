@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % This script reads video in MATLAB, lets you select some specific part of
-% it, define the ROI. Finally tracks some specific points.
+% it, define the ROI. Finally extract the overall movements.
 % lines that you must change manually are commented by a couple of '%' signs
 % like:  x=3; %%%%%%%%
 % Execute the crop cell only if you need to make a cropped video out of the
@@ -9,15 +9,17 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% loading the video
-folder_path='G:\Hamed\zf\73 03';
-fname='09_03_2020_00090_converted'; %%%%%%%%%%%%
+folder_path='Y:\HamedData\P1\72-00\02_04_2020'; %%%%%%%%%%
+fname='02_04_2020_00115_converted'; %%%%%%%%%%%%
 vid=VideoReader([folder_path '\' fname '.avi']);
 
 % selecting frame range for processig
+
 n=vid.NumFrames; % this is an estimation of number of frame, to be safe consider ...
-% something like 100 fewer frames as the last frame
+
+% something like 100 fewer frames than the last frame
 f0=1; % 1st frame %%%%%%%%%
-fn=n-1000; % last frame %%%%%%%%%%
+fn=20*60*30; % last frame %%%%%%%%%%
 
 
 %% cropping the video to the ROI and frames of interest (it will take several hours)
@@ -36,7 +38,7 @@ tic
 f_path=[folder_path '\' fname '.avi']; %%%%%%%%%%%%%%%
 
 frames=f0: fn; %%%%%%% frames to be analyzed
-roi_y=300:924;  roi_x=800:1280; %%%%%%%%%%%%% where is the region of interest?
+roi_y=100:924;  roi_x=100:1200; %%%%%%%%%%%%% where is the region of interest?
 [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames,roi_y,roi_x);
 
 % plotting the moving area of the footage
@@ -54,13 +56,13 @@ imshow(uint8(acc_difim)); title('Overall absolute difference')
 
 figure
 plot(frames(2:end)/20,r_dif(frames(2:end))); xlabel('Time (s)') ;  ylabel('Absolute body movements')
-ylim([0 3000]) ;
+ylim([0 mean(r_dif)+20*iqr(r_dif)]) ;
 toc
 
 %% Detrending concequtive difference signal for extraction of respiration
 % cutting a piece of data 
 k0=1;
-samps=k0:k0+1+3000*20;
+samps=1:10*60*20;
 d1=r_dif(samps)'; % some part of trhe r_diff signal
 d2=detrend(d1);
 s=circshift(d1,1,1);
@@ -70,8 +72,8 @@ blmsf = dsp.LMSFilter('Length',L,'StepSize',mu,'Method','Normalized LMS' );
 [y,e] = blmsf(s,d1);
 
 figure
-y_lim=[-1000 3000];
-x_lim=[k0 k0+1500*20]/20;
+y_lim=[-1000 10*iqr(r_dif)];
+x_lim=[k0 samps(end)]/20;
 subplot(2,1,1)
 plot(samps/20,d1,'b'), ylim(y_lim); xlim(x_lim)
 title('Overall absolute difference')

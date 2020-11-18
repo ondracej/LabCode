@@ -9,6 +9,7 @@ function [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract(f_path,frames
 % written by Hamed Yeganegi, yeganegih@gmail.com
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 vidroi=VideoReader(f_path); 
+disp('object was created for the video file. start of reading frames...');
 im1_=double(rgb2gray(read(vidroi, frames(1)))); % first x_old (in comparison)
 im1=im1_(roi_y,roi_x);
 acc_dif=zeros(size(im1)); % contains accumulated absolute value of consecutive differences 
@@ -60,9 +61,10 @@ for i=frames(2:end)
       x=(length(frames)-i)*toc/i;
       waitbar(i/length(frames),f,['Remaining time: ' num2str(ceil(x/60)) ' min...']);
   end
+i %%%%%
+
 end
 last_im=im1;
 last_dif=dif;
-
 end
 
