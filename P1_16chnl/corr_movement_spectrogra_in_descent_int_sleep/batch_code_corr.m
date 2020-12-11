@@ -1,25 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% this code makes the figure for the change at the initiation of sleep. It
-% includes total body dispositions, spectrogram of EEG, and correlation
-% between channels
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-addpath(genpath('D:\github\Lab Code\LoadEphys_SWRanalysis')); %%%%
-addpath(genpath('D:\github\Lab Code\Respiration VideoAnalysis')); %%%%%
-addpath(genpath('D:\github\Lab Code\P1_16chnl')); %%%%%%%%%
-clear 
-clc;
-%% body movement
-% loading the video
-
-light_off_frame=28787; %%%%%%%%%%%% lights-off frame number
-folder_path='Z:\zoologie\HamedData\P1\72-94\29_05_2020'; %%%%%%%%%% read file from here
-fname='converted_29-05-2020_00138'; %%%%%%%%%%%%
-dir_path='G:\Hamed\zf\P1\72-94\29_05_2020'; %%%%%%%%%%%%% save results here
-dir_prefix='133'; %%%%%%%%%%%%%%
-dir_path_server='Z:\zoologie\HamedData\P1\72-94\08-06-2020\chronic_2020-06-08_20-34-17'; %%%%%%%%
-file_dev=10; %%%%%%%%%% which prtion of EEG file you want to read? 10 for ane tenth of the file
-chnl_order=[1 2 3 4 5 6 8 7 10 9 11 12 13 16 14 15 ];
-
 clear r_dif
 tic
 f_path=[folder_path '\' fname '.avi'];
@@ -41,7 +19,7 @@ toc
 
 % time frames for video frames: loading synchroniying ADC channel
 downsamp_ratio=1; % must be a power of 2, as the file reader reads blocks of 1024 samples each time
-file_dev_adc=5; %%%%%%%%%%%% which poetion of file you want to read? 10 for ane tenth of the file
+file_dev_adc=5; % which poetion of file you want to read? 10 for ane tenth of the file
 [ ADC, time_adc, ~]=OpenEphys2MAT_load_save_Data(1, [dir_prefix '_ADC'], downsamp_ratio, file_dev_adc,...
     dir_path_server);
 %Extracting synchroniying times of frames
@@ -66,7 +44,7 @@ tic
     dir_path_server);
 toc
 %% plot body movement and spectrogram
-t_lim_plot=[t_frames(1) t_frames(end)];  %%%%%%%%%%% time for plotting
+t_lim_plot=[t_frames(1) t_frames(end)-600];  %%%%%%%%%%% time for plotting
 
 figure
 subplot(3,1,1)
@@ -74,7 +52,7 @@ r_dif_detrend=movmedian(r_dif,20);
 plot(t_frames/60, r_dif_detrend);
 ylabel({'body movement' ;'(pixel)'})
 ylim(median(r_dif_detrend)+[-1*iqr(r_dif_detrend) 8*iqr(r_dif_detrend)]) ; %%%%%%%%%%%%%
-xlim(t_lim_plot/60); title(['Descend into sleep in bird: ' folder_path])
+xlim(t_lim_plot/60); title(['Descend into sleep in bird: ' dir_path])
 xticklabels({})
 line([t_light_off t_light_off]/60,[ ylim],'color',[.1 .1 .1],'linestyle','--');
 
@@ -135,4 +113,3 @@ xlim(t_lim_plot/60); % time constraints, in minute
 line([t_light_off t_light_off]/60,[ ylim],'color',[.1 .1 .1],'linestyle','--');
 legend({'L-L','R-R','R-L'}); ylabel({'Correlation';'between EEGs'})
 xlabel('Time (minute)')
-ylim([.2 .9])

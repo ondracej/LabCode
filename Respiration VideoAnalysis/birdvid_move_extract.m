@@ -58,13 +58,15 @@ for i=frames(2:end)
   
   % update waitbar
   if rem(i,20)==0
-      x=(length(frames)-i)*toc/i;
-      waitbar(i/length(frames),f,['Remaining time: ' num2str(ceil(x/60)) ' min...']);
+      x=(length(frames)-(i-frames(1)))*toc/(i-frames(1));
+      waitbar((i-frames(1))/length(frames),f,['Remaining time: ' num2str(ceil(x/60)) ' min...']);
   end
-i %%%%%
+if rem(i,1000)==0
+    disp([ 'frame number being read: ' num2str(i) ' ...']); % disply the current frame value
+end
 
 end
 last_im=im1;
 last_dif=dif;
+waitbar(1,f,'Video read completely!');
 end
-
