@@ -1,4 +1,8 @@
 % load EEG as .continuous
+addpath(genpath('D:\github\Lab Code\Respiration VideoAnalysis'));
+addpath(genpath('D:\github\Lab Code\P1_16chnl'));
+addpath(genpath('D:\github\Lab Code\LoadEphys_SWRanalysis'));
+
 dir_path_server='Z:\zoologie\HamedData\P1\72-94\29_05_2020\chronic_2020-05-29_19-26-15'; %%%%%%%%
 dir_prefix='133'; %%%%%%%%%%%%%%
 file_dev=10; %%%%%%%%%% which prtion of EEG file you want to read? 10 for ane tenth of the file

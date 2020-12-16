@@ -19,7 +19,7 @@ toc
 
 % time frames for video frames: loading synchroniying ADC channel
 downsamp_ratio=1; % must be a power of 2, as the file reader reads blocks of 1024 samples each time
-file_dev_adc=5; % which poetion of file you want to read? 10 for ane tenth of the file
+file_dev_adc=1; % which poetion of file you want to read? 10 for ane tenth of the file
 [ ADC, time_adc, ~]=OpenEphys2MAT_load_save_Data(1, [dir_prefix '_ADC'], downsamp_ratio, file_dev_adc,...
     dir_path_server);
 %Extracting synchroniying times of frames
