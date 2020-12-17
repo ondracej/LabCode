@@ -1,4 +1,4 @@
-function [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract_app(f_path,frames, roi_y, roi_x)
+function [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract_app_obj(vid,frames, roi_y, roi_x)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This function gives the position (the r in polar coordinates) of the
 % center of differences in two consecutive frames and also the overall
@@ -8,8 +8,7 @@ function [r_dif,acc_dif, last_im, last_dif] = birdvid_move_extract_app(f_path,fr
 % frames(1), and nonzero for frames(2) to frames(end)
 % written by Hamed Yeganegi, yeganegih@gmail.com
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-vidroi=VideoReader(f_path); 
-im1_=double(rgb2gray(read(vidroi, frames(1)))); % first x_old (in comparison)
+im1_=double(rgb2gray(read(vid, frames(1)))); % first x_old (in comparison)
 im1=im1_(roi_y,roi_x);
 acc_dif=zeros(size(im1)); % contains accumulated absolute value of consecutive differences 
 
@@ -19,9 +18,9 @@ y_pixls=1:size(im1,1);  y_vals=y_pixls'/sum(y_pixls); % a vector of values from 
 % a length equal to the height of the image. Also the same for length
 x_pixls=1:size(im1,2);  x_vals=x_pixls'/sum(x_pixls); 
 % loop through frames
-for i=frames(2:end)
+for i=frames(2:2:end)
   % this section of the lop generates the r_dif variable, 
-  im2_=double(rgb2gray(read(vidroi,i))); % x_new
+  im2_=double(rgb2gray(read(vid,i))); % x_new
   im2=im2_(roi_y,roi_x);
   dif=abs(im2-im1);   % difference computation
   y_dif=sum(dif,2); % difference along vertical axis
@@ -44,7 +43,7 @@ for i=frames(2:end)
   % matrices
   if i==frames(2), dif_old=zeros(size(dif)); end
   avg_dif=(dif+dif_old)/2;
-  dif_thresh=median(avg_dif) + 20*iqr(abs(avg_dif)); % threshold for considering a point as..
+  dif_thresh=median(avg_dif) + 25*iqr(abs(avg_dif)); % threshold for considering a point as..
   % a consistant difference
   mask=avg_dif>dif_thresh; % to make sure that these points are constantly changing, ...
   % at least in 2 consecutive frames, not just speckle noise spots
