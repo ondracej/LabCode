@@ -43,7 +43,7 @@ for i=frames(2:2:end)
   % matrices
   if i==frames(2), dif_old=zeros(size(dif)); end
   avg_dif=(dif+dif_old)/2;
-  dif_thresh=median(avg_dif) + 25*iqr(abs(avg_dif)); % threshold for considering a point as..
+  dif_thresh=median(avg_dif) + 15*iqr(abs(avg_dif)); % threshold for considering a point as..
   % a consistant difference
   mask=avg_dif>dif_thresh; % to make sure that these points are constantly changing, ...
   % at least in 2 consecutive frames, not just speckle noise spots
