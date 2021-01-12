@@ -18,7 +18,7 @@ y_pixls=1:size(im1,1);  y_vals=y_pixls'/sum(y_pixls); % a vector of values from 
 % a length equal to the height of the image. Also the same for length
 x_pixls=1:size(im1,2);  x_vals=x_pixls'/sum(x_pixls); 
 % loop through frames
-for i=frames(2:2:end)
+for i=frames(2:1:end)
   % this section of the lop generates the r_dif variable, 
   im2_=double(rgb2gray(read(vid,i))); % x_new
   im2=im2_(roi_y,roi_x);
@@ -54,4 +54,5 @@ for i=frames(2:2:end)
 end
 last_im=im1;
 last_dif=dif;
+r_dif=r_dif(end-(3*20-1):end);
 end

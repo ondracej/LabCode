@@ -4,7 +4,7 @@ function [r_dif]=display_eeg_video(current_win, time, EEG, UIEEG, dist, t_frames
             t_plot_lim=[current_win-4.5 current_win+4.5];  % app.time for plotting
             t_plot_ind=(time>t_plot_lim(1) & time<t_plot_lim(2));
             t_plot=time(t_plot_ind);
-            EEG_plot=zscore(EEG(t_plot_ind,:));        
+            EEG_plot=EEG(t_plot_ind,:);        
             for chnl=1:size(EEG_plot,2)
                 plot(UIEEG,t_plot,EEG_plot(:,chnl)+chnl*dist);
                 hold(UIEEG,"on");
@@ -22,7 +22,7 @@ function [r_dif]=display_eeg_video(current_win, time, EEG, UIEEG, dist, t_frames
             
                         
             % display video
-            win_frames=frames(t_frames>t_plot_lim(1)+3 & t_frames<t_plot_lim(2)-3);
+            win_frames=frames(t_frames>(t_plot_lim(1)+3) & t_frames<(t_plot_lim(2)-3));
             [r_dif,acc_dif, last_im, ~] = birdvid_move_extract_app_obj(vid,win_frames,roi_y,roi_x);
             faint_im1=.8*last_im+20; % mapping to confinding the pixel intensities to 200-250 instead of full range (0-255)
             acc_difim = cat(3, faint_im1-.2*acc_dif, faint_im1-.2*acc_dif, faint_im1+.3*acc_dif); % the difference just depics in Red
