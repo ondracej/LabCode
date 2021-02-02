@@ -15,7 +15,7 @@ figure
    %%
    %%%%%%%%%%% if u want to get the coordinates by curser clicks
    
-  image_layout='G:\Hamed\zf\P1\w0020 juv\w0020 layout.jpg';% 'G:\Hamed\zf\P1\73 03\electrode_placement.jpg';
+  image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg';% 'G:\Hamed\zf\P1\73 03\electrode_placement.jpg';
   figure
   im=imread(image_layout); %%%%%%%%% 'G:\Hamed\zf\P1\73 03\electrode_placement.jpg'
   im=.6*double(rgb2gray(imresize(im,.3)));
