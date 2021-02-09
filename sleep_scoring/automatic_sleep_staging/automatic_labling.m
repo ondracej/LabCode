@@ -38,7 +38,7 @@ feats=zscore(feats);
 % we feat a distribution and find the peak and std of the REM group
 mov=mean(r_dif,2);
 pd=fitdist(mov,'kernel');
-x_vals=min(mov):range(mov)/500:mean(mov)+5*std(mov);
+x_vals=min(mov):range(mov)/2000:mean(mov)+5*std(mov);
 mov_pd=pdf(pd,x_vals);
 figure
 plot(x_vals,mov_pd,'color',[0 0 .7],'linewidth',1); hold on
@@ -61,9 +61,13 @@ for k=1:length(Wake_ind)
 end
 
 %% extraction of the typical samples of each stage (REM/nREM)
-[~,indx_high_gamma]=sort(feats(nonWake_ind,5)-feats(nonWake_ind,2)/2-feats(nonWake_ind,1)/2,'descend'); % pick the ones with highest gamma
-indx_typical_REM=nonWake_ind(indx_high_gamma(1:100));
-indx_typical_nREM=nonWake_ind(indx_high_gamma(end-99:end));
+% calculate the max val for each snippet of EEG
+vals=reshape( max( max(EEG(:,:,nonWake_ind) ,[],1) ,[],2),[1,length(nonWake_ind)]); 
+valid_inds=nonWake_ind(vals<3.5); % artifact-free ones are the ones with EEG < 3.5 std
+% pick the ones with highest gamma, lowest delta+theta
+[~,indx_high_gamma]=sort(feats(valid_inds,5)-feats(valid_inds,2)/2-feats(valid_inds,1)/2,'descend'); 
+indx_typical_REM=valid_inds(indx_high_gamma(1:100));
+indx_typical_nREM=valid_inds(indx_high_gamma(end-99:end));
 
 %% classification with kNN
 ind_class=[indx_typical_nREM; indx_typical_REM];
@@ -101,10 +105,10 @@ sum(strcmp(auto_label,'IS'))/length(auto_label)
 %% plot of classified samples
 
 figure
-cols=[1 .8 0; 0 1 1; 1 0 0; 0 0 1];
+cols=[ 0 0 1; 1 0 0; 1 .8 0; 0 1 1; ];
 scatterhist(feats(:,1),feats(:,5),'Group',auto_label,'Kernel','on','Location','SouthWest',...
     'Direction','out','Color',cols,'LineStyle',{'-','-.',':'},...
-    'LineWidth',[2,2,2],'Marker','.','MarkerSize',[10,10,10]); axis([-1.7 6 -1.5 6]);
+    'LineWidth',[2,2,2],'Marker','.','MarkerSize',[4,4,4]); axis([-2.5 5 -1.5 6]);
 xlabel('Delta z-score'); ylabel('Gamma z-score'); title('Automatic scoring')
 
 %% plot of time series samples of each stage
@@ -170,21 +174,20 @@ end
 title('sample outlier SWS'); ylim([0 21]); xlabel('Time (sec)'); yticks(1:5:20); ylabel('Sample #')
 
 %% saving data
-save('72_00_26_03_scoring','EEG','mov','feats','auto_label','t_bins','-v7.3') ; %%%%%%%%%%%
+save('juv_w0021_23_08_scoring','EEG','mov','feats','auto_label','t_bins','-v7.3') ; %%%%%%%%%%%
 %% apEntropy across classes
 stage={'Wake','IS','SWS','REM'};
 r=.2*std(EEG(:,chnl,:),0,'all'); % distance for AppEnt
-apent=zeros(4,50);
 for n=1:4
     stg_ind=find(strcmp(auto_label,stage{n})); % index to the epochs of current stage, e.g. 'Wake'
-    ind_50=randsample(length(stg_ind),100);
-    for k=1:50
-        apent(n,k)=appent(2,r,EEG(:,4,stg_ind(k))); % approx_entropy(win_len,distance,data)
+    ind_100=randsample(length(stg_ind),200);
+    for k=1:200
+        apent(n,k)=appent(2,r,EEG(:,5,ind_100(k))); % approx_entropy(win_len,distance,data)
     end
 end
 
 figure
-errorbar(mean(apent,2)*100/mean(apent(:))-100,(std(apent,0,2)/sqrt(50))*100/mean(apent(:)));
+errorbar(mean(apent,2)*100/mean(apent(:))-100,(1.96*std(apent,0,2)/sqrt(200))*100/mean(apent(:)));
 xlim([0 5]);   xticks(1:4);   xticklabels(stage); title('Approximate Entropy across stages (mean,conf interval)')
 ylabel('% AppEntropy Change')
 

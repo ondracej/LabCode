@@ -2,11 +2,11 @@ function [corr_mat_, corr_mat] = extract_network(EEG_epochs, edge_thresh, image_
 % 4 subplots for the corr matrix, the highly correlated nodes on the corr
 % matrix, the network, and the sub newtworks
 corr_mat_=zeros(size(EEG_epochs,2),size(EEG_epochs,2),size(EEG_epochs,3));
+% computing the temporal correlation matrix for each epoch and the network
 for k=1:size(EEG_epochs,3)
     corr_mat_(:,:,k)=corr(EEG_epochs(:,:,k),'type','spearman');
 end
 corr_mat=mean(corr_mat_,3);
-
 
 figure
 subplot(2,2,1)
