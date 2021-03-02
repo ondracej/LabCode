@@ -1,35 +1,46 @@
-%%  plot EEG to find and ignore noisy chnls
+
+%% filtering the EEG
+fs=30000/64;
+hpFilt = designfilt('highpassfir','StopbandFrequency',2, ...
+         'PassbandFrequency',2.5,'PassbandRipple',0.5, ...
+         'StopbandAttenuation',65,'DesignMethod','kaiserwin','SampleRate',fs);
+EEG_reshaped=reshape(EEG,size(EEG,1)*size(EEG,3),size(EEG,2));
+EEG_filtered=filtfilt(hpFilt,EEG_reshaped);
+EEG_=reshape(EEG_filtered,size(EEG,1),size(EEG,2),size(EEG,3));
+
+%%  plot EEG_ to find and ignore noisy chnls
 figure
-bin_indx=randsample(size(EEG,3)-1000,1)+500; % index to the first nREM bin
-eegn=size(EEG,1);
+bin_indx=4000; %randsample(size(EEG_,3)-1000,1)+500; % index to the first nREM bin
+EEG_n=size(EEG,1);
 for k=1:16
-    plot(round(1:eegn)/fs,(EEG(:,k,bin_indx))+.5*k); hold on
+    plot(round(1:EEG_n)/fs,(EEG(:,k,bin_indx))+.5*k); hold on
 end
 yticks(2*(1:16)), yticklabels(compose('%01d', 1:16));
 ylabel('Channel number')
 xlabel('Time (sec)')
 
 chnl=4; %%%%%%%%%%
+
 %% feature extraction for classification
 % variable definitions
-L=length(EEG(:,4,1)); % length of EEG
-feats=zeros(size(EEG,3),5);
-% for excluding the artifact in EEG and defining the bins for entropy
-alleeg=EEG(:,chnl,:);
-m=median(alleeg(:));
-d=2*iqr(alleeg(:));
+L=length(EEG_(:,4,1)); % length of EEG_
+feats=zeros(size(EEG_,3),5);
+% for excluding the artifact in EEG_ and defining the bins for entropy
+allEEG_=EEG_(:,chnl,:);
+m=median(allEEG_(:));
+d=2*iqr(allEEG_(:));
 bins=m-d:2*d/50:m+d;
-for n=1:size(EEG,3)
-    x=reshape(EEG(:,chnl,n),L,1).*hann(L);
+for n=1:size(EEG_,3)
+    x=reshape(EEG_(:,chnl,n),L,1).*hann(L);
     bandp= bandpower(x,fs,[.5 50]); % power over all frequency ranges for normalizing
     feats(n,1) = bandpower(x,fs,[.5 4])./bandp; % delta
     feats(n,2) = bandpower(x,fs,[4 8])./bandp; % theta
     feats(n,3) = bandpower(x,fs,[8 13])./bandp; % alpha
     feats(n,4) = bandpower(x,fs,[13 30])./bandp; % beta
     feats(n,5) = bandpower(x,fs,[30 50])./bandp; % gamma
-%     h1=histogram(EEG(round(L/5:4*L/5),chnl,n),bins, 'Normalization', 'Probability');   p=h1.Values;
+%     h1=histogram(EEG_(round(L/5:4*L/5),chnl,n),bins, 'Normalization', 'Probability');   p=h1.Values;
 %     feats(n,6)= entropy_sig(p); % entropy
-%     h1=histogram(abs(fft(EEG(round(L/5:4*L/5)),chnl,n)),bins, 'Normalization', 'Probability');   p=h1.Values;
+%     h1=histogram(abs(fft(EEG_(round(L/5:4*L/5)),chnl,n)),bins, 'Normalization', 'Probability');   p=h1.Values;
 %     feats(n,7)= entropy_sig(p); % entropy
 end
 feats=zscore(feats);
@@ -52,7 +63,7 @@ ylim([0 1.3*M])
 legend('movements pdf','movements histogram','threshold line')
 xlabel('Movement (pixels)'); ylabel('pdf (probability)')
 
-auto_label=cell(size(EEG,3),1);
+auto_label=cell(size(EEG_,3),1);
 Wake_ind=find(mov>=threshold);  % detection of Wake bins
 nonWake_ind=find(mov<threshold);  % detection of Wake bins
 
@@ -61,9 +72,9 @@ for k=1:length(Wake_ind)
 end
 
 %% extraction of the typical samples of each stage (REM/nREM)
-% calculate the max val for each snippet of EEG
-vals=reshape( max( max(EEG(:,:,nonWake_ind) ,[],1) ,[],2),[1,length(nonWake_ind)]); 
-valid_inds=nonWake_ind(vals<3.5); % artifact-free ones are the ones with EEG < 3.5 std
+% calculate the max val for each snippet of EEG_
+vals=reshape( max( max(EEG_(:,:,nonWake_ind) ,[],1) ,[],2),[1,length(nonWake_ind)]); 
+valid_inds=nonWake_ind(vals<3.5); % artifact-free ones are the ones with EEG_ < 3.5 std
 % pick the ones with highest gamma, lowest delta+theta
 [~,indx_high_gamma]=sort(feats(valid_inds,5)-feats(valid_inds,2)/2-feats(valid_inds,1)/2,'descend'); 
 indx_typical_REM=valid_inds(indx_high_gamma(1:100));
@@ -72,7 +83,7 @@ indx_typical_nREM=valid_inds(indx_high_gamma(end-99:end));
 %% classification with kNN
 ind_class=[indx_typical_nREM; indx_typical_REM];
 % making labels for the classifier
-labels=cell(200,1);
+labels=cell(100,1);
 for k=1:100
     labels{k}='SWS';
     labels{k+100}='REM';
@@ -105,10 +116,10 @@ sum(strcmp(auto_label,'IS'))/length(auto_label)
 %% plot of classified samples
 
 figure
-cols=[ 0 0 1; 1 0 0; 1 .8 0; 0 1 1; ];
+cols=[1 .8 0; 0 0 1; 0 1 1; 1 0 0;   ];
 scatterhist(feats(:,1),feats(:,5),'Group',auto_label,'Kernel','on','Location','SouthWest',...
     'Direction','out','Color',cols,'LineStyle',{'-','-.',':'},...
-    'LineWidth',[2,2,2],'Marker','.','MarkerSize',[4,4,4]); axis([-2.5 5 -1.5 6]);
+    'LineWidth',[2,2,2],'Marker','.','MarkerSize',[4,4,4]); ylim([-1 6]);
 xlabel('Delta z-score'); ylabel('Gamma z-score'); title('Automatic scoring')
 
 %% plot of time series samples of each stage
@@ -132,22 +143,22 @@ indx_typical_IS_=indx_IS_(ind_IS_);
 figure
 subplot(1,4,1)
 for k=1:20
-    plot(round(1:eegn)/fs,EEG(:,chnl,indx_typical_REM_(k))/1.5+k); hold on
+    plot(round(1:EEG_n)/fs,EEG_(:,chnl,indx_typical_REM_(k))/1.5+k); hold on
 end
 title('sample REM'); ylim([0 21]); xlabel('Time (sec)'); yticks(1:5:20); ylabel('Sample #')
 subplot(1,4,2)
 for k=1:20
-    plot(round(1:eegn)/fs,EEG(:,chnl,indx_typical_SWS_(k))/1.5+k); hold on
+    plot(round(1:EEG_n)/fs,EEG_(:,chnl,indx_typical_SWS_(k))/1.5+k); hold on
 end
 title('sample SWS'); ylim([0 21]); xlabel('Time (sec)'); yticks(1:5:20); 
 subplot(1,4,3)
 for k=1:20
-    plot(round(1:eegn)/fs,EEG(:,chnl,indx_typical_IS_(k))/1.5+k); hold on
+    plot(round(1:EEG_n)/fs,EEG_(:,chnl,indx_typical_IS_(k))/1.5+k); hold on
 end
 title('sample IS'); ylim([0 21]); xlabel('Time (sec)'); yticks(1:5:20);
 subplot(1,4,4)
 for k=1:20
-    plot(round(1:eegn)/fs,EEG(:,chnl,indx_typical_Wake_(k))/1.5+k); hold on
+    plot(round(1:EEG_n)/fs,EEG_(:,chnl,indx_typical_Wake_(k))/1.5+k); hold on
 end
 title('sample Wake'); ylim([0 21]); xlabel('Time (sec)'); yticks(1:5:20); 
 %% plot of time series of outliers of each stage
@@ -164,25 +175,26 @@ indx_typical_nREM_=indx_nREM_(indx_low_freq(1:20));
 figure
 subplot(1,2,1)
 for k=1:20
-    plot(round(1:eegn)/fs,EEG(:,chnl,indx_typical_REM_(k))/2+k); hold on
+    plot(round(1:EEG_n)/fs,EEG_(:,chnl,indx_typical_REM_(k))/2+k); hold on
 end
 title('sample outlier REM'); ylim([0 21]); xlabel('Time (sec)'); yticks(1:5:20); ylabel('Sample #')
 subplot(1,2,2)
 for k=1:20
-    plot(round(1:eegn)/fs,EEG(:,chnl,indx_typical_nREM_(k))/2+k); hold on
+    plot(round(1:EEG_n)/fs,EEG_(:,chnl,indx_typical_nREM_(k))/2+k); hold on
 end
 title('sample outlier SWS'); ylim([0 21]); xlabel('Time (sec)'); yticks(1:5:20); ylabel('Sample #')
 
 %% saving data
-save('juv_w0021_23_08_scoring','EEG','mov','feats','auto_label','t_bins','-v7.3') ; %%%%%%%%%%%
+save('juv_w0021_20_08_scoring','EEG_','mov','feats','auto_label','t_bins','-v7.3') ; %%%%%%%%%%%
 %% apEntropy across classes
 stage={'Wake','IS','SWS','REM'};
-r=.2*std(EEG(:,chnl,:),0,'all'); % distance for AppEnt
+r=.2*std(EEG_(:,chnl,:),0,'all'); % distance for AppEnt
+apent=zeros(4,100);
 for n=1:4
     stg_ind=find(strcmp(auto_label,stage{n})); % index to the epochs of current stage, e.g. 'Wake'
-    ind_100=randsample(length(stg_ind),200);
-    for k=1:200
-        apent(n,k)=appent(2,r,EEG(:,5,ind_100(k))); % approx_entropy(win_len,distance,data)
+    ind_100=randsample(length(stg_ind),100);
+    for k=1:100
+        apent(n,k)=appent(2,r,EEG_(:,5,ind_100(k))); % approx_entropy(win_len,distance,data)
     end
 end
 
@@ -194,48 +206,48 @@ ylabel('% AppEntropy Change')
 
 %% spectrum across groups
 % for nREM
-nwin=size(EEG,1);
+nwin=size(EEG_,1);
 nfft=2^(nextpow2(nwin));
-TW=2.5; % 2W=1; % I want to have .5 Hz resoluted, so W=1, T=5, so 2TW constant=3
+TW=2; % 2W=1; % I want to have .5 Hz resoluted, so W=1, T=5, so 2TW constant=3
 clear pxx_SWS pxx_REM pxx_IS pxx_Wake
 
 % for SWS
 bin_indx=find(strcmp(auto_label,'SWS')) ;
-ind_stage=randsample(length(bin_indx),500);
+ind_stage=randsample(length(bin_indx),200);
 n=1;
-for k=1:500
-    if max(EEG(:,chnl,bin_indx(ind_stage(k))))<4 % EEG less than 3 std
-        [pxx_SWS(:,n),f] = pmtm(EEG(:,chnl,bin_indx(ind_stage(k))),TW,nfft,round(fs)); n=n+1
+for k=1:200
+    if max(EEG_(:,chnl,bin_indx(ind_stage(k))))<3.5 % EEG_ less than 3 std
+        [pxx_SWS(:,n),f] = pmtm(EEG_(:,chnl,bin_indx(ind_stage(k))),TW,nfft,round(fs)); n=n+1
     end
 end
 
 % for REM
 bin_indx=find(strcmp(auto_label,'REM')) ;
-ind_stage=randsample(length(bin_indx),500);
+ind_stage=randsample(length(bin_indx),100);
 n=1;
-for k=1:500
-    if max(EEG(:,chnl,bin_indx(ind_stage(k))))<4 % EEG less than 3 std
-        [pxx_REM(:,n),f] = pmtm(EEG(:,chnl,bin_indx(ind_stage(k))),TW,nfft,round(fs)); n=n+1
+for k=1:100
+    if max(EEG_(:,chnl,bin_indx(ind_stage(k))))<3.5 % EEG_ less than 3 std
+        [pxx_REM(:,n),f] = pmtm(EEG_(:,chnl,bin_indx(ind_stage(k))),TW,nfft,round(fs)); n=n+1
     end
 end
 
 % for wake
 bin_indx=find(strcmp(auto_label,'Wake')) ;
-ind_stage=randsample(length(bin_indx),500);
+ind_stage=randsample(length(bin_indx),100);
 n=1;
-for k=1:500
-    if max(EEG(:,chnl,bin_indx(ind_stage(k))))<4 % EEG less than 3 std
-        [pxx_Wake(:,n),f] = pmtm(EEG(:,chnl,bin_indx(ind_stage(k))),TW,nfft,round(fs)); n=n+1
+for k=1:100
+    if max(EEG_(:,chnl,bin_indx(ind_stage(k))))<3.5 % EEG_ less than 3 std
+        [pxx_Wake(:,n),f] = pmtm(EEG_(:,chnl,bin_indx(ind_stage(k))),TW,nfft,round(fs)); n=n+1
     end
 end
 
 % for IS
 bin_indx=find(strcmp(auto_label,'IS')) ;
-ind_stage=randsample(length(bin_indx),500);
+ind_stage=randsample(length(bin_indx),100);
 n=1;
-for k=1:500
-    if max(EEG(:,chnl,bin_indx(ind_stage(k))))<4 % EEG less than 3 std
-        [pxx_IS(:,n),f] = pmtm(EEG(:,chnl,bin_indx(ind_stage(k))),TW,nfft,round(fs)); n=n+1
+for k=1:100
+    if max(EEG_(:,chnl,bin_indx(ind_stage(k))))<3.5 % EEG_ less than 3 std
+        [pxx_IS(:,n),f] = pmtm(EEG_(:,chnl,bin_indx(ind_stage(k))),TW,nfft,round(fs)); n=n+1;
     end
 end
 % computing mean and STE
@@ -249,7 +261,7 @@ plot(f,log10(mean_spec_SWS),'b','linewidth',2);  hold on
 plot(f,log10(mean_spec_REM),'r','linewidth',2)
 plot(f,log10(mean_spec_Wake),'color',[1 .8 0],'linewidth',2)
 plot(f,log10(mean_spec_IS),'c','linewidth',2)
-xlim([0 100]); ylim([-4.0 -1.5]) %%%%%%%%
+xlim([0 100]); ylim([-4.5 -0.5]) %%%%%%%%
 ylabel('Log of power')
 legend('SWS','REM','Wake','IS')
 xlabel('Freequency (Hz)')
