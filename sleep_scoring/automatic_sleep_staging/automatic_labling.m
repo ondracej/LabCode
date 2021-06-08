@@ -185,7 +185,7 @@ end
 title('sample outlier SWS'); ylim([0 21]); xlabel('Time (sec)'); yticks(1:5:20); ylabel('Sample #')
 
 %% saving data
-save('juv_w0021_20_08_scoring','EEG_','mov','feats','auto_label','t_bins','-v7.3') ; %%%%%%%%%%%
+save('juv_w0020_25_09_scoring','EEG_','mov','feats','auto_label','t_bins','-v7.3') ; %%%%%%%%%%%
 %% apEntropy across classes
 stage={'Wake','IS','SWS','REM'};
 r=.2*std(EEG_(:,chnl,:),0,'all'); % distance for AppEnt

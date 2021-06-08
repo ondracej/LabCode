@@ -15,7 +15,7 @@ imagesc(conn_mat,[0 1]); colorbar; axis square, colormap(parula); title([titl ' 
 xticks([4.5 12.5]); xticklabels({'L' , 'R'});  yticks([4.5 12.5]); yticklabels({'L' , 'R'})
 % getting the indexes of colors in the imagesc plot for the graph that will follow
 cmap=colormap(parula);
-Cindex = ceil(abs(conn_mat)*length(cmap)); % index for each entry
+Cindex = ceil(abs(conn_mat)*length(cmap)+eps); % index for each entry
 
 subplot(2,2,2)
 imagesc(conn_mat>edge_probab,[0 1]); colorbar; axis square, 

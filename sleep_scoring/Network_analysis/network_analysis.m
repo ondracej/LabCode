@@ -1,7 +1,7 @@
 % plots of network for different stages
 
-bird='72-00'; %%%%%%%%%%%
-image_layout='Z:\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
+bird='w0021'; %%%%%%%%%%%
+image_layout='Z:\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%%%
 save_add='G:\Hamed\zf\P1\connectivity_vars';
 fs=30000/64;
 edge_probab=.95; 
@@ -78,7 +78,10 @@ for j=1:4
     end
 end
 saveas(gcf,[save_add '\' bird '_head_network_all.fig']);
-
+%% coefficients of correction for the missed channels
+RR=28/21;
+LL=28/21;
+RL=64/49;
 
 %% connectivity measures
 t=[0 12];
@@ -95,12 +98,13 @@ mean_connRL=NaN(1,length(indx_));
 for k=1:size(EEG_piece,3)
     if max(EEG_piece(:,:,k),[],'all')<3.5
         [conn_mat_(:,:,k),~,~,~] = infer_network_correlation_analytic(EEG_piece(:,:,k));
-        net_density(k)=sum(tril(conn_mat_(:,:,k),-1),'all')/(size(corr_mat_,1)*(size(corr_mat_,1)-1)/2); % depict higher correlations
+        net_density(k)=sum(tril(conn_mat_(:,:,k),-1),'all')/...
+            (size(corr_mat_,1)-1)*(size(corr_mat_,1)-2)/2; % depict higher correlations
         corr_mat_(:,:,k)=corr(EEG_piece(:,:,k),'type','spearman');
         mean_conn(k)=mean(tril(corr_mat_(:,:,k),-1),'all');
-        mean_connRR(k)=mean(tril(corr_mat_(9:16,9:16,k),-1),'all');
-        mean_connLL(k)=mean(tril(corr_mat_(1:8,1:8,k),-1),'all');
-        mean_connRL(k)=mean(corr_mat_(9:16,1:8,k),'all');
+        mean_connRR(k)=mean(tril(corr_mat_(9:16,9:16,k),-1),'all')*RR;
+        mean_connLL(k)=mean(tril(corr_mat_(1:8,1:8,k),-1),'all')*LL;
+        mean_connRL(k)=mean(corr_mat_(9:16,1:8,k),'all')*RL;
 
     end
 end
@@ -119,15 +123,17 @@ for k=indx_
         line([t_bins(k) t_bins(k)]/60,[0 1],'color',[0 0 1],'LineWidth',.1);
     end
 end
+xlim([0 60])
 % yticks(.5:3.5); yticklabels({'SWS','IS','REM','Wake'}); axis tight
 subplot(3,1,2)
 plot(t_bins(indx_)/60,net_density,'color',[.5 .5 1]); hold on; axis tight
-ylabel({'Network';'density'}); 
+ylabel({'Network';'density'});  xlim([0 60])
 
 subplot(3,1,3)
 plot(t_bins(indx_)/60,mean_conn,'color',[.4 .8 .2]); 
 xlabel('Time (min)')
-ylabel({'mean';'connectivity'}); axis tight;
+ylabel({'mean';'connectivity'}); xlim([0 60])
+saveas(gcf,[save_add '\' bird '_descent_into_sleep.fig']);
 
 %% cluster's connectivity time series computation
 thresh_eeg=4*iqr(EEG,'all');
@@ -279,7 +285,7 @@ for k=1:5
 end
 %% variables to save
 % measures of connectivity
-save([save_add '\' bird],...
+save([save_add '\' bird '-vars'],...
 'net_dense_Wake', 'net_dense_IS', 'net_dense_REM', 'net_dense_SWS',...
 'mean_conn_Wake', 'mean_conn_IS', 'mean_conn_REM', 'mean_conn_SWS',...
 'mean_connRR_Wake', 'mean_connRR_REM', 'mean_connRR_IS', 'mean_connRR_SWS',...

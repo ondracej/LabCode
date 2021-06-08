@@ -1,24 +1,24 @@
 %% loading the data
 % setting addresses and parameters
 
-folder_path='Z:\zoologie\HamedData\P1\w0021 juv\20-08-2020'; %%%%%%%%%% read videofile from here
-fname='20-08-2020_00160_converted'; %%%%%%%%%%%%
-dir_path_server='Z:\zoologie\HamedData\P1\w0021 juv\20-08-2020\chronic_2020-08-20_21-28-27'; %%%%%%%%
+folder_path='Z:\HamedData\P1\w0020 juv\25_09_2020'; %%%%%%%%%% read videofile from here
+fname='25_09_2020_00168-converted'; %%%%%%%%%%%%
+dir_path_ephys='Z:\HamedData\P1\w0020 juv\25_09_2020\chronic_2020-09-25_21-01-37'; %%%%%%%%
 dir_prefix='142'; %%%%%%%%%%%%%%
 app.file_dev=1; %%%%%%%%%%%%%%%%% which portion of EEG file you want to read? 10 for ane tenth of the file
 chnl_order=[1 2 3 4 5 7 6 8 9 10 11 12 13 16 14 15 ]; 
 [~,app.data_name,~]=fileparts(folder_path);
-%% preparing the app.EEG
+%% Reading the EEG
 app.f_path=[folder_path '\' fname '.avi'];
 app.vid=VideoReader(app.f_path);
-f0=1; % 1st frame
-fn=878000;%ceil(app.vid.FrameRate*app.vid.Duration/app.file_dev)-1000;  %%%%%%%%%% last frame %%%%%%%%% /10
+f0=27000; %%%%%%%% 1st frame
+fn=982000;%ceil(app.vid.FrameRate*app.vid.Duration/app.file_dev)-1000;  %%%%%%%%%% last frame %%%%%%%%% /10
 app.frames=f0: fn; % frames to be analyzed
 
 % app.time frames for app.video frames: loading synchroniying ADC channel
 downsamp_ratio=1; % must be a power of 2, as the file reader reads blocks of 1024 samples each app.time
 [ ADC, time_adc, ~]=OpenEphys2MAT_load_save_Data(1, [dir_prefix '_ADC'], downsamp_ratio, app.file_dev,...
-    dir_path_server);
+    dir_path_ephys);
 %Extracting synchroniying app.times of frames
 [peak_indx]=find(ADC.*(ADC>4));
 jumps_to_new_frame_indx=[diff(peak_indx)>5; true];
@@ -30,7 +30,7 @@ app.t_frames=t_frames_(app.frames);
 % load app.EEG as .continuous
 downsamp_ratio=64; %%%%%%%%% must be a power of 2, as the file reader reads blocks of 1024 samples each app.time
 [ EEG_, app.time, ~]=OpenEphys2MAT_load_save_Data(chnl_order, [dir_prefix '_CH'], downsamp_ratio, app.file_dev,...
-    dir_path_server);
+    dir_path_ephys);
 EEG=zscore(EEG_);
 clear EEG_
 
@@ -52,7 +52,7 @@ EEG=eeg(:,:,1:k-1); clear eeg
 t_bins=app.t_frames(1)+5:1.5:app.t_frames(end);
 %% load video
 clear r_dif
-app.roi_y=1:1024;  app.roi_x=1:1280; % where is the region of interest?
+app.roi_y=1:1024;  app.roi_x=1:1280;  % where is the region of interest?
 app.current_win=app.t_frames(1)+5; % first window-center app.time
 k=1;
 while app.current_win<app.t_frames(end)
