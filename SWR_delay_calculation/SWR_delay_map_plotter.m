@@ -22,7 +22,7 @@ addpath(genpath('D:\github\Lab Code\SWR_delay_calculation')); % for accessing so
 % designing a filter for extraction of low frequenc ý component of each
 % SWR, the sharp wave (e.g. 20-40 Hz)
 fs=32000; % sampling rate
-[b1,a1] = butter(2,[120 400]/(fs/2));
+[b1,a1] = butter(2,[150 400]/(fs/2));
 [b2,a2] = butter(2,[.2 20]/(fs/2));
 
 % reading from the cell, filtering, and rearranging in a 3D matrix
@@ -74,38 +74,52 @@ end
 t_trough=(t_trough_ind-min(t_trough_ind,[],'all'))/fs;
 
 %% ripple envelope and plot with sharp waves
-hilb_len=round(fs/50) ; % length parameter for the Hilbert filter
-[up,lo] = envelope(ripples_mat(:,:,swr_count),hilb_len,'analytic');
+win_len=round(fs/20) ; % sliding window for the RMS envelope
+[up,lo] = envelope(ripples_mat(:,:,swr_count),win_len,'rms');
 
-% plot
 %% plotting one SW and ripple envelopes for all channels
 swr_count=6; %??????????????????????
 dist=10; % distance between channels for the plottring %???????????????????
 samps=1:1:length(SWR);
 t_plot=samps/(fs/1);
 figure
-for chnl=1:10%size(SWRs,1)
+chnls=20:40; % channels to plot
+for chnl=chnls %size(SWRs,1)
     subplot(1,2,1) % for the sharp wave and ripples envelope
-    plot(t_plot,ripples_mat(samps,chnl,swr_count)-dist*chnl,'color',[0 .4 .2]);
-    shade(t_plot,up(samps,chnl)-dist*chnl,t_plot,lo(samps,chnl)-dist*chnl,'FillType',[1 2],...
-        'fillalpha',.5)
+    plot(t_plot,ripples_mat(samps,chnl,swr_count)+dist*chnl,'color',[1 .5 .6]);     hold on
 
-    hold on
-    yticks(dist*(-chnl:4:-1));
-    yticklabels(num2cell(1:4:chnl));
+    plot(t_plot,up(samps,chnl)+dist*chnl,t_plot,lo(samps,chnl)+dist*chnl,'color',[.5 0 0]);   
+    yticks(dist*(chnls(1):4:chnls(end)));
+    yticklabels(num2cell(chnls(1):4:chnls(end)));
     xlim([.5 1.5])
+    ylim(dist*[chnls(1)-1 chnls(end)+1])
     ylabel('channels')
     xlabel('Time (sec)');
+    
     subplot(1,2,2) % for the sharp wave and the ripples
-    plot(t_plot,.5*ripples_mat(samps,chnl,swr_count)-dist*chnl,'color',[1 .5 .6]);
-    plot(t_plot,sharp_wave_mat(samps,chnl,swr_count)-dist*chnl,'color',[0 .4 .2]);
-    hold on
-    yticks(dist*(-chnl:4:-1));
+    plot(t_plot,ripples_mat(samps,chnl,swr_count)+dist*chnl,'color',[1 .5 .6]);     hold on
+
+    plot(t_plot,sharp_wave_mat(samps,chnl,swr_count)+dist*chnl,'color',[0 .4 .2]);
+    yticks(dist*(chnls(1):4:chnls(end)));
     yticklabels({});
     xlim([.5 1.5])
+    ylim(dist*[chnls(1)-1 chnls(end)+1])
     xlabel('Time (sec)');
     
 end
+
+% threshold for ripple detection
+
+tr=median(up)+3*iqr(up);
+subplot(1,2,1) % adding the threshold to the subplot 1
+for chnl=chnls
+    supra_threh=up(:,chnl)>tr(chnl);
+    plot(t_plot(supra_threh),up(supra_threh,chnl)+dist*chnl,'color',[0 .0 .6]);
+    plot(t_plot(supra_threh),lo(supra_threh,chnl)+dist*chnl,'color',[0 .0 .6]);
+
+end
+
+
 %% visualization
 % defining the electrode pad grid coordinates
 k=100; % spacing between the contacts, in micro meter
