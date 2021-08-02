@@ -2,15 +2,19 @@ function [h]=multicolorloine(x,y,varargin)
 
 % c is a vector, containing values corresponding to color:
 c=varargin{1};
-% cr is a 2 entry-vector, first value is corresponding to lowest color, and
-% the 2nd value associated to the highest color:
+
+% cr is a 2 entry-vector, first value is the value of y corresponding to lowest color, and
+% the 2nd value associated to the value of y associated with highest color:
 cr=varargin{2};
+
 cmap=varargin{3}; % color map: jet, parula, ... or any other
 numpoints=numel(x);
 % making an index out of c for the cmap
 cn=(c-cr(1))/(cr(2)-cr(1));
 cn=ceil(cn*size(cmap,1));
 cn=max(cn,1);
+cn=min(cn,256);
+
 n=nargin;
 switch n-2
     case 4

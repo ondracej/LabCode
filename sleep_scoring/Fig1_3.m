@@ -28,14 +28,18 @@ yticks(2*(1:16)), yticklabels(compose('%01d', 1:16));
 ylabel('Channel number')
 xlabel('Time (sec)')
 
-chnl=4; %%%%%%%%%%
+chnl=4; %%%%%%%%%% non-noisy channel
 
-%% defining a threshold for removing the EEG samples with artefact
+% defining a threshold for removing the EEG samples with artefact
 eeg=reshape(EEG3sec(:,chnl,:),[1,size(EEG3sec,1)*size(EEG3sec,3)]);
-thresh=4*iqr(eeg);
+thresh=3*iqr(eeg);
 maxes_=max(abs(EEG3sec(:,chnl,:)),[],1);
 maxes=reshape(maxes_,[1,length(maxes_)]);
 valid_inds=find(maxes<thresh);
+valid_inds_logic=maxes<thresh;
+% add the threshold line to the EEG plot
+line([1/fs,EEG3sec_n/fs],[.5*chnl+thresh .5*chnl+thresh],'linestyle','--');
+line([1/fs,EEG3sec_n/fs],[.5*chnl-thresh .5*chnl-thresh],'linestyle','--');
 
 %% extracting low/high ratio (LH)
 fs=30000/64;
@@ -66,21 +70,23 @@ end
 % figure
 t_plot=[.2 2.2]*3600; %%%%%%%%%%% t_lim for plot in seconds
 ind=t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1);
-mov_valid=NaN(size(mov));
-mov_valid(valid_inds)=mov(valid_inds);
-
+mov_valid=NaN(size(mov3sec));
+mov_valid(valid_inds)=mov3sec(valid_inds);
+LH_valid=NaN(size(LH_valid));
+LH_valid(valid_inds)=LH(valid_inds);
 % plot of smothed data (movement, low/high and connectivity)
 figure
-win=30; % win length for smoothing
+win=20; % win length for smoothing
 subplot(3,1,1)
-plot(t_bins3sec(ind)/60,mov_avg_nan(mov3sec(ind),win),'color',0.6*[1 1 1]);
-xlim(t_plot/60); ylim([700 1400]);  xticklabels({}); hold on
+plot(t_bins3sec(ind)/60,mov_avg_nan(mov3sec(ind),win),'color',0.3*[1 1 1],'linewidth',1.2); hold on
+
+xlim(t_plot/60); ylim([700 1800]);  xticklabels({}); hold on
 area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
 ylabel({'Movement';'(pixlel)'});  xticks([]);
 subplot(3,1,2)
-plot((t_bins3sec(ind))/60,mov_avg_nan(LH_valid(ind),win));
-xlim(t_plot/60); ylim([0 190]); xticklabels({});
+plot((t_bins3sec(ind))/60,mov_avg_nan(LH_valid(ind),win),'linewidth',1.2,'color',[0 0 .9]);
+xlim(t_plot/60); ylim([10 150]); xticklabels({});
 hold on
 area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
@@ -104,7 +110,7 @@ threshold=mov_peack+1*iqr(mov); % threshold on movement to differentiate Wake/RE
 subplot(3,1,1)
 line(t_plot/60,[threshold threshold],'linestyle','--');
 %% plotting EEG3sec and corr matrix for peak and through times
-t_spot=1.457*3600; % time of a peak of the low/high ratio
+t_spot=83.0*60; % time of the snippet
 bin_indx=find(abs(t_bins3sec-t_spot)==min(abs(t_bins3sec-t_spot)));
 figure
 EEG3sec_n=size(EEG3sec,1);
@@ -117,10 +123,12 @@ yticklabels({}); ylim([ -16*.6-.5 0]);  xticks([0 .5 1 1.5 2 2.5 3])
 figure
 bin_indx=find(abs(t_bins3sec-t_spot)==min(abs(t_bins3sec-t_spot)));
 EEG3sec_n=size(EEG3sec,1);
+% to find the EEG amplitude range for the color range:
 for k=1:16
+    eeg_piece=EEG3sec(:,k,bin_indx); c_min=min(eeg_piece(:)); c_max=max(eeg_piece(:));
     y=EEG3sec(:,k,bin_indx)-.6*k;
-    col=y;
-    multicolorloine(round(1:EEG3sec_n)/fs,y,col,.8*jet,1.5); hold on
+    col=y+.6*k;
+    multicolorloine(round(1:EEG3sec_n)/fs,y,col,[c_min c_max],.8*jet,1.5); hold on
 end
 xlabel('Time (sec)')
 yticklabels({}); ylim([ -16*.6-.5 0])
@@ -130,6 +138,7 @@ figure
 corr_mat_samp=corr(EEG3sec(:,:,bin_indx),'type','spearman');
 imagesc(corr_mat_samp,[-.25 1]); axis equal; axis tight; yticks([]); xticks([]);
 colorbar; colormap(parula)
+print(['EEG IS' ],'-dsvg');
 
 %% box plots for the correlation values
 % L-L
@@ -158,29 +167,34 @@ ylim([-.25 1]);
 % first designing a filter for smooting the data just to avoid detecting
 % multiple redundant peaks when we do peak finding:
 smoother = designfilt('lowpassiir','FilterOrder',4, ...
-    'PassbandFrequency',45,'PassbandRipple',0.5, ...
+    'PassbandFrequency',20,'PassbandRipple',0.5, ...
     'SampleRate',fs);
 local_wave_per_chnl=zeros(size(EEG3sec,2),size(EEG3sec,3));
 % go through all the data, find the suprathreshold peaks in all channels:
 for epoch=1:size(EEG3sec,3)
+
     if sum(epoch==valid_inds)==0
         local_wave(epoch)=NaN; continue;
     end
     local_wave(epoch)=0; n=0; % n is number of all detected paired peaks, ...
     % that could be redundant
+    peak_position=[]; % peak_position contains the index to the peaks of local waves
+    all_peaks=[]; % contains all the candidate peaks for local wave
+    % find the times of all the supra-threshold peakes in all channels:
     for ch=1:size(EEG3sec,2)
         smoothedEEG=filtfilt(smoother, EEG3sec(:,ch,epoch));
-        supra_thresh=abs(smoothedEEG)>2*thresh/4; % (thresh is 4iqr(eeg))
+        supra_thresh=abs(smoothedEEG)>1*thresh/4; % (thresh is 4iqr(eeg))
         [~,peak_inds{ch}]=findpeaks(smoothedEEG.*supra_thresh,'MinPeakDistance',40);
         % at least 90 m sec (40/fs) time diff between consequtive peaks
     end
-    % find the simultaneous peaks in multiple channels:
+    
+    % find the simultaneous peaks in different channels:
     for ch1=1:size(EEG3sec,2)-1
         all_peaks_ch1=peak_inds{ch1};
         for k=1:length( all_peaks_ch1 )
             peak=all_peaks_ch1(k);
             for ch2=ch1+1:size(EEG3sec,2)
-                if min(abs(peak_inds{ch2}-peak),[],'all')<=4
+                if min(abs(peak_inds{ch2}-peak),[],'all')<=4 % peaks within 10 ms
                     n=n+1;  all_peaks(n)=peak;
                 end
             end
@@ -188,7 +202,7 @@ for epoch=1:size(EEG3sec,3)
     end
     % now we have all the synchronusly-ocurring peaks, that may be redundant.
     % Therefore now we have to remove the redundancies. For this purpose,
-    % we sort all the detected synchronous peaks, and count number of jumps
+    % we sort all the detected synchronous peaks, and count the number of jumps
     % (diff>2) +1
     sorted_peaks=sort(all_peaks);
     while(length(sorted_peaks)>4)
@@ -198,7 +212,7 @@ for epoch=1:size(EEG3sec,3)
             break;
         end
         if length(sorted_peaks(1:jump_ind))>=4 & length(sorted_peaks(1:jump_ind))<=12
-            % if there are at least 4 chnls with that peak but not more
+            % if there are at least 25% chnls with that peak but not more
             % than 75% of chnls
             local_wave(epoch)=local_wave(epoch)+1;
             peak_position(local_wave(epoch))=mean(sorted_peaks(1:jump_ind));
@@ -210,6 +224,9 @@ for epoch=1:size(EEG3sec,3)
     
     % computing abundance of local waves in each channel
     for ch=1:size(EEG3sec,2)
+        if isempty(peak_position)
+            break;
+        end
         peak_inds_ch=peak_inds{ch};
         for pk=1:length(peak_inds_ch)
             ch_peak=peak_inds_ch(pk);
@@ -218,8 +235,30 @@ for epoch=1:size(EEG3sec,3)
             end
         end
     end
+    local_wave_position{epoch}=peak_position;
+    clear   peak_inds
 end
 
+%% plot of a sample of detected local waves
+% plot of a sample of filtered EEG epoch and the detected local waves and the
+% threshold of local wave detection
+
+t_spot=1.557*3600; % time of a peak of the low/high ratio
+bin_indx=find(abs(t_bins3sec-t_spot)==min(abs(t_bins3sec-t_spot)));
+figure
+EEG3sec_n=size(EEG3sec,1);
+for k=1:16
+    smoothedEEG=filtfilt(smoother, EEG3sec(:,k,bin_indx));
+    plot(round(1:EEG3sec_n)/fs,smoothedEEG-.6*k,'color',.5*[1 1 1]); hold on
+end
+line([0 3],(-thresh/4-.6)*[1 1],'linestyle','--','color',[.3 .3 1]);
+xlabel('Time (sec)')
+yticklabels({}); ylim([ -16*.6-.5 0]);  xticks([0 .5 1 1.5 2 2.5 3])
+
+t_local_waves=local_wave_position{bin_indx}/fs;
+for k=1:length(t_local_waves)
+    line([t_local_waves(k) t_local_waves(k)],[-.6*17 0],'linestyle','-','color',[1 .0 .2 .3],'linewidth',3);
+end
 %% local wave frequency per cannel
 figure
 im=imread(image_layout);
@@ -244,12 +283,13 @@ set(gcf, 'Position',[200 , 200, 600, 500]);
 figure
 t_plot=[.2 12.5]*3600; %%%%%%%%%%% t_lim for plot in seconds
 ind=t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1);
-win=30;
+inds=(ind & [valid_inds_logic 0]); % considering the plotting intervalk and the noise free time ponts
+win=20;
 
 subplot(3,1,1)
-plot(t_bins3sec(ind)/60,mov_avg_nan(mov3sec(ind),win),'color',0.3*[1 1 1],...
+plot(t_bins3sec(inds)/60,mov_avg_nan(mov3sec(inds),win),'color',0.3*[1 1 1],...
     'linewidth',1);
-xlim(t_plot/60); ylim([700 1400]);  xticklabels({}); hold on
+xlim(t_plot/60); ylim([700 1200]);  xticklabels({}); hold on
 area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
 area([light_on_t t_plot(2)]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
@@ -258,7 +298,7 @@ ylabel({'Movement';'(pixlel)'});  xticks([]);
 subplot(3,1,1)
 line(t_plot/60,[threshold threshold],'linestyle','--');
 subplot(3,1,2)
-plot((t_bins3sec(ind))/60,mov_avg_nan(LH_valid(ind),win),'color',[0 .3 .8],...
+plot((t_bins3sec(inds))/60,mov_avg_nan(LH(inds),win),'color',[0 .3 .8],...
     'linewidth',1);
 xlim(t_plot/60); ylim([0 150]); xticklabels({});
 hold on
@@ -268,7 +308,7 @@ ylabel('\bf	(\delta+\theta) / \gamma');  xticks([]);
 area([light_on_t t_plot(2)]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
 subplot(3,1,3)
-plot((t_bins3sec(ind))/3600,mov_avg_nan(local_wave(ind),win),'color',[.2 .5 1],...
+plot((t_bins3sec(inds))/3600,mov_avg_nan(local_wave(inds),win),'color',[.2 .5 1],...
     'linewidth',1);
 xlim(t_plot/3600);
 hold on
@@ -276,13 +316,17 @@ area([t_plot(1) light_off_t]/3600,[100 100],'facecolor',[1 1 0],'FaceAlpha',.2,.
     'edgecolor',[1 .8 0]);  xticks([]);
 area([light_on_t t_plot(2)]/3600,[100 100],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);  xticks([]);
-ylabel({'local wave / sec'});  ylim([7 17]);
+ylabel({'local wave / sec'});  ylim([0 4.4]);
 xticks([0:12])
 xlabel('Time (h)');
+
+%% save the figure
+print(['fig. 2 supplementary - local wave detection' ],'-dsvg');
+
 %% correlational plots
-y1=local_wave(valid_inds)';
-y2=net_density(valid_inds)';
-x=LH_valid(valid_inds)';
+y1=mov_avg_nan(local_wave(valid_inds)',win)';
+y2=mov_avg_nan(net_density(valid_inds)',win)';
+x=LH(valid_inds)';
 x_=x(1:10:end);  y1_=y1(1:10:end); y2_=y2(1:10:end);
 f1=fit(x_, y1_, 'poly1', 'Exclude', x_ > 4*iqr(x_));
 figure
@@ -290,7 +334,7 @@ plot(f1,x_,y1_)
 xlim([0 4*iqr(x_)]);   xlabel('\bf	(\delta+\theta) / \gamma')
 ylabel('Local wave / sec');
 
-f1=fit(x_, y2_, 'poly2', 'Exclude', x_ > 4*iqr(x_));
+f1=fit(x_, y2_, 'poly1', 'Exclude', x_ > 4*iqr(x_));
 figure
 plot(f1,x_,y2_)
 xlim([0 4*iqr(x_)]);
