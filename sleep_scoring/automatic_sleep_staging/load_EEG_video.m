@@ -1,18 +1,19 @@
+
 %% loading the data
 % setting addresses and parameters
-
-folder_path='Z:\HamedData\P1\w0020 juv\25_09_2020'; %%%%%%%%%% read videofile from here
-fname='25_09_2020_00168-converted'; %%%%%%%%%%%%
-dir_path_ephys='Z:\HamedData\P1\w0020 juv\25_09_2020\chronic_2020-09-25_21-01-37'; %%%%%%%%
-dir_prefix='142'; %%%%%%%%%%%%%%
+saving_name='w009_28-04_scoring'; %%%%%%%%%%%% saving name in the local computer
+folder_path='Z:\zoologie\HamedData\P1\w0009 juv\28-04-2020'; %%%%%%%%%% read videofile from here
+fname='28-04-2020_00125_converted'; %%%%%%%%%%%% video file name
+dir_path_ephys='Z:\zoologie\HamedData\P1\w0009 juv\28-04-2020\chronic_2020-04-28_21-30-40'; %%%%%%%%
+dir_prefix='133'; %%%%%%%%%%%%%%
 app.file_dev=1; %%%%%%%%%%%%%%%%% which portion of EEG file you want to read? 10 for ane tenth of the file
-chnl_order=[1 2 3 4 5 7 6 8 9 10 11 12 13 16 14 15 ]; 
+chnl_order=[1 2 3 4 5 7 6 8 9 10 11 12 13 16 14 15]; 
 [~,app.data_name,~]=fileparts(folder_path);
 %% Reading the EEG
 app.f_path=[folder_path '\' fname '.avi'];
 app.vid=VideoReader(app.f_path);
-f0=27000; %%%%%%%% 1st frame
-fn=982000;%ceil(app.vid.FrameRate*app.vid.Duration/app.file_dev)-1000;  %%%%%%%%%% last frame %%%%%%%%% /10
+f0=1; %1st frame
+fn=873000;%%%%%%%  ceil(app.vid.FrameRate*app.vid.Duration/app.file_dev)-1000;  %%%%%%%%%% last frame %%%%%%%%% /10
 app.frames=f0: fn; % frames to be analyzed
 
 % app.time frames for app.video frames: loading synchroniying ADC channel
@@ -66,3 +67,6 @@ app.current_win=app.current_win+1.5; % first window-center app.time
 end
 r_dif=r_dif(1:k-1,:);
 
+mov=mean(r_dif,2);
+%% save the output variables
+save(['G:\Hamed\zf\P1\labled sleep\' saving_name],'EEG','t_bins','mov','-v7.3','-nocompression');

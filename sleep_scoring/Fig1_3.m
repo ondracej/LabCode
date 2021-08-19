@@ -1,45 +1,53 @@
 % load data and layout
-load 73_03_09_03_scoring   % load data
-image_layout='Z:\HamedData\P1\73-03\73-03 layout.jpg'; %%%%%%%%%%%%%%
-light_off_t=32840/20; %%%%%%%%%%% frame number devided by rate of acquisition
-light_on_t=889174/20;  %%%%%%%%%%% frame number devided by rate of acquisition
+fname='73_03_09_03_scoring';  % load data
+load(fname);
+image_layout='Z:\zoologie\HamedData\P1\73-03\73-03 layout.jpg'; %%%%%%%%%%%%%%
+light_off_t=31000/20; %%%%%%%%%%% frame number devided by rate of acquisition
+light_on_t=889160/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 fs=30000/64;
-edge_probab=.95;
-% position of recording sites on the photo:
-figure
-im=imread(image_layout);
-im=.6*double(rgb2gray(imresize(im,.3)));
-imshow(int8(im)); hold on
+chnl=4; % non-noisy channel
 
-%% reshaping data in 3 sec windows
+% reshaping data in 3 sec windows, in case bins are 1.5 sec
+if length(mov)>27000
 new_len=floor(size(EEG,3)/2);
-EEG3sec=reshape(EEG(:,:,1:new_len*2),size(EEG,1)*2,size(EEG,2),new_len);
+EEG3sec=zeros(size(EEG,1)*2,size(EEG,2),new_len);
+for k=1:new_len
+    EEG3sec(:,:,k)=[EEG(:,:,2*k-1);EEG(:,:,2*k)];
+end
 t_bins3sec=downsample(t_bins,2)+1.5/2;
 mov3sec=downsample((mov+circshift(mov,-1))/2, 2);
-
+else
+mov3sec=mov;
+EEG3sec=EEG;
+t_bins3sec=t_bins;
+end
+mov3sec=mov3sec(1:size(EEG3sec,3));
+clear t_bins mov k feats EEG auto_label
 %%  plot EEG3sec_ to find and ignore noisy chnls
 figure
-bin_indx=4000; %randsample(size(EEG3sec_,3)-1000,1)+500; % index to the first nREM bin
+bin_indx=9501; %randsample(size(EEG3sec_,3)-1000,1)+500; % index to the first nREM bin
 EEG3sec_n=size(EEG3sec,1);
+dist=1; % in std
 for k=1:16
-    plot(round(1:EEG3sec_n)/fs,(EEG3sec(:,k,bin_indx))+.5*k); hold on
+    plot(round(1:EEG3sec_n)/fs,(EEG3sec(:,k,bin_indx))+dist*k); hold on
 end
 yticks(2*(1:16)), yticklabels(compose('%01d', 1:16));
 ylabel('Channel number')
 xlabel('Time (sec)')
-
-chnl=4; %%%%%%%%%% non-noisy channel
-
-% defining a threshold for removing the EEG samples with artefact
+title(fname);
+%
+% defining a threshold for removing the EEG samples with artefact and wake
+% snippets
 eeg=reshape(EEG3sec(:,chnl,:),[1,size(EEG3sec,1)*size(EEG3sec,3)]);
-thresh=3*iqr(eeg);
+thresh=4*iqr(eeg);
 maxes_=max(abs(EEG3sec(:,chnl,:)),[],1);
 maxes=reshape(maxes_,[1,length(maxes_)]);
-valid_inds=find(maxes<thresh);
-valid_inds_logic=maxes<thresh;
+thresh_mov=median(mov3sec)+5*iqr(mov3sec); % threshold for separating wakes from sleep based on movement
+valid_inds=find(maxes<thresh & mov3sec'<thresh_mov);
+valid_inds_logic=(maxes<thresh & mov3sec'<thresh_mov);
 % add the threshold line to the EEG plot
-line([1/fs,EEG3sec_n/fs],[.5*chnl+thresh .5*chnl+thresh],'linestyle','--');
-line([1/fs,EEG3sec_n/fs],[.5*chnl-thresh .5*chnl-thresh],'linestyle','--');
+line([1/fs,EEG3sec_n/fs],[dist*chnl+thresh dist*chnl+thresh],'linestyle','--');
+line([1/fs,EEG3sec_n/fs],[dist*chnl-thresh dist*chnl-thresh],'linestyle','--');
 
 %% extracting low/high ratio (LH)
 fs=30000/64;
@@ -53,52 +61,42 @@ for k=1:size(EEG3sec,3)
     LH(k)=px_low/px_high;
 end
 
-%%  connectivity measures
+%  connectivity measure: corr matrix fore each bin
 corr_mat_=NaN(size(EEG3sec,2),size(EEG3sec,2),size(EEG3sec,3));
 conn_mat_=NaN(size(EEG3sec,2),size(EEG3sec,2),size(EEG3sec,3));
-net_density=NaN(1,size(EEG3sec,3));
 mean_conn=NaN(1,size(EEG3sec,3));
 
 for k=valid_inds
     [conn_mat_(:,:,k),~,~,~] = infer_network_correlation_analytic(EEG3sec(:,:,k));
-    net_density(k)=sum(tril(conn_mat_(:,:,k),-1),'all')/...
-        ((size(corr_mat_,1)-1)*size(corr_mat_,1)/2); % depict higher correlations
     corr_mat_(:,:,k)=corr(EEG3sec(:,:,k),'type','spearman');
     mean_conn(k)=mean(tril(corr_mat_(:,:,k),-1),'all');
 end
-%% plot of movement, low/high and connectivity
-% figure
+% plot of movement, low/high and connectivity
 t_plot=[.2 2.2]*3600; %%%%%%%%%%% t_lim for plot in seconds
 ind=t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1);
 mov_valid=NaN(size(mov3sec));
 mov_valid(valid_inds)=mov3sec(valid_inds);
-LH_valid=NaN(size(LH_valid));
+LH_valid=NaN(size(LH));
 LH_valid(valid_inds)=LH(valid_inds);
 % plot of smothed data (movement, low/high and connectivity)
 figure
+title(fname);
 win=20; % win length for smoothing
-subplot(3,1,1)
+subplot(2,1,1)
 plot(t_bins3sec(ind)/60,mov_avg_nan(mov3sec(ind),win),'color',0.3*[1 1 1],'linewidth',1.2); hold on
 
-xlim(t_plot/60); ylim([700 1800]);  xticklabels({}); hold on
+xlim(t_plot/60); ylim([700 1200]);  xticklabels({}); hold on
 area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
 ylabel({'Movement';'(pixlel)'});  xticks([]);
-subplot(3,1,2)
+subplot(2,1,2)
 plot((t_bins3sec(ind))/60,mov_avg_nan(LH_valid(ind),win),'linewidth',1.2,'color',[0 0 .9]);
-xlim(t_plot/60); ylim([10 150]); xticklabels({});
+xlim(t_plot/60); ylim([10 100]); xticklabels({});
 hold on
 area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
 ylabel('\bf	(\delta+\theta) / \gamma');  xticks([]);
-subplot(3,1,3)
-plot((t_bins3sec(ind)-t_plot(1))/3600,mov_avg_nan(net_density(ind),win),'color',[0 .2 .8]);
-xlim((t_plot-t_plot(1))/3600); ylim([.2 .4]);
-hold on
-area(([t_plot(1) light_off_t]-t_plot(1))/3600,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
-    'edgecolor',[1 .8 0]);
-xlabel('Time (h)')
-ylabel({'Network'; 'Density'}); xticks([0 .5 1 1.5 2])
+
 
 % defining and adding the line of deliniating wake/sleep
 % we feat a distribution and find the peak and std of the REM group
@@ -107,12 +105,49 @@ x_vals=min(mov3sec):range(mov3sec)/2000:mean(mov3sec)+5*std(mov3sec);
 mov_pd=pdf(pd,x_vals);
 [M,I] = max(mov_pd); mov_peack=x_vals(I);
 threshold=mov_peack+1*iqr(mov); % threshold on movement to differentiate Wake/REM
-subplot(3,1,1)
+subplot(2,1,1)
 line(t_plot/60,[threshold threshold],'linestyle','--');
+
+%% depth of sleep for all channels
+t_plot=[.2 4.2]*3600; %%%%%%%%%%% t_lim for plot in seconds
+ind=find(t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1));
+
+LH_t_plot=NaN(16,length(ind)); % low/high freq ratio, first filled with NaN, and then in the indeces that are in the t_plot and valid ...
+% (artefact-free) we put the corresponding value of the LH
+ind_valid_t_plot=intersect(valid_inds,ind); % indeces that are in the t_plot and valid (artefact-free)
+for ch=1:16
+for k=ind_valid_t_plot % only for the tplot time compute the LH
+    % settings for multitaper
+    nwin=size(EEG3sec,1);  nfft=2^(nextpow2(nwin));  TW=1.25;
+    [pxx,f]=pmtm(EEG3sec(:,ch,k),TW,nfft,round(fs));
+    px_low=norm(pxx(f<8 & f>1.5));
+    px_high=norm(pxx(f<49 & f>30));
+    LH_t_plot(ch,k-(ind(1)-1))=px_low/px_high; 
+end
+end
+%% figure for the sleep depth across channels
+figure
+title(fname);
+for ch=[2 7 11 16]
+HL_ch=mov_avg_nan(LH_t_plot(ch,:),win);
+HL_toplot=NaN(size(HL_ch));
+HL_toplot(~isnan(HL_ch))=(HL_ch(~isnan(HL_ch))-mean(HL_ch(~isnan(HL_ch))))/std(HL_ch(~isnan(HL_ch)));
+plot((t_bins3sec(ind))/3600,HL_toplot+.8*ch,'linewidth',1,'color',[0*(1-ch/16) 1*(1-ch/16) 1*(ch/16) .6]); % 
+hold on
+end
+t_plot=[.2 4.2]*3600; %%%%%%%%%%% t_lim for plot in seconds
+
+xlim(t_plot/3600); ylim([-3 17]);
+area([t_plot(1) light_off_t]/3600,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
+    'edgecolor',[1 .8 0]);
+ylabel('normalized \bf	(\delta+\theta) / \gamma'); 
+xlabel('Time (h)');
 %% plotting EEG3sec and corr matrix for peak and through times
-t_spot=83.0*60; % time of the snippet
+t_spot=89.06*60; % time of the snippet
 bin_indx=find(abs(t_bins3sec-t_spot)==min(abs(t_bins3sec-t_spot)));
 figure
+title(fname);
+
 EEG3sec_n=size(EEG3sec,1);
 for k=1:16
     plot(round(1:EEG3sec_n)/fs,(EEG3sec(:,k,bin_indx))-.6*k,'color',.5*[1 1 1]); hold on
@@ -121,6 +156,8 @@ xlabel('Time (sec)')
 yticklabels({}); ylim([ -16*.6-.5 0]);  xticks([0 .5 1 1.5 2 2.5 3])
 
 figure
+title(fname);
+
 bin_indx=find(abs(t_bins3sec-t_spot)==min(abs(t_bins3sec-t_spot)));
 EEG3sec_n=size(EEG3sec,1);
 % to find the EEG amplitude range for the color range:
@@ -135,6 +172,7 @@ yticklabels({}); ylim([ -16*.6-.5 0])
 xticks([0 .5 1 1.5 2 2.5 3])
 
 figure
+title(fname);
 corr_mat_samp=corr(EEG3sec(:,:,bin_indx),'type','spearman');
 imagesc(corr_mat_samp,[-.25 1]); axis equal; axis tight; yticks([]); xticks([]);
 colorbar; colormap(parula)
@@ -151,6 +189,7 @@ corr_LR_vals_=corr_LR(:);
 inds_LR=randsample(length(corr_LR_vals_),length(corr_RR_vals));
 corr_LR_vals=corr_LR_vals_(inds_LR);
 figure
+title(fname);
 boxplot([corr_LL_vals corr_RR_vals corr_LR_vals],'colors','kkk'); hold on
 plot(1+.05*randn(size(corr_LL_vals)),corr_LL_vals,'.','color',[255 200 0]/255,...
     'markersize',17);
@@ -246,6 +285,7 @@ end
 t_spot=1.557*3600; % time of a peak of the low/high ratio
 bin_indx=find(abs(t_bins3sec-t_spot)==min(abs(t_bins3sec-t_spot)));
 figure
+title(fname);
 EEG3sec_n=size(EEG3sec,1);
 for k=1:16
     smoothedEEG=filtfilt(smoother, EEG3sec(:,k,bin_indx));
@@ -261,27 +301,29 @@ for k=1:length(t_local_waves)
 end
 %% local wave frequency per cannel
 figure
+title(fname);
 im=imread(image_layout);
 im=.6*double(rgb2gray(imresize(im,.3)));
 imshow(int8(im)); hold on
 % [x,y]=ginput(16);
 xy(:,1)=x; xy(:,2)=y;
-cm=autumn(10)*1; % colormap: parula
+cm=autumn(200)*1; % colormap: parula
 max_val=max(mean(local_wave_per_chnl(:,valid_inds),2));
 for ch=1:size(EEG3sec,2)
     rel_val=mean(local_wave_per_chnl(ch,valid_inds))/max_val;
     scatter1 = scatter(x(ch),y(ch),300,'o','MarkerFaceColor',...
-        cm(round(rel_val*10),:),'MarkerEdgeColor',cm(round(rel_val*10),:));
+        cm(round(rel_val*200),:),'MarkerEdgeColor',cm(round(rel_val*200),:));
     scatter1.MarkerFaceAlpha = 1; scatter1.MarkerEdgeAlpha =.9;
     hold on
 end
 set(gcf, 'Position',[200 , 200, 600, 500]);
 
-%% a figure of low/high power ratio, connectivity, and local wave abundancy rate
+%% a figure of movement, low/high power ratio, and local wave abundancy rate
 
 % plot of smOothed data (movement, low/high and connectivity)
 figure
-t_plot=[.2 12.5]*3600; %%%%%%%%%%% t_lim for plot in seconds
+title(fname);
+t_plot=[.2 12.2]*3600; %%%%%%%%%%% t_lim for plot in seconds
 ind=t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1);
 inds=(ind & [valid_inds_logic 0]); % considering the plotting intervalk and the noise free time ponts
 win=20;
@@ -300,7 +342,7 @@ line(t_plot/60,[threshold threshold],'linestyle','--');
 subplot(3,1,2)
 plot((t_bins3sec(inds))/60,mov_avg_nan(LH(inds),win),'color',[0 .3 .8],...
     'linewidth',1);
-xlim(t_plot/60); ylim([0 150]); xticklabels({});
+xlim(t_plot/60); ylim([0 90]); xticklabels({});
 hold on
 area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
@@ -321,22 +363,22 @@ xticks([0:12])
 xlabel('Time (h)');
 
 %% save the figure
-print(['fig. 2 supplementary - local wave detection' ],'-dsvg');
+print(['fig 1 supplementary depth variable accross channels' ],'-dsvg');
 
 %% correlational plots
 y1=mov_avg_nan(local_wave(valid_inds)',win)';
-y2=mov_avg_nan(net_density(valid_inds)',win)';
 x=LH(valid_inds)';
-x_=x(1:10:end);  y1_=y1(1:10:end); y2_=y2(1:10:end);
+x_=x(1:10:end);  y1_=y1(1:10:end); 
 f1=fit(x_, y1_, 'poly1', 'Exclude', x_ > 4*iqr(x_));
 figure
+title(fname);
 plot(f1,x_,y1_)
 xlim([0 4*iqr(x_)]);   xlabel('\bf	(\delta+\theta) / \gamma')
 ylabel('Local wave / sec');
 
-f1=fit(x_, y2_, 'poly1', 'Exclude', x_ > 4*iqr(x_));
 figure
-plot(f1,x_,y2_)
+title(fname);
+plot(f1,x_)
 xlim([0 4*iqr(x_)]);
 xlabel('\bf	(\delta+\theta) / \gamma')
 ylabel('Network Density');
@@ -351,6 +393,7 @@ EEG3sec_n=round(size(EEG3sec,1)/3);
     min_col=min(EEG3sec(:,:,bin_indx),[],'all');
     max_col=max(EEG3sec(:,:,bin_indx),[],'all');
 figure
+title(fname);
 for k=1:16
     y_=EEG3sec(:,k,bin_indx)-.6*k;
     t_=round(1:EEG3sec_n)/fs;
@@ -370,11 +413,13 @@ yticklabels({}); ylim([ -16*.6-.5 0]);   xlim([.8 1])
 
 %% snapshot plot
 figure
+title(fname);
 im=imread(image_layout);
 im=.6*double(rgb2gray(imresize(im,.3)));
 imshow(int8(im)); hold on
 % [x11,y11]=ginput(2);
 figure
+title(fname);
 set(gcf, 'Position', .8*[50,50,1400,800]);
 
 bin_indx=find(abs(t_bins3sec-t_win)==min(abs(t_bins3sec-t_win)));
@@ -416,6 +461,7 @@ bin_indx=find(abs(t_bins3sec-t_win)==min(abs(t_bins3sec-t_win)));
 n_sample=3*fs; % number of data samples to plot
 
 figure
+title(fname);
 imshow(int8(im));     hold on
 % [x,y]=ginput(16);
 
@@ -433,6 +479,7 @@ end
 
 % plotting mean trajectory data points as dots
 figure
+title(fname);
 set(gcf, 'Position',1.8*[100 100 320 280]);
 % multicolorloine(x_meanl,y_meanl,1:n_sample,[1 n_sample],...
 %     copper,1,'none','none',7); hold on
