@@ -1,19 +1,8 @@
-
-%% loading the data
-% setting addresses and parameters
-saving_name='w009_30-04_scoring'; %%%%%%%%%%%% saving name in the local computer
-folder_path='Z:\zoologie\HamedData\P1\w0009 juv\30-04-2020'; %%%%%%%%%% read videofile from here
-fname='3-04-2020_00125_converted'; %%%%%%%%%%%% video file name
-dir_path_ephys='Z:\zoologie\HamedData\P1\w0009 juv\28-04-2020\chronic_2020-04-28_21-30-40'; %%%%%%%%
-dir_prefix='133'; %%%%%%%%%%%%%%
-app.file_dev=1; %%%%%%%%%%%%%%%%% which portion of EEG file you want to read? 10 for ane tenth of the file
-chnl_order=[1 2 3 4 5 7 6 8 9 10 11 12 13 16 14 15]; 
-[~,app.data_name,~]=fileparts(folder_path);
 %% Reading the EEG
 app.f_path=[folder_path '\' fname '.avi'];
 app.vid=VideoReader(app.f_path);
 f0=1; %1st frame
-fn=873000;%%%%%%%  ceil(app.vid.FrameRate*app.vid.Duration/app.file_dev)-1000;  %%%%%%%%%% last frame %%%%%%%%% /10
+fn=ceil(app.vid.FrameRate*app.vid.Duration)-1000;  %%%%%%%%%% last frame %%%%%%%%% /10
 app.frames=f0: fn; % frames to be analyzed
 
 % app.time frames for app.video frames: loading synchroniying ADC channel

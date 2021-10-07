@@ -3,34 +3,38 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%% The Recipe %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % We read SWRs (columns), one at a time, from variable SWRs. Within each
-% SWR, we determine the valley of the SWR for each channel. Therefore we
-% will have the time-of-ocurrance of SWR at each channel. Then we center
-% all these times around the first one, so all will be either zero or
-% positive numbers. When we finish this procress for all detected SWRs, we
-% computer the average of that relative-time matrix and plot it
+% SWR, we make the envelioe of the ripple burst using Hilbert transform. The 
+% onset of the ripple wave is ditermined using a threshold crossing over the envelope.
+% Therefore we will have the time-of-ocurrance of SWR at each channel. Then we center
+% all these times relative to the first one, so all will be either zero or
+% positive numbers. When we perform this procress for all detected SWRs, we
+% interpolate this relative-delay-time matrix for more spatial point, to have 
+% a better spacial resolution in the visualization and plot it
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% add the data folder to the current path
-clear
-file_add='Z:\JanieData\JanieSliceSWRDetections\1453-bic01';
+
+file_add='Z:\zoologie\JanieData\JanieSliceSWRDetections\1453-bic01'; %%%%%%%% the path for the detected SWRs
+swr_count=12; %%%%%%%%%%% which detected SWR to process?
+
+addpath(genpath(file_add));
 pathparts = strsplit(file_add,'\'); data_name=pathparts{end};
 addpath(genpath(file_add));
 data=load('detections');
 SWRs=data.D.AllSWRDataOnChans; % each column of this cell is one SWR, rows correspond to channels
-addpath(genpath('D:\github\Lab Code\SWR_delay_calculation')); % for accessing some already written...
-% functions
+addpath(genpath(file_add));
 %% reorganizing the data in matrices and SWR trough detection
 
 % designing a filter for extraction of low frequenc ý component of each
 % SWR, the sharp wave (e.g. 20-40 Hz)
 fs=32000; % sampling rate
-[b1,a1] = butter(2,[150 400]/(fs/2));
-[b2,a2] = butter(2,[.2 20]/(fs/2));
+[b1,a1] = butter(2,[150 400]/(fs/2)); % ripple burst spectral range
+[b2,a2] = butter(2,[.2 20]/(fs/2)); % sharp wave range
 
 % reading from the cell, filtering, and rearranging in a 3D matrix
-for swr_count=1:size(SWRs,2)
+swr_count_=swr_count;
     for chnl=1:size(SWRs,1)
-        SWR(:,chnl)=SWRs{chnl,swr_count};
+        SWR(:,chnl)=SWRs{chnl,swr_count_};
     end
     
     % we filter the data to just extract the low-frequency component,
@@ -38,12 +42,11 @@ for swr_count=1:size(SWRs,2)
     ripple=filtfilt(b1,a1,SWR);
     sharp_wave=filtfilt(b2,a2,SWR);
     
-    ripples_mat(:,:,swr_count)=ripple;
-    sharp_wave_mat(:,:,swr_count)=sharp_wave;
-end
+    ripples_mat(:,:,swr_count_)=ripple;
+    sharp_wave_mat(:,:,swr_count_)=sharp_wave;
+
 
 %% plotting one SWR for all channels
-swr_count=15; %??????????????????????
 dist=10; % distance between channels for the plottring %???????????????????
 figure
 for chnl=1:size(SWRs,1)
@@ -69,9 +72,8 @@ for chnl=1:size(SWRs,1)
     
 end
 
-%% Extracting the Sharp wave trough, extracting the ripple envelope, plotting 1 SWR across channels
+%% extracting the ripple envelope, plotting 1 SWR along channels
 % extracting the trough times across channels
-swr_count=15; %??????????????????????
 
 for chnl=1:size(sharp_wave_mat,2)
     [~,t_trough_ind(chnl)]=min(sharp_wave_mat(:,chnl,swr_count),[],'all','linear');
@@ -125,8 +127,8 @@ end
 t00=t0/fs;
 %% delay map visualization
 
-% the time when the SWR has been detected in a channel is the reference time, or zero ...
-% delay, and we consideer the time of observation of the SWR in the other
+% the time when the SWR has been detected in a channel first, is the reference time, or zero
+% delay, and we consider the time of observation of the SWR in the other
 % channels as the daly of the spread of the SWR, so we subtract the t_min
 % from all the t_delays
 sorted_t00=unique(sort(t00)); t00_min=sorted_t00(3); % after sorting the delay times, the first one is 0 (or 1/fs) which is associated ...

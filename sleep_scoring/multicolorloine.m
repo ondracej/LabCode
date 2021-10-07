@@ -13,7 +13,7 @@ numpoints=numel(x);
 cn=(c-cr(1))/(cr(2)-cr(1));
 cn=ceil(cn*size(cmap,1));
 cn=max(cn,1);
-cn=min(cn,256);
+cn=min(cn,size(cmap,1));
 
 n=nargin;
 switch n-2
