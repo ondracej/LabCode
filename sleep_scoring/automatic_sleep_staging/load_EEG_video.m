@@ -4,9 +4,9 @@
 saving_name='w009_30-04_scoring'; %%%%%%%%%%%% saving name in the local computer
 folder_path='Z:\zoologie\HamedData\P1\w0009 juv\30-04-2020'; %%%%%%%%%% read videofile from here
 fname='3-04-2020_00125_converted'; %%%%%%%%%%%% video file name
-dir_path_ephys='Z:\zoologie\HamedData\P1\w0009 juv\28-04-2020\chronic_2020-04-28_21-30-40'; %%%%%%%%
+dir_path_ephys='Z:\zoologie\HamedData\P1\w0009 juv\01-05-2020\chronic_2020-05-01_20-43-18'; %%%%%%%%
 dir_prefix='133'; %%%%%%%%%%%%%%
-app.file_dev=1; %%%%%%%%%%%%%%%%% which portion of EEG file you want to read? 10 for ane tenth of the file
+app.file_dev=4; %%%%%%%%%%%%%%%%% which portion of EEG file you want to read? 10 for ane tenth of the file
 chnl_order=[1 2 3 4 5 7 6 8 9 10 11 12 13 16 14 15]; 
 [~,app.data_name,~]=fileparts(folder_path);
 %% Reading the EEG

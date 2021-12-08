@@ -1,11 +1,10 @@
 % load data and layout
 clear;
-fname='w0020_25_09_scoring';
-load(fname);
-image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%%%
-light_off_t=35580/20; %%%%%%%%%%% frame number devided by rate of acquisition
-light_on_t=900200/20;  %%%%%%%%%%% frame number devided by rate of acquisition
-
+fname='w0009_01-05_scoring';
+load(fname);  % load data
+image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%%%
+light_off_t=32/20; %%%%%%%%%%% frame number devided by rate of acquisition
+light_on_t=872004/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 
 fs=30000/64;
 chnl=4; % non-noisy channel
@@ -76,7 +75,7 @@ end
 %     mean_conn(k)=mean(tril(corr_mat_(:,:,k),-1),'all');
 % end
 %% plot of movement, low/high and connectivity
-t_plot=[.4 4.4]*3600; %%%%%%%%%%% t_lim for plot in seconds
+t_plot=[.4 4.9]*3600; %%%%%%%%%%% t_lim for plot in seconds
 ind=t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1);
 mov_valid=NaN(size(mov3sec));
 mov_valid(valid_inds)=mov3sec(valid_inds);
@@ -89,17 +88,22 @@ win=20; % win length for smoothing
 subplot(2,1,1)
 plot(t_bins3sec(ind)/60,mov_avg_nan(mov3sec(ind),win),'color',0.3*[1 1 1],'linewidth',1.2); hold on
 
-xlim(t_plot/60); ylim([700 1500]);  xticklabels({}); hold on
+xlim(t_plot/60); ylim([700 3000]);  xticklabels({}); hold on
 area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
+    'edgecolor',[1 .8 0]);
+area([light_on_t t_plot(2)]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
 ylabel({'Movement';'(pixlel)'});  
 subplot(2,1,2)
-plot((t_bins3sec(ind))/60,mov_avg_nan(LH_valid(ind),win),'linewidth',1.2,'color',[0 0 .9]);
-xlim(t_plot/60); ylim([10 440]); 
+plot((t_bins3sec(ind))/3600,mov_avg_nan(LH_valid(ind),win),'linewidth',1.2,'color',[0 0 .9]);
+xlim(t_plot/3600); ylim([0 40]); 
 hold on
-area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
+area([t_plot(1) light_off_t]/3600,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
+    'edgecolor',[1 .8 0]);
+area([light_on_t t_plot(2)]/3600,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
 ylabel('\bf	(\delta+\theta) / \gamma');  
+xlabel('Time (h)')
 
 
 % defining and adding the line of deliniating wake/sleep
@@ -112,7 +116,6 @@ threshold=mov_peack+1*iqr(mov3sec); % threshold on movement to differentiate Wak
 subplot(2,1,1)
 line(t_plot/60,[threshold threshold],'linestyle','--');
 print(['mov and depth' fname],'-painters','-depsc');
-
 %% depth of sleep for all channels
 t_plot=[0 5]*3600; %%%%%%%%%%% t_lim for plot in seconds
 ind=find(t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1));
@@ -136,7 +139,7 @@ ind=find(t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1));
 
 figure
 title(fname);
-dist=1.1; % spacing between the channels on the EEG plot 
+dist=1; % spacing between the channels on the EEG plot 
 win=20; % win length for smoothing
 for ch=[2 7 11 16]
 HL_ch=mov_avg_nan(LH_t_plot(ch,:),win);
@@ -154,11 +157,11 @@ xlabel('Time (h)');
 print(['depth 4 channel adult' fname],'-painters','-depsc');
 
 %% plotting EEG3sec and corr matrix for peak and through times
-t_spot=183.85*60; % time of the snippet
+t_spot=2.978*3600; % time of the snippet
 bin_indx=find(abs(t_bins3sec-t_spot)==min(abs(t_bins3sec-t_spot)));
 figure
 title(fname);
-dist=2; % between channels in the plot , instd
+dist=3; % between channels in the plot , instd
 EEG3sec_n=size(EEG3sec,1);
 for k=1:16
     plot(round(1:EEG3sec_n)/fs,(EEG3sec(:,k,bin_indx))-dist*k,'color',.5*[1 1 1]); hold on
@@ -337,12 +340,12 @@ for ch=1:size(EEG3sec,2)
 end
 set(gcf, 'Position',[200 , 200, 600, 500]);
 
-%% a figure of movement, low/high power ratio, and local wave abundancy rate
+%% a figure of low/high power ratio, and local wave abundancy rate
 
 % plot of smOothed data (movement, low/high and connectivity)
 figure
 title(fname);
-t_plot=[0 12.5]*3600; %%%%%%%%%%% t_lim for plot in seconds
+t_plot=[0 12.7]*3600; %%%%%%%%%%% t_lim for plot in seconds
 ind=t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1);
 if length(ind)~=length(valid_inds_logic)
     valid_inds_logic=[valid_inds_logic 0];
@@ -350,18 +353,7 @@ end
 inds=(ind & valid_inds_logic); % considering the plotting interval and the noise free time points
 win=20;
 
-subplot(3,1,1)
-plot(t_bins3sec(inds)/60,mov_avg_nan(mov3sec(inds),win),'color',0.3*[1 1 1],...
-    'linewidth',1);
-xlim(t_plot/60); ylim([650 1000]);  xticklabels({}); hold on
-area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
-    'edgecolor',[1 .8 0]);
-area([light_on_t t_plot(2)]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
-    'edgecolor',[1 .8 0]);
-ylabel({'Movement';'(pixlel)'});  xticks([]);
-subplot(3,1,1)
-line(t_plot/60,[threshold threshold],'linestyle','--');
-subplot(3,1,2)
+subplot(2,1,1)
 plot((t_bins3sec(inds))/60,mov_avg_nan(LH(inds),win),'color',[0 .3 .8],...
     'linewidth',1);
 xlim(t_plot/60); ylim([0 max(mov_avg_nan(LH(inds),win),[],'all')+5]); xticklabels({});
@@ -371,7 +363,7 @@ area([t_plot(1) light_off_t]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,.
 ylabel('\bf	(\delta+\theta) / \gamma');  xticks([]);
 area([light_on_t t_plot(2)]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
-subplot(3,1,3)
+subplot(2,1,2)
 plot((t_bins3sec(inds))/3600,mov_avg_nan(local_wave(inds),win),'color',[.2 .5 1],...
     'linewidth',1);
 xlim(t_plot/3600);

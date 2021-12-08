@@ -12,7 +12,7 @@
 % %%%%%%%%%%%%%%%%%
 % load_EEG_video_batch_code;
 % toc
-% 
+
 % clear;
 % saving_name='72-00_03-04_scoring'; %%%%%%%%%%%% saving name in the local computer
 % folder_path='Z:\zoologie\HamedData\P1\72-00\03_04_2020'; %%%%%%%%%% read videofile from here
@@ -237,10 +237,10 @@ load_EEG_video_batch_code;
 
 
 clear;
-saving_name='73-03_14-03_scoring'; %%%%%%%%%%%% saving name in the local computer
-folder_path='Z:\zoologie\HamedData\P1\73-03\73_03 14_03_2020'; %%%%%%%%%% read videofile from here
-fname='14_03_2020_00096_converted'; %%%%%%%%%%%% video file name
-dir_path_ephys='Z:\zoologie\HamedData\P1\73-03\73_03 14_03_2020\chronic_2020-03-14_20-46-38'; %%%%%%%%
+saving_name='73-03_09-03_scoring'; %%%%%%%%%%%% saving name in the local computer
+folder_path='Z:\zoologie\HamedData\P1\73-03\73_03 09_03_2020'; %%%%%%%%%% read videofile from here
+fname='09_03_2020_00090_converted'; %%%%%%%%%%%% video file name
+dir_path_ephys='Z:\zoologie\HamedData\P1\73-03\73-03 09_03_2020\chronic_2020-03-09_19-18-04'; %%%%%%%%
 dir_prefix='133'; %%%%%%%%%%%%%%
 app.file_dev=1; %%%%%%%%%%%%%%%%% which portion of EEG file you want to read? 10 for ane tenth of the file
 chnl_order=[1 2 3 4 5 6 8 7 10 9 11 12 13 16 14 15 ]; 
