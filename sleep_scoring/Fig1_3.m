@@ -1,10 +1,4 @@
 % load data and layout
-clear;
-fname='w0009_01-05_scoring';
-load(fname);  % load data
-image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%%%
-light_off_t=32/20; %%%%%%%%%%% frame number devided by rate of acquisition
-light_on_t=872004/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 
 fs=30000/64;
 chnl=4; % non-noisy channel
@@ -30,7 +24,7 @@ clear t_bins mov k feats EEG_ auto_label
 figure
 bin_indx=9501; %randsample(size(EEG3sec_,3)-1000,1)+500; % index to the first nREM bin
 EEG3sec_n=size(EEG3sec,1);
-dist=1; % in std
+dist=.5; % in std
 for k=1:16
     plot(round(1:EEG3sec_n)/fs,(EEG3sec(:,k,bin_indx))+dist*k); hold on
 end
@@ -52,15 +46,15 @@ valid_inds_logic=(maxes<thresh & mov3sec'<thresh_mov);
 line([1/fs,EEG3sec_n/fs],[dist*chnl+thresh dist*chnl+thresh],'linestyle','--');
 line([1/fs,EEG3sec_n/fs],[dist*chnl-thresh dist*chnl-thresh],'linestyle','--');
 
-%% extracting low/high ratio (LH)
-fs=30000/64;
+%% extracting low/high ratio (continuous depth of sleep index)
+fs=30000/64; % initial sampling rate devided by downsampling factor
 LH=NaN(1,size(EEG3sec,3)); % low/high freq ratio
 for k=1:size(EEG3sec,3)
     % settings for multitaper
     nwin=size(EEG3sec,1);  nfft=2^(nextpow2(nwin));  TW=1.25;
     [pxx,f]=pmtm(EEG3sec(:,chnl,k),TW,nfft,round(fs));
-    px_low=norm(pxx(f<8 & f>1.5));
-    px_high=norm(pxx(f<49 & f>30));
+    px_low=norm(pxx(f<8 & f>1.5)); % delta and theta power (below 1.5 could me polluted with noise artefacts [Rattenborg, 2019, Sleep])
+    px_high=norm(pxx(f<49 & f>30)); % (low) gamma
     LH(k)=px_low/px_high;
 end
 
@@ -74,7 +68,7 @@ end
 %     corr_mat_(:,:,k)=corr(EEG3sec(:,:,k),'type','spearman');
 %     mean_conn(k)=mean(tril(corr_mat_(:,:,k),-1),'all');
 % end
-%% plot of movement, low/high and connectivity
+%% plot of movement, low/high 
 t_plot=[.4 4.9]*3600; %%%%%%%%%%% t_lim for plot in seconds
 ind=t_bins3sec<t_plot(2) & t_bins3sec>t_plot(1);
 mov_valid=NaN(size(mov3sec));
@@ -96,7 +90,7 @@ area([light_on_t t_plot(2)]/60,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,..
 ylabel({'Movement';'(pixlel)'});  
 subplot(2,1,2)
 plot((t_bins3sec(ind))/3600,mov_avg_nan(LH_valid(ind),win),'linewidth',1.2,'color',[0 0 .9]);
-xlim(t_plot/3600); ylim([0 40]); 
+xlim(t_plot/3600); ylim([0 200]); 
 hold on
 area([t_plot(1) light_off_t]/3600,[5000 5000],'facecolor',[1 1 0],'FaceAlpha',.2,...
     'edgecolor',[1 .8 0]);
@@ -340,7 +334,7 @@ for ch=1:size(EEG3sec,2)
 end
 set(gcf, 'Position',[200 , 200, 600, 500]);
 
-%% a figure of low/high power ratio, and local wave abundancy rate
+%% a figure of depth-of-sleep, and local wave abundancy rate
 
 % plot of smOothed data (movement, low/high and connectivity)
 figure

@@ -4,7 +4,7 @@ clear
 
 n=1;
 res(n).bird=''; % initiation of the file
-save('G:\Hamed\zf\P1\labled sleep\batch_results_fig4.mat','res','-nocompression')
+save('G:\Hamed\zf\P1\labled sleep\batch_results_Fig4_pipeline.mat','res','-nocompression')
 
 n=1;
 fname='72-94_29_05_scoring';   % load data
@@ -13,7 +13,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=28772/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=892778/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 
 toc
 disp('for one dataset');
@@ -26,7 +26,7 @@ image_layout='Z:\zoologie\HamedData\P1\73-03\73-03 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=31000/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=889160/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=1:16; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=3;
@@ -36,7 +36,7 @@ image_layout='Z:\zoologie\HamedData\P1\73-03\73-03 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=5980/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=837500/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=1:16; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=4;
@@ -46,7 +46,7 @@ image_layout='Z:\zoologie\HamedData\P1\73-03\73-03 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=746290/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=1:16; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=5;
@@ -56,7 +56,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=872000/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=6;
@@ -66,7 +66,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%
 light_off_t=690/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=871900/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=7;
@@ -76,7 +76,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=842000/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=8;
@@ -86,7 +86,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=884675/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=9;
@@ -96,7 +96,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=851777/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=10;
@@ -106,7 +106,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=843130/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=11;
@@ -116,7 +116,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=854300/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=12;
@@ -126,7 +126,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=842350/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=13;
@@ -136,7 +136,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=7000/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=857860/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=14;
@@ -146,7 +146,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1780/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=851500/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=15;
@@ -156,7 +156,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%
 light_off_t=19040/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=881362/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=16;
@@ -166,7 +166,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=35580/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=900200/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=17;
@@ -176,7 +176,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=22100/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=885580/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=18;
@@ -186,7 +186,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=840700/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=19;
@@ -196,7 +196,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=847160/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=20;
@@ -206,7 +206,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=7370/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=919130/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=21;
@@ -216,7 +216,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=832800/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -227,7 +227,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=810000/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -238,7 +238,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=804670/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:13 15:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=24;
@@ -248,7 +248,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=52530/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=916540/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -259,7 +259,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=135300/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=1000300/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=26;
@@ -269,7 +269,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=106800/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=989716/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=27;
@@ -279,7 +279,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=2970/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=867190/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -290,7 +290,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=6715/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=871390/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -301,7 +301,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=855300/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=30;
@@ -311,7 +311,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=879920/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=31;
@@ -321,7 +321,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=837890/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 n=32;
@@ -331,7 +331,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=820590/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -342,7 +342,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%
 light_off_t=32120/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=897280/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -353,7 +353,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1580/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=866430/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -364,7 +364,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%
 light_off_t=16560/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=881111/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -375,7 +375,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=8630/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=873750/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -386,7 +386,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=53200/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=917500/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -397,7 +397,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=33050/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=897180/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -408,7 +408,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=22100/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=885570/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -419,7 +419,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=23390/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=887300/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -430,7 +430,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=84520/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=947970/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 clear
 
 
@@ -441,6 +441,6 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=19130/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=883360/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % number of non-noisy channels
-Fig4;
+Fig4_pipeline;
 
 

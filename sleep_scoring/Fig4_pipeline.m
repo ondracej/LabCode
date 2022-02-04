@@ -1,33 +1,54 @@
+
 fs=30000/64;
+chnl=4; % non-noisy channel
 % reshaping data in 3 sec windows, in case bins are 1.5 sec
-if exist('EEG_')==1
-    EEG=EEG_;
-end
-if size(EEG,3)>27000
-new_len=floor(size(EEG,3)/2);
-EEG3sec=zeros(size(EEG,1)*2,size(EEG,2),new_len);
-for k=1:new_len
-    EEG3sec(:,:,k)=[EEG(:,:,2*k-1);EEG(:,:,2*k)];
-end
-t_bins3sec=downsample(t_bins,2)+1.5/2;
-mov3sec=downsample((mov+circshift(mov,-1))/2, 2);
+if exist('EEG3sec','var')==0
+    if exist('EEG_','var')==1
+        EEG=EEG_;
+    elseif exist('eeg_adc','var')
+        EEG=eeg_adc;
+    end
+    if size(EEG,3)>27000
+        new_len=floor(size(EEG,3)/2);
+        EEG3sec=zeros(size(EEG,1)*2,size(EEG,2),new_len);
+        for k=1:new_len
+            EEG3sec(:,:,k)=[EEG(:,:,2*k-1);EEG(:,:,2*k)];
+        end
+        t_bins3sec=downsample(t_bins,2)+1.5/2;
+        mov3sec=downsample((mov+circshift(mov,-1))/2, 2);
+    else
+        mov3sec=mov;
+        EEG3sec=EEG;
+        % t_bins3sec=t_bins;
+    end
 else
-mov3sec=mov;
-EEG3sec=EEG;
-t_bins3sec=t_bins;
+    mov3sec=mov;
+    
 end
-mov3sec=mov3sec(1:size(EEG3sec,3));
+
+if length(EEG3sec)>=length(mov3sec) && exist('t_diff','var') % this is true if the synchronizing pulse has worked correctly
+    EEG3sec=EEG3sec(:,:,round(t_diff/3)+1:end);
+    EEG3sec=EEG3sec(:,:,1:length(mov3sec));
+else
+    mov3sec=mov3sec(1:size(EEG3sec,3));
+end
+
 clear t_bins mov k feats EEG auto_label
-chnl=4; % one non-noisy channel
+
+% finding the bins when the bird is not moving too much (is not wake) and EEG is without movement artefact  
 eeg=reshape(EEG3sec(:,chnl,:),[1,size(EEG3sec,1)*size(EEG3sec,3)]);
 thresh=4*iqr(eeg);
 maxes_=max(abs(EEG3sec(:,chnl,:)),[],1);
 maxes=reshape(maxes_,[1,length(maxes_)]);
-thresh_mov=median(mov3sec)+5*iqr(mov3sec); % threshold for separating wakes from sleep based on movement
-valid_inds=find(maxes<thresh & mov3sec'<thresh_mov);
-valid_inds_logic=(maxes<thresh & mov3sec'<thresh_mov);
-
-% extracting low/high ratio (LH)
+if exist('t_diff','var') % in case that we dont have the synchronizing signal
+    valid_inds=find(maxes<thresh );
+    valid_inds_logic=(maxes<thresh );
+else
+    thresh_mov=median(mov3sec)+5*iqr(mov3sec); % threshold for separating wakes from sleep based on movement
+    valid_inds=find(maxes<thresh & mov3sec'<thresh_mov);
+    valid_inds_logic=(maxes<thresh & mov3sec'<thresh_mov);
+end
+%% extracting low/high ratio (LH)
 fs=30000/64;
 LH=NaN(1,size(EEG3sec,3)); % low/high freq ratio
 for k=1:size(EEG3sec,3)
@@ -66,6 +87,8 @@ for bin_n=1:length(REM_valid_inds)
     % in the correlation matrix. So, each entry in the s1 is either 0, or 1
     s=s1-diag(diag(s1)); % removing self loops
     [ current_cliques ] = maximalCliques( s ); % extract fully-connected subgrapohs, each clique is a column of ones and zeroes ...
+    current_cliques=current_cliques(:,sum(current_cliques)>2);   % only considering cliques with at least 3 nodes
+
     % in the output matrix
     
     % for the very first clique detected :
@@ -102,6 +125,7 @@ for bin_n=1:length(IS_valid_inds)
     [ current_cliques ] = maximalCliques( s ); % extract fully-connected subgrapohs, each clique is a column of ones and zeroes ...
     % in the output matrix
     % only cliques with min 3 points are accepted:
+    current_cliques=current_cliques(:,sum(current_cliques)>2);   % only considering cliques with at least 3 nodes
 
         for current_clique_ind=1:size(current_cliques,2)
             n_matches=0; % this variable will become 1 in case the current clique matches with one of the the ones in the template
@@ -129,6 +153,7 @@ for bin_n=1:length(SWS_valid_inds)
     s=s1-diag(diag(s1)); % removing self loops
     [ current_cliques ] = maximalCliques( s ); % extract fully-connected subgrapohs, each clique is a column of ones and zeroes ...
     % in the output matrix
+    current_cliques=current_cliques(:,sum(current_cliques)>2);   % only considering cliques with at least 3 nodes
 
         for current_clique_ind=1:size(current_cliques,2)
             n_matches=0; % this variable will become 1 in case the current clique matches with one of the the ones in the template
@@ -203,10 +228,10 @@ SWS_main_cliques=cliques_listed(:,SWS_main_cliques_ind);
 % end
 %     
     
-SWS_subnet_incidence=figure;
-plot(SWS_clique_occurance_sorted/length(SWS_valid_inds),'.','markersize',10); hold on
-line([1 length(SWS_clique_occurance_sorted)],[thresh thresh]/length(SWS_valid_inds),'linestyle','--','color',[1 .2 0]);
-xlabel('clique number'); ylabel('Frequency of observation');  title('SWS')
+% SWS_subnet_incidence=figure;
+% plot(SWS_clique_occurance_sorted/length(SWS_valid_inds),'.','markersize',10); hold on
+% line([1 length(SWS_clique_occurance_sorted)],[thresh thresh]/length(SWS_valid_inds),'linestyle','--','color',[1 .2 0]);
+% xlabel('clique number'); ylabel('Frequency of observation');  title('SWS')
 
 % picking the most-frequent cliques in IS
 % we keep the cliques that are happening at least in 10 % of the time
@@ -225,10 +250,10 @@ IS_main_cliques=cliques_listed(:,IS_main_cliques_ind);
 %     plot(x(inds),IS_cliques_address(inds),'r.','markersize',3)
 % end
     
-IS_subnet_incidence=figure;
-plot(IS_clique_occurance_sorted/length(IS_valid_inds),'.','markersize',10); hold on
-line([1 length(IS_clique_occurance_sorted)],[thresh thresh]/length(IS_valid_inds),'linestyle','--','color',[1 .2 0]);
-xlabel('clique number'); ylabel('Frequency of observation');  title('IS')
+% IS_subnet_incidence=figure;
+% plot(IS_clique_occurance_sorted/length(IS_valid_inds),'.','markersize',10); hold on
+% line([1 length(IS_clique_occurance_sorted)],[thresh thresh]/length(IS_valid_inds),'linestyle','--','color',[1 .2 0]);
+% xlabel('clique number'); ylabel('Frequency of observation');  title('IS')
 
 
 % picking the most-frequent cliques in REM
@@ -249,148 +274,148 @@ REM_main_cliques=cliques_listed(:,REM_main_cliques_ind);
 % end
     
     
-REM_subnet_incidence=figure;
-plot(REM_clique_occurance_sorted/length(REM_valid_inds),'.','markersize',10); hold on
-line([1 length(REM_clique_occurance_sorted)],[thresh thresh]/length(REM_valid_inds),'linestyle','--','color',[1 .2 0]);
-xlabel('clique number'); ylabel('Frequency of observation'); title('REM')
-
-% %% visualization of recurring co-active cluster (cliques)
+% REM_subnet_incidence=figure;
+% plot(REM_clique_occurance_sorted/length(REM_valid_inds),'.','markersize',10); hold on
+% line([1 length(REM_clique_occurance_sorted)],[thresh thresh]/length(REM_valid_inds),'linestyle','--','color',[1 .2 0]);
+% xlabel('clique number'); ylabel('Frequency of observation'); title('REM')
 % 
-% % getting the coordinates of the recording sites:
-% figure
-% image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
-% title(fname);
-% im=imread(image_layout);
-% im=.6*double(rgb2gray(imresize(im,.3)));
-% imshow(int8(im)); hold on
-% [x,y]=ginput(16);
-% xy(:,1)=x; xy(:,2)=y;
-xy =[
-   74.2000  157.1000
-   58.8000  172.1000
-   51.5000  140.7000
-   42.8000  154.7000
-   41.1000  119.6000
-   54.2000   96.2000
-   78.2000  101.9000
-   78.2000   84.2000
-  113.3000   83.5000
-  111.0000  101.6000
-  134.1000   96.2000
-  148.4000  116.0000
-  135.4000  136.0000
-  148.8000  150.4000
-  117.7000  151.7000
-  130.4000  168.4000];
-%%
-% first preparing the color scheme for color-coding the subnetworks by their
-% corresponding ocurrance rate
-rates=[SWS_clique_occurance_sorted(1:size(SWS_main_cliques,2))/length(SWS_valid_inds), ...
-    IS_clique_occurance_sorted(1:size(IS_main_cliques,2))/length(IS_valid_inds), ...
-    REM_clique_occurance_sorted(1:size(REM_main_cliques,2))/length(REM_valid_inds)];
-cmap=winter(100);
-
-subnets_fig=figure('Position',[10 200 1950 420]);
-whole_graph=zeros(16);
-whole_graph(valid_chnls,valid_chnls)=ones(length(valid_chnls)); % a fully-connected substrate minus the noisy channels
-Gcorr = graph(whole_graph,'lower','omitselfloops'); % the main graph containing all the possible edges between each pair of nodes
-subplot(1,3,1) % for SWS networks
-hold on
-for k =1:size(SWS_main_cliques,2)
-    % laying out electrode sites
-    x0=(max(xy(:,1))/3)*(rem(k-1,3))-min(xy(:,1))/3; % for plotting each sub-network we depict the electrode layout first, scaled for the plot
-    y0=(max(xy(:,2))/3)*floor((k-1)/3)-min(xy(:,2))/3;  % for plotting each sub-network we depict the electrode layout first, scaled for the plot
-    for ch=1:16
-        scatter1 = scatter(xy(ch,1)/3+x0, xy(ch,2)/3+y0,30,'o','MarkerFaceColor',[.5 .6 .8],...
-            'MarkerEdgeColor',.5*[1 1 1],'MarkerFaceAlpha',.4,...
-            'MarkerEdgeAlpha',.2);
-    end
-    
-    clique_right_size=false(16,1); % assigning zeroes to the noisy chasnnels, and constructing a 16x1 vector for the subgraph
-    clique_right_size(valid_chnls)=SWS_main_cliques(:,k);
-    sub=subgraph(Gcorr,clique_right_size);
-    h=plot(sub,'EdgeAlpha',.8,'markersize',4,'NodeColor',[1 .6 .5]); hold on
-    XData=xy(logical(clique_right_size),1);  YData=xy(logical(clique_right_size),2);
-    h.XData=XData/3+x0;      h.YData=YData/3+y0; 
-    h.NodeLabel = {};
-    h.LineWidth = 1;
-    axis([-5 max(xy(:,1)) -5 max(xy(:,2))]); axis square; axis ij
-    xticks([]);  yticks([]);
-    h.EdgeColor = cmap(ceil(eps+99.99*(SWS_clique_occurance_sorted(k)/length(SWS_valid_inds)-min(rates))/range(rates)),:);
-
-end
-title('SWS co-active netwoks')
-
-whole_graph=zeros(16);
-whole_graph(valid_chnls,valid_chnls)=ones(length(valid_chnls)); % a fully-connected substrate minus the noisy channels
-Gcorr = graph(whole_graph,'lower','omitselfloops'); % the main graph containing all the possible edges between each pair of nodes
-subplot(1,3,2) % for IS networks
-hold on
-for k =1:size(IS_main_cliques,2)
-    % laying out electrode sites
-    x0=(max(xy(:,1))/3)*(rem(k-1,3))-min(xy(:,1))/3; % for plotting each sub-network we depict the electrode layout first, scaled for the plot
-    y0=(max(xy(:,2))/3)*floor((k-1)/3)-min(xy(:,2))/3;  % for plotting each sub-network we depict the electrode layout first, scaled for the plot
-    for ch=1:16
-        scatter1 = scatter(xy(ch,1)/3+x0, xy(ch,2)/3+y0,30,'o','MarkerFaceColor',[.5 .6 .8],...
-            'MarkerEdgeColor',.5*[1 1 1],'MarkerFaceAlpha',.4,...
-            'MarkerEdgeAlpha',.2);
-    end
-    
-    clique_right_size=false(16,1); % assigning zeroes to the noisy chasnnels, and constructing a 16x1 vector for the subgraph
-    clique_right_size(valid_chnls)=IS_main_cliques(:,k);
-    sub=subgraph(Gcorr,clique_right_size);
-    h=plot(sub,'EdgeAlpha',.8,'markersize',4,'NodeColor',[1 .6 .5]); hold on
-    XData=xy(logical(clique_right_size),1);  YData=xy(logical(clique_right_size),2);
-    h.XData=XData/3+x0;      h.YData=YData/3+y0; 
-    h.NodeLabel = {};
-    h.LineWidth = 1;
-    axis([-5 max(xy(:,1)) -5 max(xy(:,2))]); axis square; axis ij
-    xticks([]);  yticks([]);
-    h.EdgeColor = cmap(ceil(eps+99.99*(IS_clique_occurance_sorted(k)/length(IS_valid_inds)-min(rates))/range(rates)),:);
-
-end
-title('IS co-active netwoks')
-
-whole_graph=zeros(16);
-whole_graph(valid_chnls,valid_chnls)=ones(length(valid_chnls)); % a fully-connected substrate minus the noisy channels
-Gcorr = graph(whole_graph,'lower','omitselfloops'); % the main graph containing all the possible edges between each pair of nodes
-subplot(1,3,3) % for REM networks
-hold on
-for k =1:size(REM_main_cliques,2)
-    % laying out electrode sites
-    x0=(max(xy(:,1))/3)*(rem(k-1,3))-min(xy(:,1))/3; % for plotting each sub-network we depict the electrode layout first, scaled for the plot
-    y0=(max(xy(:,2))/3)*floor((k-1)/3)-min(xy(:,2))/3;  % for plotting each sub-network we depict the electrode layout first, scaled for the plot
-    for ch=1:16
-        scatter1 = scatter(xy(ch,1)/3+x0, xy(ch,2)/3+y0,30,'o','MarkerFaceColor',[.5 .6 .8],...
-            'MarkerEdgeColor',.5*[1 1 1],'MarkerFaceAlpha',.4,...
-            'MarkerEdgeAlpha',.2);
-    end
-    
-    clique_right_size=false(16,1); % assigning zeroes to the noisy chasnnels, and constructing a 16x1 vector for the subgraph
-    clique_right_size(valid_chnls)=REM_main_cliques(:,k);
-    sub=subgraph(Gcorr,clique_right_size);
-    h=plot(sub,'EdgeAlpha',.8,'markersize',4,'NodeColor',[1 .6 .5]); hold on
-    XData=xy(logical(clique_right_size),1);  YData=xy(logical(clique_right_size),2);
-    h.XData=XData/3+x0;      h.YData=YData/3+y0; 
-    h.NodeLabel = {};
-    h.LineWidth = 1;
-    axis([-5 max(xy(:,1)) -5 max(xy(:,2))]); axis square; axis ij
-    xticks([]);  yticks([]);
-    h.EdgeColor = cmap(ceil(eps+99.99*(REM_clique_occurance_sorted(k)/length(REM_valid_inds)-min(rates))/range(rates)),:);
-
-end
-title('REM co-active netwoks')
-colormap(winter);
-aa=colorbar;
-%aa.XTickLabel={'-12','-9','-6','-3','0','3','6','9','12'}; % 
-set(aa,'ticks',0:1);
-set(aa,'ticklabels',round(100*[min(rates) max(rates)])/100);
-    
+% % %% visualization of recurring co-active cluster (cliques)
+% % 
+% % % getting the coordinates of the recording sites:
+% % figure
+% % image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
+% % title(fname);
+% % im=imread(image_layout);
+% % im=.6*double(rgb2gray(imresize(im,.3)));
+% % imshow(int8(im)); hold on
+% % [x,y]=ginput(16);
+% % xy(:,1)=x; xy(:,2)=y;
+% xy =[
+%    74.2000  157.1000
+%    58.8000  172.1000
+%    51.5000  140.7000
+%    42.8000  154.7000
+%    41.1000  119.6000
+%    54.2000   96.2000
+%    78.2000  101.9000
+%    78.2000   84.2000
+%   113.3000   83.5000
+%   111.0000  101.6000
+%   134.1000   96.2000
+%   148.4000  116.0000
+%   135.4000  136.0000
+%   148.8000  150.4000
+%   117.7000  151.7000
+%   130.4000  168.4000];
+% %%
+% % first preparing the color scheme for color-coding the subnetworks by their
+% % corresponding ocurrance rate
+% rates=[SWS_clique_occurance_sorted(1:size(SWS_main_cliques,2))/length(SWS_valid_inds), ...
+%     IS_clique_occurance_sorted(1:size(IS_main_cliques,2))/length(IS_valid_inds), ...
+%     REM_clique_occurance_sorted(1:size(REM_main_cliques,2))/length(REM_valid_inds)];
+% cmap=winter(100);
+% 
+% subnets_fig=figure('Position',[10 200 1950 420]);
+% whole_graph=zeros(16);
+% whole_graph(valid_chnls,valid_chnls)=ones(length(valid_chnls)); % a fully-connected substrate minus the noisy channels
+% Gcorr = graph(whole_graph,'lower','omitselfloops'); % the main graph containing all the possible edges between each pair of nodes
+% subplot(1,3,1) % for SWS networks
+% hold on
+% for k =1:size(SWS_main_cliques,2)
+%     % laying out electrode sites
+%     x0=(max(xy(:,1))/3)*(rem(k-1,3))-min(xy(:,1))/3; % for plotting each sub-network we depict the electrode layout first, scaled for the plot
+%     y0=(max(xy(:,2))/3)*floor((k-1)/3)-min(xy(:,2))/3;  % for plotting each sub-network we depict the electrode layout first, scaled for the plot
+%     for ch=1:16
+%         scatter1 = scatter(xy(ch,1)/3+x0, xy(ch,2)/3+y0,30,'o','MarkerFaceColor',[.5 .6 .8],...
+%             'MarkerEdgeColor',.5*[1 1 1],'MarkerFaceAlpha',.4,...
+%             'MarkerEdgeAlpha',.2);
+%     end
+%     
+%     clique_right_size=false(16,1); % assigning zeroes to the noisy chasnnels, and constructing a 16x1 vector for the subgraph
+%     clique_right_size(valid_chnls)=SWS_main_cliques(:,k);
+%     sub=subgraph(Gcorr,clique_right_size);
+%     h=plot(sub,'EdgeAlpha',.8,'markersize',4,'NodeColor',[1 .6 .5]); hold on
+%     XData=xy(logical(clique_right_size),1);  YData=xy(logical(clique_right_size),2);
+%     h.XData=XData/3+x0;      h.YData=YData/3+y0; 
+%     h.NodeLabel = {};
+%     h.LineWidth = 1;
+%     axis([-5 max(xy(:,1)) -5 max(xy(:,2))]); axis square; axis ij
+%     xticks([]);  yticks([]);
+%     h.EdgeColor = cmap(ceil(eps+99.99*(SWS_clique_occurance_sorted(k)/length(SWS_valid_inds)-min(rates))/range(rates)),:);
+% 
+% end
+% title('SWS co-active netwoks')
+% 
+% whole_graph=zeros(16);
+% whole_graph(valid_chnls,valid_chnls)=ones(length(valid_chnls)); % a fully-connected substrate minus the noisy channels
+% Gcorr = graph(whole_graph,'lower','omitselfloops'); % the main graph containing all the possible edges between each pair of nodes
+% subplot(1,3,2) % for IS networks
+% hold on
+% for k =1:size(IS_main_cliques,2)
+%     % laying out electrode sites
+%     x0=(max(xy(:,1))/3)*(rem(k-1,3))-min(xy(:,1))/3; % for plotting each sub-network we depict the electrode layout first, scaled for the plot
+%     y0=(max(xy(:,2))/3)*floor((k-1)/3)-min(xy(:,2))/3;  % for plotting each sub-network we depict the electrode layout first, scaled for the plot
+%     for ch=1:16
+%         scatter1 = scatter(xy(ch,1)/3+x0, xy(ch,2)/3+y0,30,'o','MarkerFaceColor',[.5 .6 .8],...
+%             'MarkerEdgeColor',.5*[1 1 1],'MarkerFaceAlpha',.4,...
+%             'MarkerEdgeAlpha',.2);
+%     end
+%     
+%     clique_right_size=false(16,1); % assigning zeroes to the noisy chasnnels, and constructing a 16x1 vector for the subgraph
+%     clique_right_size(valid_chnls)=IS_main_cliques(:,k);
+%     sub=subgraph(Gcorr,clique_right_size);
+%     h=plot(sub,'EdgeAlpha',.8,'markersize',4,'NodeColor',[1 .6 .5]); hold on
+%     XData=xy(logical(clique_right_size),1);  YData=xy(logical(clique_right_size),2);
+%     h.XData=XData/3+x0;      h.YData=YData/3+y0; 
+%     h.NodeLabel = {};
+%     h.LineWidth = 1;
+%     axis([-5 max(xy(:,1)) -5 max(xy(:,2))]); axis square; axis ij
+%     xticks([]);  yticks([]);
+%     h.EdgeColor = cmap(ceil(eps+99.99*(IS_clique_occurance_sorted(k)/length(IS_valid_inds)-min(rates))/range(rates)),:);
+% 
+% end
+% title('IS co-active netwoks')
+% 
+% whole_graph=zeros(16);
+% whole_graph(valid_chnls,valid_chnls)=ones(length(valid_chnls)); % a fully-connected substrate minus the noisy channels
+% Gcorr = graph(whole_graph,'lower','omitselfloops'); % the main graph containing all the possible edges between each pair of nodes
+% subplot(1,3,3) % for REM networks
+% hold on
+% for k =1:size(REM_main_cliques,2)
+%     % laying out electrode sites
+%     x0=(max(xy(:,1))/3)*(rem(k-1,3))-min(xy(:,1))/3; % for plotting each sub-network we depict the electrode layout first, scaled for the plot
+%     y0=(max(xy(:,2))/3)*floor((k-1)/3)-min(xy(:,2))/3;  % for plotting each sub-network we depict the electrode layout first, scaled for the plot
+%     for ch=1:16
+%         scatter1 = scatter(xy(ch,1)/3+x0, xy(ch,2)/3+y0,30,'o','MarkerFaceColor',[.5 .6 .8],...
+%             'MarkerEdgeColor',.5*[1 1 1],'MarkerFaceAlpha',.4,...
+%             'MarkerEdgeAlpha',.2);
+%     end
+%     
+%     clique_right_size=false(16,1); % assigning zeroes to the noisy chasnnels, and constructing a 16x1 vector for the subgraph
+%     clique_right_size(valid_chnls)=REM_main_cliques(:,k);
+%     sub=subgraph(Gcorr,clique_right_size);
+%     h=plot(sub,'EdgeAlpha',.8,'markersize',4,'NodeColor',[1 .6 .5]); hold on
+%     XData=xy(logical(clique_right_size),1);  YData=xy(logical(clique_right_size),2);
+%     h.XData=XData/3+x0;      h.YData=YData/3+y0; 
+%     h.NodeLabel = {};
+%     h.LineWidth = 1;
+%     axis([-5 max(xy(:,1)) -5 max(xy(:,2))]); axis square; axis ij
+%     xticks([]);  yticks([]);
+%     h.EdgeColor = cmap(ceil(eps+99.99*(REM_clique_occurance_sorted(k)/length(REM_valid_inds)-min(rates))/range(rates)),:);
+% 
+% end
+% title('REM co-active netwoks')
+% colormap(winter);
+% aa=colorbar;
+% %aa.XTickLabel={'-12','-9','-6','-3','0','3','6','9','12'}; % 
+% set(aa,'ticks',0:1);
+% set(aa,'ticklabels',round(100*[min(rates) max(rates)])/100);
+%     
 %% saving variables
-loaded_res=load('G:\Hamed\zf\P1\labled sleep\batch_results_fig4.mat');
+loaded_res=load('G:\Hamed\zf\P1\labled sleep\batch_results_Fig4_pipeline.mat');
 res=loaded_res.res;
 
-res(n).bird=fname;
+res(n).experiment=fname(1:11);
 % since, some of the chsnnels are noisy, the detected sub-networks are have the length of the valid_channels. ...
 % so we need to map them to 16-channel set. For example when channel 1 is
 % noisy, the main_clicques is a matriy with 15 rows, instead of 16, so in
@@ -411,15 +436,19 @@ res(n).REM_clique_occurance=REM_clique_occurance_sorted;
 res(n).IS_clique_occurance=IS_clique_occurance_sorted;
 res(n).SWS_clique_occurance=SWS_clique_occurance_sorted;
 
-% saving variables
-save subnets_fig
-saveas(subnets_fig,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\sub-networks ' fname '.fig']);
-saveas(subnets_fig,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\sub-networks ' fname '.png']);
-saveas(REM_subnet_incidence,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\REM_subnet_incidence' fname '.png']);
-saveas(IS_subnet_incidence,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\IS_subnet_incidence' fname '.png']);
-saveas(SWS_subnet_incidence,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\SWS_subnet_incidence' fname '.png']);
+res(n).REM_bins=length(REM_valid_inds);
+res(n).IS_bins=length(IS_valid_inds);
+res(n).SWS_bins=length(SWS_valid_inds);
 
-save('G:\Hamed\zf\P1\labled sleep\batch_results_fig4.mat','res','-nocompression')
+% saving figures
+% save subnets_fig
+% saveas(subnets_fig,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\sub-networks ' fname '.fig']);
+% saveas(subnets_fig,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\sub-networks ' fname '.png']);
+% saveas(REM_subnet_incidence,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\REM_subnet_incidence' fname '.png']);
+% saveas(IS_subnet_incidence,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\IS_subnet_incidence' fname '.png']);
+% saveas(SWS_subnet_incidence,['Z:\zoologie\HamedData\CorrelationPaper\Figures\new story\feedback\Fig. 4\SWS_subnet_incidence' fname '.png']);
+% saving variables
+save('G:\Hamed\zf\P1\labled sleep\batch_results_Fig4_pipeline.mat','res','-nocompression');
 
 
 
