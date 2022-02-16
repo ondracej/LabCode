@@ -440,7 +440,7 @@ conn_different_bands;
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%
-these are the ones without ADC. For EEG-video alighnment, the difference between the srtarting time is used.
+% these are the ones without ADC. For EEG-video alighnment, the difference between the srtarting time is used.
 
 n=43
 fname='w041-05-01-2022_scoring';   % load data

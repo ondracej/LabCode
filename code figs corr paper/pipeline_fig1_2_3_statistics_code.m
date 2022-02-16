@@ -1,36 +1,62 @@
+
 fs=30000/64;
 chnl=4; % non-noisy channel
 % reshaping data in 3 sec windows, in case bins are 1.5 sec
-if exist('EEG_','var')==1
-    EEG=EEG_;
-end
-if size(EEG,3)>27000
-new_len=floor(size(EEG,3)/2);
-EEG3sec=zeros(size(EEG,1)*2,size(EEG,2),new_len);
-for k=1:new_len
-    EEG3sec(:,:,k)=[EEG(:,:,2*k-1);EEG(:,:,2*k)];
-end
-t_bins3sec=downsample(t_bins,2)+1.5/2;
-mov3sec=downsample((mov+circshift(mov,-1))/2, 2);
+if exist('EEG3sec','var')==0
+    if exist('EEG_','var')==1
+        EEG=EEG_;
+    elseif exist('eeg_adc','var')
+        EEG=eeg_adc;
+    end
+    if size(EEG,3)>27000
+        new_len=floor(size(EEG,3)/2);
+        EEG3sec=zeros(size(EEG,1)*2,size(EEG,2),new_len);
+        for k=1:new_len
+            EEG3sec(:,:,k)=[EEG(:,:,2*k-1);EEG(:,:,2*k)];
+        end
+        t_bins3sec=downsample(t_bins,2)+1.5/2;
+        mov3sec=downsample((mov+circshift(mov,-1))/2, 2);
+    else
+        mov3sec=mov;
+        EEG3sec=EEG;
+        % t_bins3sec=t_bins;
+    end
 else
-mov3sec=mov;
-EEG3sec=EEG;
-t_bins3sec=t_bins;
+    if exist('mov','var')
+        mov3sec=mov;
+    end
 end
-mov3sec=mov3sec(1:size(EEG3sec,3));
+
+if exist('mov3sec','var')
+    if length(EEG3sec)>=length(mov3sec) % this is true if the synchronizing pulse has worked correctly
+        EEG3sec=EEG3sec(:,:,round(t_diff/3)+1:end);
+        EEG3sec=EEG3sec(:,:,1:length(mov3sec));
+    else
+        mov3sec=mov3sec(1:size(EEG3sec,3));
+    end
+end
+
 clear t_bins mov k feats EEG auto_label
 
+% finding the bins where animal is not moving too much (is not wake) and EEG is without movement artefact
 eeg=reshape(EEG3sec(:,chnl,:),[1,size(EEG3sec,1)*size(EEG3sec,3)]);
 thresh=4*iqr(eeg);
 maxes_=max(abs(EEG3sec(:,chnl,:)),[],1);
 maxes=reshape(maxes_,[1,length(maxes_)]);
-thresh_mov=median(mov3sec)+5*iqr(mov3sec); % threshold for separating wakes from sleep based on movement
-valid_inds=find(maxes<thresh & mov3sec'<thresh_mov);
-valid_inds_logic=(maxes<thresh & mov3sec'<thresh_mov);
+if exist('t_diff','var') % in case that we dont have the synchronizing signal
+    valid_inds=find(maxes<thresh );
+    valid_inds_logic=(maxes<thresh );
+else
+    thresh_mov=median(mov3sec)+5*iqr(mov3sec); % threshold for separating wakes from sleep based on movement
+    valid_inds=find(maxes<thresh & mov3sec'<thresh_mov);
+    valid_inds_logic=(maxes<thresh & mov3sec'<thresh_mov);
+end
 
 %% extracting low/high ratio (LH)
 fs=30000/64;
 LH=NaN(1,size(EEG3sec,3)); % low/high freq ratio
+L=NaN(1,size(EEG3sec,3)); % low freq power 
+H=NaN(1,size(EEG3sec,3)); % high freq power 
 for k=1:size(EEG3sec,3)
     % settings for multitaper
     nwin=size(EEG3sec,1);  nfft=2^(nextpow2(nwin));  TW=1.25;
@@ -38,13 +64,21 @@ for k=1:size(EEG3sec,3)
     px_low=norm(pxx(f<8 & f>1.5));
     px_high=norm(pxx(f<49 & f>30));
     LH(k)=px_low/px_high;
+    L(k)=px_low;
+    H(k)=px_high;
+    
 end
 
- median_LH=median(LH(~isnan(LH)));
- iqr_LH=iqr(LH(~isnan(LH)));
- se_LH=std(LH(~isnan(LH)))/ sqrt(sum(~isnan(LH)));
- 
- %% extracting low/high ratio (LH) for all channels
+median_LH=median(LH(~isnan(LH)));
+iqr_LH=iqr(LH(~isnan(LH)));
+se_LH=std(LH(~isnan(LH)))/ sqrt(sum(~isnan(LH)));
+
+median_L=median(L(~isnan(L)));
+iqr_L=iqr(L(~isnan(L)));
+
+median_H=median(H(~isnan(H)));
+iqr_H=iqr(H(~isnan(H)));
+%% extracting low/high ratio (LH) for all channels
 fs=30000/64;
 LH_=NaN(size(EEG3sec,2),1000); % low/high freq ratio
 for k=1:1000
@@ -70,7 +104,7 @@ EEG3sec_healthy=EEG3sec(:,valid_chnls,:);
 local_wave_per_chnl=zeros(size(EEG3sec_healthy,2),size(EEG3sec_healthy,3));
 % go through all the data, find the suprathreshold peaks in all channels:
 for epoch=1:size(EEG3sec_healthy,3)
-
+    
     if sum(epoch==valid_inds)==0
         local_wave(epoch)=NaN; continue;
     end
@@ -136,12 +170,12 @@ for epoch=1:size(EEG3sec_healthy,3)
     local_wave_position{epoch}=peak_position;
     clear   peak_inds
 end
-  % averaging over bins
-  local_wave_per_chnl_mean_=mean(local_wave_per_chnl,2);
-  local_wave_per_chnl_mean=NaN(16,1);
-  local_wave_per_chnl_mean(valid_chnls)=local_wave_per_chnl_mean_;
-  
-%% taking samples of each stage and compute the cross-correlations between EEG activities. 
+% averaging over bins
+local_wave_per_chnl_mean_=mean(local_wave_per_chnl,2);
+local_wave_per_chnl_mean=NaN(16,1);
+local_wave_per_chnl_mean(valid_chnls)=local_wave_per_chnl_mean_;
+
+%% taking samples of each stage and compute the cross-correlations between EEG activities.
 % we take 10% of each stage
 LH_valid=LH(valid_inds);
 REM_thresh=quantile(LH_valid,.1); % 10% quartile for REM
@@ -164,7 +198,7 @@ for ind=valid_inds
     
     RR_corr_part=tril(corr_mat(9:16,9:16),-1);
     RR_corr_vals=RR_corr_part(valid_chnls(valid_chnls>8)-8, valid_chnls(valid_chnls>8)-8);
-    RR_corr=sum(RR_corr_vals(:))/sum(RR_corr_vals(:)~=0);    
+    RR_corr=sum(RR_corr_vals(:))/sum(RR_corr_vals(:)~=0);
     
     LR_corr_part=corr_mat(1:8,9:16);
     LR_corr_vals=LR_corr_part(valid_chnls(valid_chnls<=8), valid_chnls(valid_chnls>8)-8);
@@ -188,21 +222,23 @@ for ind=valid_inds
     end
 end
 % average and ste
-LLRRLR_corr_REM_ste=std(LLRRLR_corr_REM)/sqrt(length(LLRRLR_corr_REM)); 
+LLRRLR_corr_REM_ste=std(LLRRLR_corr_REM)/sqrt(length(LLRRLR_corr_REM));
 LLRRLR_corr_IS_ste=std(LLRRLR_corr_IS)/sqrt(length(LLRRLR_corr_IS));
-LLRRLR_corr_SWS_ste=std(LLRRLR_corr_SWS)/sqrt(length(LLRRLR_corr_SWS)); 
-LLRRLR_corr_REM_mean=mean(LLRRLR_corr_REM); 
+LLRRLR_corr_SWS_ste=std(LLRRLR_corr_SWS)/sqrt(length(LLRRLR_corr_SWS));
+LLRRLR_corr_REM_mean=mean(LLRRLR_corr_REM);
 LLRRLR_corr_IS_mean=mean(LLRRLR_corr_IS);
 LLRRLR_corr_SWS_mean=mean(LLRRLR_corr_SWS);
-   
+
 %% saving variables
-loaded_res=load('G:\Hamed\zf\P1\labled sleep\batch_results3.mat');
+loaded_res=load('G:\Hamed\zf\P1\labled sleep\batch_results3with_dph_Fig_1_2_3.mat');
 res=loaded_res.res;
 
 res(n).bird=fname;
-LH_local_wave_corr=corrcoef(LH(valid_inds),local_wave(valid_inds));
+a=LH(valid_inds);  b=local_wave(valid_inds);
+cc=~isnan(b) & ~isnan(a);
+LH_local_wave_corr=corrcoef(a(cc),b(cc));
 res(n).corr_local_wave_and_depth=LH_local_wave_corr(1,2); % the cross-correlation
-res(n).local_wave_perSec_perChnl_mean=local_wave_per_chnl_mean/3; 
+res(n).local_wave_perSec_perChnl_mean=local_wave_per_chnl_mean/3;
 local_wave_perSec_perChnl_se=std(mean(local_wave_per_chnl,1)/3) / sqrt(length(valid_inds));% sum of number of local waves corrected ...
 % for the number of sleep-time bins and non-noisy channels
 res(n).median_LH_per_chnl=median_LH_per_chnl;
@@ -215,4 +251,4 @@ res(n).LLRRLR_corr_SWS=LLRRLR_corr_SWS_mean;
 res(n).LLRRLR_corr_REM_ste=LLRRLR_corr_REM_ste;
 res(n).LLRRLR_corr_IS_ste=LLRRLR_corr_IS_ste;
 res(n).LLRRLR_corr_SWS_ste=LLRRLR_corr_SWS_ste;
-save('G:\Hamed\zf\P1\labled sleep\batch_results3.mat','res','-nocompression')
+save('G:\Hamed\zf\P1\labled sleep\batch_results3with_dph_Fig_1_2_3.mat','res','-nocompression')
