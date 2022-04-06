@@ -4,12 +4,13 @@ clear;
 
 data=load('G:\Hamed\zf\P1\labled sleep\batch_results3with_dph_Fig_1_2_3'); % the file containing the batch result of all birds
 res=data.res; % the variable containing the results
+res=res(1:49);
 
 bird_names={'72-00','73-03','72-94','w0009','w0016','w0018','w0020','w0021','w0041','w0043'};
 bird_symbols={'o','<','>','+','*','x','s','d','v','^'};
 rng(355);
 col_=.9*rand(10,3);
-col_mask=[.5*ones(3,3); 1.2*ones(7,3)];
+col_mask=[.5*ones(3,3); 1.1*ones(7,3)];
 col=col_.*col_mask;
 %  extracting the ID for each bird (1 to 8)
 for bird_n=1:length(res)
@@ -46,9 +47,30 @@ ylim([0 260]); xlim([85 330]);
 xticks([150 240]);
 xticklabels({'Juveniles','Adults'}) 
 ylabel('Depth of Sleep')
-% xticks([0 2]);  xticklabels({'Juveniles','Adults'});
 title('Sleep depth index across nights');
 
+%% figure for the mean of depth variable and the error bars based on the real age
+figure;
+for bird_n=1:length(res)
+    % plotting
+        i=bird_id(bird_n);
+        err = res(bird_n).iqr_LH/2;
+        x=res(bird_n).dph;
+        y=res(bird_n).median_LH;
+    if i<=3 % for adults
+        plot( x-500,y,'marker',bird_symbols{i},'color',col(i,:),'LineWidth',2); hold on
+        errorbar(x-500,y, err, 'color',[col(i,:) .2]);
+    else  % for juveniles
+        plot(x,y,'marker',bird_symbols{i},'color',col(i,:),'LineWidth',2); hold on
+        errorbar(x,y, err, 'color',[col(i,:) .2]);
+    end
+end
+ylim([0 260]); xlim([45 315]); 
+xticks([50 55 60 65 70 75 80 85 90 145 185 190 195 280 285 290 295 300 305]);
+xticklabels({'50' '' '' '' '' '' '' '' '90' '//' '' '690' '' '' '' '790' '' '' ''});
+xlabel('age (dph)')
+ylabel('Depth of Sleep')
+title('Sleep depth index across nights');
 
 %% figure for the mean of low band powers (1.5-8)
 figure;
@@ -105,11 +127,11 @@ for k=1:length(bird_names)
 end
 legend(bird_names)
 ylim([0 14])
-%%
-% figure for the mean local wave incidence for all nights and birds
+
+%% figure for the mean local wave incidence for all nights and birds
 
 figure;
-for bird_n=1:length(res)-2
+for bird_n=1:length(res)
     % plotting
         i=bird_id(bird_n);
         var_=res(bird_n).local_wave_perSec_perChnl_mean; 
@@ -124,29 +146,37 @@ for bird_n=1:length(res)-2
         errorbar(x+2*sum(bird_id<i),y, err, 'color',[col(i,:) .2]);
     end
 end
-  xlim([40 350]) 
 title('local wave incidence across nights');
-xlabel ('age (dph)')
 ylabel('local wave incidence (#/sec)')
+xlim([85 330]); 
+xticks([150 240]);
+xticklabels({'Juveniles','Adults'}) 
+
+
 %%
 % statistics for figure 1,2
 % statistical test for the median of sleep-depth variable
-juv_inds=bird_id==4 | bird_id==5 | bird_id==6 | bird_id==8 ; % index to bird_id for juveniles
+juv_inds=bird_id>4 ; % index to bird_id for juveniles
 adu_inds=bird_id==1 | bird_id==2 | bird_id==3  ; % index to bird_id for juveniles
-mean_median_depth_juv=mean([res(juv_inds).median_LH])
-mean_median_depth_adult=mean([res(adu_inds).median_LH])
+mean_median_depth_juv=median([res(juv_inds).median_LH])
+mean_median_depth_adult=median([res(adu_inds).median_LH])
 
-iqr_median_depth_juv=iqr([res(juv_inds).median_LH])
-iqr_median_depth_adult=iqr([res(adu_inds).median_LH])
+std_median_depth_juv=std([res(juv_inds).median_LH])
+std_median_depth_adult=std([res(adu_inds).median_LH])
 
 all_local_wave_chnls_juv=[res(juv_inds).local_wave_perSec_perChnl_mean];
 mean_local_wave_juv=mean(all_local_wave_chnls_juv(~isnan(all_local_wave_chnls_juv)),'all')
+std_local_wave_juv=std(all_local_wave_chnls_juv(~isnan(all_local_wave_chnls_juv)))
 
 all_local_wave_chnls_adu=[res(adu_inds).local_wave_perSec_perChnl_mean];
 mean_local_wave_adu=mean(all_local_wave_chnls_adu(~isnan(all_local_wave_chnls_adu)),'all')
+std_local_wave_adu=std(all_local_wave_chnls_adu(~isnan(all_local_wave_chnls_adu)))
 
 % statistical test between adult and juvenile group
-[p,h]=ranksum( [res(juv_inds).local_wave_perSec_perChnl_mean], [res(adu_inds).local_wave_perSec_perChnl_mean] )
+all_local_wave_chnls_adu(~isnan(all_local_wave_chnls_adu));
+
+[p,h]=ranksum( all_local_wave_chnls_adu(~isnan(all_local_wave_chnls_adu)), ...
+    all_local_wave_chnls_juv(~isnan(all_local_wave_chnls_juv)) )
 [p,h]=ranksum( [res(juv_inds).median_LH], [res(adu_inds).median_LH] )
 
 mean_corr_local_wave_and_depth_juv=median([res(juv_inds).corr_local_wave_and_depth])
@@ -155,13 +185,21 @@ mean_corr_local_wave_and_depth_adu=median([res(adu_inds).corr_local_wave_and_dep
 iqr_corr_local_wave_and_depth_juv=iqr([res(juv_inds).corr_local_wave_and_depth])
 iqr_corr_local_wave_and_depth_adu=iqr([res(adu_inds).corr_local_wave_and_depth])
 
+[p,h]=ranksum([res(adu_inds).corr_local_wave_and_depth],[res(juv_inds).corr_local_wave_and_depth])
 %%  Fig. 3 plot of the inter/intra-hemispheric correlations during different stages in adult group
 % for the adult
+rng(355);
+col_=.9*rand(10,3);
+col_mask=[.5*ones(3,3); 1.1*ones(7,3)];
+col=col_.*col_mask;
+col(3,:)=1.4*col(3,:);
+col(2,:)=.4*col(2,:);
+
 f_adult=figure; 
-for bird_n=1:length(res)-2
+for bird_n=1:length(res)
     % plotting
     i=bird_id(bird_n);
-    age=780*(i==1)+686*(i==2)+780*(i==3)+50*(i==4)+50*(i==5)+51*(i==6)+52*(i==8); % depending on the bird ID, only one of the parenthesis will ...
+    age=780*(i==1)+686*(i==2)+780*(i==3)+50*(i==4)+51*(i==5)+51*(i==6)+54*(i==7)+52*(i==8)+83*(i==9)+69*(i==10); % depending on the bird ID, only one of the parenthesis will ...
     % be logically correct. That 1, multiplied by the age of the
     % corresponding bird, gives the age of the bird.
     if i<=3 % for adults
@@ -220,7 +258,7 @@ for bird_n=1:length(res)
 
     if i>3 % for adults
     x=res(bird_n).dph;
-    age=780*(i==1)+686*(i==2)+780*(i==3)+50*(i==4)+50*(i==5)+51*(i==6)+52*(i==8); % depending on the bird ID, only one of the parenthesis will ...
+    age=780*(i==1)+686*(i==2)+780*(i==3)+50*(i==4)+51*(i==5)+51*(i==6)+54*(i==7)+52*(i==8)+83*(i==9)+69*(i==10); % depending on the bird ID, only one of the parenthesis will ...
     % be logically correct. That 1, multiplied by the age of the
     % corresponding bird, gives the age of the bird.    
         % LL corr
@@ -268,24 +306,6 @@ for bird_n=1:length(res)
     end
 end
 
-%% test if the correlation between DOS and local wave density is significanto
-
-bird_n=1:length(res);
-juv_id=(bird_id(bird_n)==4 | bird_id(bird_n)==5 | bird_id(bird_n)==6 | bird_id(bird_n)==8); % id of all juveniles
-juv_n=1; adult_n=1;
-for bird_n=1:length(res)-2
-    id=bird_id(bird_n);
-    % only one of the parenthesis will be logical 1
-    if id==4 | id==5 | id==6 | id==8 % if it is a juvenile
-    dos_loc_wave_corrs_juv(juv_n)=res(juv_n).corr_local_wave_and_depth;
-    juv_n=juv_n+1;
-    elseif i<=3
-    dos_loc_wave_corrs_adult(adult_n)=res(adult_n).corr_local_wave_and_depth;
-    adult_n=adult_n+1;
-    end
-end
-p = signrank(dos_loc_wave_corrs_adult)
-p = signrank(dos_loc_wave_corrs_juv)
 
 %% corr of connectivity with age, adding the regression line and statistical significance
 % juvenule
@@ -305,31 +325,31 @@ for bird_n=1:length(res)
     end
 end
 % LL, RR, and LR for SWS:
-conn_SWS_LL=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,1));
-conn_SWS_RR=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,2));
-conn_SWS_LR=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,3));
+[corr_SWS_LL, p_SWS_LL]=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,1))
+[corr_SWS_RR , p_SWS_RR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,2))
+[corr_SWS_LR, p_SWS_LR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,3))
 
-corr_SWS_LL=conn_SWS_LL(1,2)
-corr_SWS_RR=conn_SWS_RR(1,2)
-corr_SWS_LR=conn_SWS_LR(1,2)
+[corr_SWS_LL]=corr_SWS_LL(1,2)
+[corr_SWS_RR]=corr_SWS_RR(1,2)
+[corr_SWS_LR]=corr_SWS_LR(1,2)
 
 % LL, RR, and LR for IS:
-conn_IS_LL=corrcoef(juv_exp_day,juv_LLRRLR_corr_IS(:,1));
-conn_IS_RR=corrcoef(juv_exp_day,juv_LLRRLR_corr_IS(:,2));
-conn_IS_LR=corrcoef(juv_exp_day,juv_LLRRLR_corr_IS(:,3));
+[conn_IS_LL p_IS_LL]=corrcoef(juv_exp_day,juv_LLRRLR_corr_IS(:,1))
+[conn_IS_RR p_IS_RR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_IS(:,2))
+[conn_IS_LR p_IS_LR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_IS(:,3))
 
-corr_IS_LL=conn_IS_LL(1,2)
-corr_IS_RR=conn_IS_RR(1,2)
-corr_IS_LR=conn_IS_LR(1,2)
+corr_IS_LL=corr_IS_LL(1,2)
+corr_IS_RR=corr_IS_RR(1,2)
+corr_IS_LR=corr_IS_LR(1,2)
 
 % LL, RR, and LR for REM:
-conn_REM_LL=corrcoef(juv_exp_day,juv_LLRRLR_corr_REM(:,1));
-conn_REM_RR=corrcoef(juv_exp_day,juv_LLRRLR_corr_REM(:,2));
-conn_REM_LR=corrcoef(juv_exp_day,juv_LLRRLR_corr_REM(:,3));
+[conn_REM_LL p_REM_LL]=corrcoef(juv_exp_day,juv_LLRRLR_corr_REM(:,1))
+[conn_REM_RR p_REM_RR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_REM(:,2))
+[conn_REM_LR p_REM_LR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_REM(:,3))
 
-corr_REM_LL=conn_REM_LL(1,2)
-corr_REM_RR=conn_REM_RR(1,2)
-corr_REM_LR=conn_REM_LR(1,2)
+corr_REM_LL=corr_REM_LL(1,2)
+corr_REM_RR=corr_REM_RR(1,2)
+corr_REM_LR=corr_REM_LR(1,2)
 
 % adult
 clear  adult_LLRRLR_corr_SWS  adult_LLRRLR_corr_IS  adult_LLRRLR_corr_REM  adult_exp_day
@@ -349,27 +369,27 @@ for bird_n=1:length(res)
     end
 end
 % LL, RR, and LR for SWS:
-conn_SWS_LL=corrcoef(adult_exp_day,adult_LLRRLR_corr_SWS(:,1));
-conn_SWS_RR=corrcoef(adult_exp_day,adult_LLRRLR_corr_SWS(:,2));
-conn_SWS_LR=corrcoef(adult_exp_day,adult_LLRRLR_corr_SWS(:,3));
+[conn_SWS_LL p_SWS_LL]=corrcoef(adult_exp_day,adult_LLRRLR_corr_SWS(:,1))
+[conn_SWS_RR p_SWS_RR]=corrcoef(adult_exp_day,adult_LLRRLR_corr_SWS(:,2))
+[conn_SWS_LR p_SWS_LR]=corrcoef(adult_exp_day,adult_LLRRLR_corr_SWS(:,3))
 
 corr_SWS_LL=conn_SWS_LL(1,2)
 corr_SWS_RR=conn_SWS_RR(1,2)
 corr_SWS_LR=conn_SWS_LR(1,2)
 
 % LL, RR, and LR for IS:
-conn_IS_LL=corrcoef(adult_exp_day,adult_LLRRLR_corr_IS(:,1));
-conn_IS_RR=corrcoef(adult_exp_day,adult_LLRRLR_corr_IS(:,2));
-conn_IS_LR=corrcoef(adult_exp_day,adult_LLRRLR_corr_IS(:,3));
+[conn_IS_LL p_IS_LL]=corrcoef(adult_exp_day,adult_LLRRLR_corr_IS(:,1))
+[conn_IS_RR p_IS_RR]=corrcoef(adult_exp_day,adult_LLRRLR_corr_IS(:,2))
+[conn_IS_LR p_IS_LR]=corrcoef(adult_exp_day,adult_LLRRLR_corr_IS(:,3))
 
 corr_IS_LL=conn_IS_LL(1,2)
 corr_IS_RR=conn_IS_RR(1,2)
 corr_IS_LR=conn_IS_LR(1,2)
 
 % LL, RR, and LR for REM:
-conn_REM_LL=corrcoef(adult_exp_day,adult_LLRRLR_corr_REM(:,1));
-conn_REM_RR=corrcoef(adult_exp_day,adult_LLRRLR_corr_REM(:,2));
-conn_REM_LR=corrcoef(adult_exp_day,adult_LLRRLR_corr_REM(:,3));
+[conn_REM_LL p_REM_LL]=corrcoef(adult_exp_day,adult_LLRRLR_corr_REM(:,1))
+[conn_REM_RR p_REM_RR]=corrcoef(adult_exp_day,adult_LLRRLR_corr_REM(:,2))
+[conn_REM_LR p_REM_LR]=corrcoef(adult_exp_day,adult_LLRRLR_corr_REM(:,3))
 
 corr_REM_LL=conn_REM_LL(1,2)
 corr_REM_RR=conn_REM_RR(1,2)
@@ -383,9 +403,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_adult)
-x=-1:1:16; y=slope*x+intercept;
+x=-6:1:16; y=slope*x+intercept;
 subplot(1,3,1); hold on
-plot(x,y,'--','color',.3*[1 1 1]);
+plot(x,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=adult_exp_day; y=adult_LLRRLR_corr_IS(:,1);
 cov_xy=cov(x,y);
@@ -393,9 +413,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_adult)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,1); hold on
-plot(x+30,y,'--','color',.3*[1 1 1]);
+plot(x+30,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=adult_exp_day; y=adult_LLRRLR_corr_REM(:,1);
 cov_xy=cov(x,y);
@@ -403,9 +423,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_adult)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,1); hold on
-plot(x+60,y,'--','color',.3*[1 1 1]);
+plot(x+60,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 % finding the fitting regression line
 % for the RR subplot
@@ -415,9 +435,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_adult)
-x=-1:1:16; y=slope*x+intercept;
+x=-6:1:16; y=slope*x+intercept;
 subplot(1,3,2); hold on
-plot(x,y,'--','color',.3*[1 1 1]);
+plot(x,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=adult_exp_day; y=adult_LLRRLR_corr_IS(:,2);
 cov_xy=cov(x,y);
@@ -425,9 +445,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_adult)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,2); hold on
-plot(x+30,y,'--','color',.3*[1 1 1]);
+plot(x+30,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=adult_exp_day; y=adult_LLRRLR_corr_REM(:,2);
 cov_xy=cov(x,y);
@@ -435,9 +455,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_adult)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,2); hold on
-plot(x+60,y,'--','color',.3*[1 1 1]);
+plot(x+60,y,'--','color',.1*[1 1 1],'linewidth',2.5);
 
 
 % finding the fitting regression line
@@ -448,9 +468,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_adult)
-x=-1:1:16; y=slope*x+intercept;
+x=-6:1:16; y=slope*x+intercept;
 subplot(1,3,3); hold on
-plot(x,y,'--','color',.3*[1 1 1]);
+plot(x,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=adult_exp_day; y=adult_LLRRLR_corr_IS(:,3);
 cov_xy=cov(x,y);
@@ -458,9 +478,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_adult)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,3); hold on
-plot(x+30,y,'--','color',.3*[1 1 1]);
+plot(x+30,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=adult_exp_day; y=adult_LLRRLR_corr_REM(:,3);
 cov_xy=cov(x,y);
@@ -468,9 +488,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_adult)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,3); hold on
-plot(x+60,y,'--','color',.3*[1 1 1]);
+plot(x+60,y,'--','color',.1*[1 1 1],'linewidth',2.5);
 
 % for juveniles
 % finding the fitting regression line
@@ -481,9 +501,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_juvenile)
-x=-1:1:16; y=slope*x+intercept;
+x=-6:1:16; y=slope*x+intercept;
 subplot(1,3,1); hold on
-plot(x,y,'--','color',.3*[1 1 1]);
+plot(x,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=juv_exp_day; y=juv_LLRRLR_corr_IS(:,1);
 cov_xy=cov(x,y);
@@ -491,9 +511,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_juvenile)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,1); hold on
-plot(x+30,y,'--','color',.3*[1 1 1]);
+plot(x+30,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=juv_exp_day; y=juv_LLRRLR_corr_REM(:,1);
 cov_xy=cov(x,y);
@@ -501,9 +521,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_juvenile)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,1); hold on
-plot(x+60,y,'--','color',.3*[1 1 1]);
+plot(x+60,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 % finding the fitting regression line
 % for the RR subplot
@@ -515,7 +535,7 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=-1:1:16; y=slope*x+intercept;
 subplot(1,3,2); hold on
-plot(x,y,'--','color',.3*[1 1 1]);
+plot(x,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=juv_exp_day; y=juv_LLRRLR_corr_IS(:,2);
 cov_xy=cov(x,y);
@@ -523,9 +543,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_juvenile)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,2); hold on
-plot(x+30,y,'--','color',.3*[1 1 1]);
+plot(x+30,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=juv_exp_day; y=juv_LLRRLR_corr_REM(:,2);
 cov_xy=cov(x,y);
@@ -533,9 +553,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_juvenile)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,2); hold on
-plot(x+60,y,'--','color',.3*[1 1 1]);
+plot(x+60,y,'--','color',.1*[1 1 1],'linewidth',2.5);
 
 
 % finding the fitting regression line
@@ -548,7 +568,7 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=-1:1:16; y=slope*x+intercept;
 subplot(1,3,3); hold on
-plot(x,y,'--','color',.3*[1 1 1]);
+plot(x,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=juv_exp_day; y=juv_LLRRLR_corr_IS(:,3);
 cov_xy=cov(x,y);
@@ -556,9 +576,9 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_juvenile)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,3); hold on
-plot(x+30,y,'--','color',.3*[1 1 1]);
+plot(x+30,y,'--','color',.1*[1 1 1],'linewidth',2.5);
  
 x=juv_exp_day; y=juv_LLRRLR_corr_REM(:,3);
 cov_xy=cov(x,y);
@@ -566,9 +586,29 @@ slope=cov_xy(2,1)/var(x);
 intercept=mean(y)-slope*mean(x);
 % adding the regression line to the figures
 figure(f_juvenile)
-x=(-1:1:16); y=slope*x+intercept;
+x=(-6:1:16); y=slope*x+intercept;
 subplot(1,3,3); hold on
-plot(x+60,y,'--','color',.3*[1 1 1]);
+plot(x+60,y,'--','color',.1*[1 1 1],'linewidth',2.5);
+%% test if the correlation between DOS and local wave density is significanto
+
+bird_n=1:length(res);
+juv_id=(bird_id(bird_n)==4 | bird_id(bird_n)==5 | bird_id(bird_n)==6 | bird_id(bird_n)==8); % id of all juveniles
+juv_n=1; adult_n=1;
+for bird_n=1:length(res)-2
+    id=bird_id(bird_n);
+    % only one of the parenthesis will be logical 1
+    if id==4 | id==5 | id==6 | id==8 % if it is a juvenile
+    dos_loc_wave_corrs_juv(juv_n)=res(juv_n).corr_local_wave_and_depth;
+    juv_n=juv_n+1;
+    elseif i<=3
+    dos_loc_wave_corrs_adult(adult_n)=res(adult_n).corr_local_wave_and_depth;
+    adult_n=adult_n+1;
+    end
+end
+p = signrank(dos_loc_wave_corrs_adult)
+p = signrank(dos_loc_wave_corrs_juv)
+
+
 %% statistical tests for figure 3: connectivities across the hemispheres 
 
 % 2-way ANOVA for the difference in connectivity across the hemispheres
@@ -700,16 +740,19 @@ cm=flipud(autumn(100)); % colormap
 adult_count=zeros(16,1); juv_count=zeros(16,1);
 adult_sum=zeros(16,1); juv_sum=zeros(16,1);
 for bird_n=1:length(res)
-        i=bird_id(bird_n);
-        local_wave_per_chnl = res(bird_n).local_wave_perSec_perChnl_mean;
-        nans=isnan(local_wave_per_chnl);
-        local_wave_per_chnl(nans)=zeros(1,sum(nans));
-    if i<=3 % for adults
-        adult_sum=adult_sum+local_wave_per_chnl;
-        adult_count=adult_count+~nans;
-    else  % for juveniles
-        juv_sum=juv_sum+local_wave_per_chnl;
-        juv_count=juv_count+~nans;
+    i=bird_id(bird_n);
+    local_wave_per_chnl = res(bird_n).local_wave_perSec_perChnl_mean;
+    nans=isnan(local_wave_per_chnl);
+    non_nans=find(~(nans));
+    for chnl=non_nans
+        
+        if i<=3 % for adults
+            adult_sum(chnl)=adult_sum(chnl)+local_wave_per_chnl(chnl);
+            adult_count(chnl)=adult_count(chnl)+1;
+        else  % for juveniles
+            juv_sum(chnl)=juv_sum(chnl)+local_wave_per_chnl(chnl);
+            juv_count(chnl)=juv_count(chnl)+1;
+        end
     end
 end
 adult_mean=adult_sum./adult_count;
@@ -720,7 +763,7 @@ for ch=1:length(juv_count) % number of channels
     rel_val=(adult_mean(ch)-min(all_birds_mean))/range(all_birds_mean);
     scatter1 = scatter(xy_adult(ch,1),xy_adult(ch,2),300,'o','MarkerFaceColor',...
         cm(ceil(rel_val*100+eps),:),'MarkerEdgeColor',cm(ceil(rel_val*100+eps),:));
-    scatter1.MarkerFaceAlpha = 1; scatter1.MarkerEdgeAlpha =.9;
+    scatter1.MarkerFaceAlpha = 1; scatter1.MarkerEdgeAlpha =.8;
     hold on
 end
 set(gcf, 'Position',[200 , 200, 600, 500]);
@@ -730,11 +773,14 @@ for ch=1:length(juv_count) % number of channels
     rel_val=(juv_mean(ch)-min(juv_mean))/range(all_birds_mean);
     scatter1 = scatter(xy_juv(ch,1),xy_juv(ch,2),300,'o','MarkerFaceColor',...
         cm(ceil(rel_val*100+eps),:),'MarkerEdgeColor',cm(ceil(rel_val*100+eps),:));
-    scatter1.MarkerFaceAlpha = 1; scatter1.MarkerEdgeAlpha =.9;
+    scatter1.MarkerFaceAlpha = 1; scatter1.MarkerEdgeAlpha =.8;
     hold on
 end
 set(gcf, 'Position',[200 , 200, 600, 500]);
 
+figure
+colormap(cm)
+colorbar('ticks',[0 1],'ticklabels',round(100*[min(all_birds_mean) max(all_birds_mean)])/100);
 %% sleep depth per channel for the adults and juvenile mapped on the electrode
 % sites
 figure
@@ -744,32 +790,36 @@ im=imread(image_layout);
 im1=.6*double(rgb2gray(imresize(im,.3)));
 subplot(1,2,1)
 imshow(int8(im1)); hold on
-% [x1,y1]=ginput(16);
-% xy_adult(:,1)=x1; xy_adult(:,2)=y1;
+[x1,y1]=ginput(16);
+xy_adult(:,1)=x1; xy_adult(:,2)=y1;
 % load juvenile template
 image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; 
 im=imread(image_layout);
 im1=.6*double(rgb2gray(imresize(im,.3)));
 subplot(1,2,2)
 imshow(int8(im1)); hold on
-% [x1,y1]=ginput(16);
-% xy_juv(:,1)=x1; xy_juv(:,2)=y1;
+[x1,y1]=ginput(16);
+xy_juv(:,1)=x1; xy_juv(:,2)=y1;
 
 cm=flipud(autumn(100)); % colormap
 adult_count=zeros(16,1); juv_count=zeros(16,1);
 adult_sum=zeros(16,1); juv_sum=zeros(16,1);
 for bird_n=1:length(res)
-        i=bird_id(bird_n);
-        sleep_depth_per_chnl = res(bird_n).median_LH_per_chnl;
-        nans=isnan(sleep_depth_per_chnl);
-        sleep_depth_per_chnl(nans)=zeros(1,sum(nans));
-    if i<=3 % for adults
-        adult_sum=adult_sum+sleep_depth_per_chnl;
-        adult_count=adult_count+~nans;
-    else  % for juveniles
-        juv_sum=juv_sum+sleep_depth_per_chnl;
-        juv_count=juv_count+~nans;
+    i=bird_id(bird_n);
+    sleep_depth_per_chnl = res(bird_n).median_LH_per_chnl;
+    nans=isnan(sleep_depth_per_chnl);
+    non_nans=find(~(nans));
+    for chnl=non_nans
+        if i<=3 % for adults
+            adult_sum(chnl)=adult_sum(chnl)+sleep_depth_per_chnl(chnl);
+            adult_count(chnl)=adult_count(chnl)+1;
+        else  % for juveniles
+            juv_sum(chnl)=juv_sum(chnl)+sleep_depth_per_chnl(chnl);
+            juv_count(chnl)=juv_count(chnl)+1;
+        end
     end
+    
+    
 end
 adult_mean=adult_sum./adult_count;
 juv_mean=juv_sum./juv_count;
@@ -793,3 +843,6 @@ for ch=1:length(juv_count) % number of channels
     hold on
 end
 set(gcf, 'Position',[200 , 200, 600, 500]);
+figure
+colormap(cm)
+colorbar('ticks',[0 1],'ticklabels',round(100*[min(all_birds_mean) max(all_birds_mean)])/100);

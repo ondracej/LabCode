@@ -163,9 +163,12 @@ end
 
 
 % for adults 
-SWS_adult_size_probabilites=cell(16,1); % initialize the variable that contains the weight of the SWS networks
-IS_adult_size_probabilites=cell(16,1); % initialize the variable that contains the weight of the SWS networks
-REM_adult_size_probabilites=cell(16,1); % initialize the variable that contains the weight of the SWS networks
+SWS_adult_incidence_sum=zeros(1,16);
+SWS_adult_incidence_count=zeros(1,16);
+IS_adult_incidence_sum=zeros(1,16);
+IS_adult_incidence_count=zeros(1,16);
+REM_adult_incidence_sum=zeros(1,16);
+REM_adult_incidence_count=zeros(1,16);
 
 for bird=1:3 % for the adults
     % SWS:
@@ -173,64 +176,102 @@ for bird=1:3 % for the adults
     if ~isempty(SWS_nets_bird)
         for nn=1:size(SWS_nets_bird,2)
             net_size=sum(SWS_nets_bird(:,nn));
-            SWS_adult_size_probabilites{net_size,:}=[SWS_adult_size_probabilites{net_size,:}  nets(bird).SWS_dominant_networks_incidence(nn,:)];
+            SWS_adult_incidence_sum(1,net_size)=SWS_adult_incidence_sum_net_size(1,net_size)+...
+                sum(nets(bird).SWS_dominant_networks_incidence(nn,:));
         end
     end
-    
+             SWS_adult_incidence_count=SWS_adult_incidence_count+3;
+
+
     % IS:
     IS_nets_bird=nets(bird).IS_dominant_networks;
     if ~isempty(IS_nets_bird)
         for nn=1:size(IS_nets_bird,2)
             net_size=sum(IS_nets_bird(:,nn));
-            IS_adult_size_probabilites{net_size,:}=[IS_adult_size_probabilites{net_size,:}  nets(bird).IS_dominant_networks_incidence(nn,:)];
+            IS_adult_incidence_sum(1,net_size)=IS_adult_incidence_sum_net_size(1,net_size)+...
+                sum(nets(bird).IS_dominant_networks_incidence(nn,:));
         end
     end
-    
+             IS_adult_incidence_count=IS_adult_incidence_count+3;
+
+
     % REM:
     REM_nets_bird=nets(bird).REM_dominant_networks;
     if ~isempty(REM_nets_bird)
         for nn=1:size(REM_nets_bird,2)
             net_size=sum(REM_nets_bird(:,nn));
-            REM_adult_size_probabilites{net_size,:}=[REM_adult_size_probabilites{net_size,:}  nets(bird).REM_dominant_networks_incidence(nn,:)];
+            REM_adult_incidence_sum(1,net_size)=REM_adult_incidence_sum_net_size(1,net_size)+...
+                sum(nets(bird).REM_dominant_networks_incidence(nn,:));
         end
     end
+            REM_adult_incidence_count=REM_adult_incidence_count+3;
+
 end
+    SWS_adult_incidence_rate=SWS_adult_incidence_sum./SWS_adult_incidence_count;
+    IS_adult_incidence_rate=IS_adult_incidence_sum./IS_adult_incidence_count;
+    REM_adult_incidence_rate=REM_adult_incidence_sum./REM_adult_incidence_count;
+    SWS_adult_incidence_rate(isnan(SWS_adult_incidence_rate))=zeros(1,sum(isnan(SWS_adult_incidence_rate)));
+    IS_adult_incidence_rate(isnan(IS_adult_incidence_rate))=zeros(1,sum(isnan(IS_adult_incidence_rate)));
+    REM_adult_incidence_rate(isnan(REM_adult_incidence_rate))=zeros(1,sum(isnan(REM_adult_incidence_rate)));
+    adult_REM_avg_size=(1:16)*REM_adult_incidence_rate'/sum(REM_adult_incidence_rate)
+    adult_IS_avg_size=(1:16)*IS_adult_incidence_rate'/sum(IS_adult_incidence_rate)
+    adult_SWS_avg_size=(1:16)*SWS_adult_incidence_rate'/sum(SWS_adult_incidence_rate)
 
+% for juvs 
+SWS_juv_incidence_sum=zeros(1,16);
+SWS_juv_incidence_count=zeros(1,16);
+IS_juv_incidence_sum=zeros(1,16);
+IS_juv_incidence_count=zeros(1,16);
+REM_juv_incidence_sum=zeros(1,16);
+REM_juv_incidence_count=zeros(1,16);    
+    
 % for juveniles 
-SWS_juvenile_size_probabilites=cell(16,1); % initialize the variable that contains the weight of the SWS networks
-IS_juvenile_size_probabilites=cell(16,1); % initialize the variable that contains the weight of the SWS networks
-REM_juvenile_size_probabilites=cell(16,1); % initialize the variable that contains the weight of the SWS networks
-
 for bird=4:10 % for the juveniles
     % SWS:
     SWS_nets_bird=nets(bird).SWS_dominant_networks;
     if ~isempty(SWS_nets_bird)
         for nn=1:size(SWS_nets_bird,2)
             net_size=sum(SWS_nets_bird(:,nn));
-            SWS_juvenile_size_probabilites{net_size,:}=[SWS_juvenile_size_probabilites{net_size,:}  nets(bird).SWS_dominant_networks_incidence(nn,:)];
-        end
+            SWS_juv_incidence_sum(1,net_size)=SWS_juv_incidence_sum_net_size(1,net_size)+...
+                sum(nets(bird).SWS_dominant_networks_incidence(nn,:));
+            end
     end
-    
+    SWS_juv_incidence_count=SWS_juv_incidence_count+3;
+ 
     % IS:
     IS_nets_bird=nets(bird).IS_dominant_networks;
     if ~isempty(IS_nets_bird)
         for nn=1:size(IS_nets_bird,2)
             net_size=sum(IS_nets_bird(:,nn));
-            IS_juvenile_size_probabilites{net_size,:}=[IS_juvenile_size_probabilites{net_size,:}  nets(bird).IS_dominant_networks_incidence(nn,:)];
+            IS_juv_incidence_sum(1,net_size)=IS_juv_incidence_sum_net_size(1,net_size)+...
+                sum(nets(bird).IS_dominant_networks_incidence(nn,:));
         end
     end
-    
+    IS_juv_incidence_count=IS_juv_incidence_count+3;
+   
     % REM:
     REM_nets_bird=nets(bird).REM_dominant_networks;
     if ~isempty(REM_nets_bird)
         for nn=1:size(REM_nets_bird,2)
             net_size=sum(REM_nets_bird(:,nn));
-            REM_juvenile_size_probabilites{net_size,:}=[REM_juvenile_size_probabilites{net_size,:}  nets(bird).REM_dominant_networks_incidence(nn,:)];
+            REM_juv_incidence_sum(1,net_size)=REM_juv_incidence_sum_net_size(1,net_size)+...
+                sum(nets(bird).REM_dominant_networks_incidence(nn,:));
         end
     end
+    REM_juv_incidence_count=REM_juv_incidence_count+3;
+
 end
 
-
+    SWS_juv_incidence_rate=SWS_juv_incidence_sum./SWS_juv_incidence_count;
+    IS_juv_incidence_rate=IS_juv_incidence_sum./IS_juv_incidence_count;
+    REM_juv_incidence_rate=REM_juv_incidence_sum./REM_juv_incidence_count;
+    SWS_juv_incidence_rate(isnan(SWS_juv_incidence_rate))=zeros(1,sum(isnan(SWS_juv_incidence_rate)));
+    IS_juv_incidence_rate(isnan(IS_juv_incidence_rate))=zeros(1,sum(isnan(IS_juv_incidence_rate)));
+    REM_juv_incidence_rate(isnan(REM_juv_incidence_rate))=zeros(1,sum(isnan(REM_juv_incidence_rate)));
+    juv_REM_avg_size=(1:16)*REM_juv_incidence_rate'/sum(REM_juv_incidence_rate)
+    juv_IS_avg_size=(1:16)*IS_juv_incidence_rate'/sum(IS_juv_incidence_rate)
+    juv_SWS_avg_size=(1:16)*SWS_juv_incidence_rate'/sum(SWS_juv_incidence_rate)
+    
 %% saving variables
 loaded_res=load('G:\Hamed\zf\P1\labled sleep\batch_results_Fig4_pipeline.mat');
 res=loaded_res.res;
