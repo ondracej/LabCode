@@ -153,7 +153,7 @@ light_on_t(n)=810000/20;  %%%%%%%%%%% frame number devided by rate of acquisitio
 
 
 
-n=23
+n=23;
 
 light_off_t(n)=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t(n)=804670/20;  %%%%%%%%%%% frame number devided by rate of acquisition
@@ -356,9 +356,9 @@ for bird=1:length(res)
     end
 end
 
-REMs_adult_mean=mean(REM_transitions_adult,2);  REMs_adult_mean(1)=REMs_adult_mean(1)*60/40 ; % because we counted the transitions 
+REMs_adult_mean=mean(REM_transitions_adult,2);  REMs_adult_mean(1)=REMs_adult_mean(1)*60/40  % because we counted the transitions 
 % after 20 minutes through lights off
-REMs_juv_mean=mean(REM_transitions_juv,2);  REMs_juv_mean(1)=REMs_juv_mean(1)*60/40 ; % because we counted the transitions 
+REMs_juv_mean=mean(REM_transitions_juv,2);  REMs_juv_mean(1)=REMs_juv_mean(1)*60/40  % because we counted the transitions 
 % after 20 minutes through lights off
 REMs_adult_err=std(REM_transitions_adult,0,2)/sqrt(size(REM_transitions_adult,2));
 REMs_juv_err=std(REM_transitions_juv,0,2)/sqrt(size(REM_transitions_juv,2));
@@ -387,7 +387,7 @@ xlim([0 12.01])
 
 clear hh p
 for h=1:12
-    [hh(h),p(h)] = ttest2(REM_transitions_juv(h,:)', REMs_adult_mean(h,:)','Alpha',0.05);
+    [p(h),hh(h)] = ranksum(REM_transitions_juv(h,:)', REM_transitions_adult(h,:)','Alpha',0.05)
 end
 
 smooth_len=[3 15 60]; % length of smoothing window in seconds
@@ -461,10 +461,14 @@ xlabel('Inter-REM time (sec)')
 
 inter_SWS_juv_mean=(N1*bin_centers')/sum(N1)
 inter_SWS_adult_mean=(N2*bin_centers')/sum(N2)
+inter_SWS_juv_std=std(inter_SWS_juv)
+inter_SWS_adult_std=std(inter_SWS_adult)
 [hh_SWS,pp]=ttest2(inter_SWS_juv,inter_SWS_adult)
 
 inter_REM_juv_mean=(N3*bin_centers')/sum(N3)
 inter_REM_adult_mean=(N4*bin_centers')/sum(N4)
+inter_REM_adult_std=std(inter_REM_adult)
+inter_REM_juv_std=std(inter_REM_juv)
 [hh_REM,pp]=ttest2(inter_REM_juv,inter_REM_adult)
 
         

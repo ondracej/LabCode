@@ -51,6 +51,7 @@ title('Sleep depth index across nights');
 
 %% figure for the mean of depth variable and the error bars based on the real age
 figure;
+subplot(2,1,1)
 for bird_n=1:length(res)
     % plotting
         i=bird_id(bird_n);
@@ -60,17 +61,33 @@ for bird_n=1:length(res)
     if i<=3 % for adults
         plot( x-500,y,'marker',bird_symbols{i},'color',col(i,:),'LineWidth',2); hold on
         errorbar(x-500,y, err, 'color',[col(i,:) .2]);
+    end
+end
+ylim([0 260]); xlim([180 315]); 
+xticks([ 145 185 190 195 280 285 290 295 300 305]);
+xticklabels({ '//' '' '690' '' '' '' '790' '' '' ''});
+xlabel('age (dph)')
+ylabel('Depth of Sleep')
+title('Sleep depth index across nights');
+subplot(2,1,2)
+
+for bird_n=1:length(res)
+    % plotting
+        i=bird_id(bird_n);
+        err = res(bird_n).iqr_LH/2;
+        x=res(bird_n).dph;
+        y=res(bird_n).median_LH;
+    if i<=3 % for adults
     else  % for juveniles
         plot(x,y,'marker',bird_symbols{i},'color',col(i,:),'LineWidth',2); hold on
         errorbar(x,y, err, 'color',[col(i,:) .2]);
     end
 end
-ylim([0 260]); xlim([45 315]); 
-xticks([50 55 60 65 70 75 80 85 90 145 185 190 195 280 285 290 295 300 305]);
-xticklabels({'50' '' '' '' '' '' '' '' '90' '//' '' '690' '' '' '' '790' '' '' ''});
+ylim([0 260]); xlim([45 90]); 
+xticks([50 55 60 65 70 75 80 85 90 ]);
+xticklabels({'50' '' '' '' '' '' '' '' '90' });
 xlabel('age (dph)')
-ylabel('Depth of Sleep')
-title('Sleep depth index across nights');
+ylabel('Depth of Sleep juv')
 
 %% figure for the mean of low band powers (1.5-8)
 figure;
@@ -597,10 +614,10 @@ juv_n=1; adult_n=1;
 for bird_n=1:length(res)-2
     id=bird_id(bird_n);
     % only one of the parenthesis will be logical 1
-    if id==4 | id==5 | id==6 | id==8 % if it is a juvenile
+    if id>3 % if it is a juvenile
     dos_loc_wave_corrs_juv(juv_n)=res(juv_n).corr_local_wave_and_depth;
     juv_n=juv_n+1;
-    elseif i<=3
+    elseif id<=3
     dos_loc_wave_corrs_adult(adult_n)=res(adult_n).corr_local_wave_and_depth;
     adult_n=adult_n+1;
     end

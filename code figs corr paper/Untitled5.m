@@ -1,22 +1,57 @@
-figure
+%% statistics of occurrence of networks for each group and in each stage
 
-n = 100;
-x = linspace(-10,10,n); y = x.^2;
-p = plot(x,y,'r', 'LineWidth',5);
+% for adults 
+network_sizes_adults=[];
+for bird=1:3 % for the adults
+    codes=[]; % decimal equivalent of binary representation of the graphs for each bird
+    % SWS:
+    SWS_nets=nets(bird).SWS_dominant_networks';
+    if ~isempty(SWS_nets)
+            codes=[codes  (SWS_nets*2.^[0:15]')'];
+    end
 
-%// modified jet-colormap
-cd = [uint8(jet(n)*255) uint8(ones(n,1))].'; %'
-drawnow
-set(p.Edge, 'ColorBinding','interpolated', 'ColorData',cd)
-%%
+    % IS:
+    IS_nets=nets(bird).IS_dominant_networks';
+    if ~isempty(IS_nets)
+            codes=[codes  (IS_nets*2.^[0:15]')'];
+    end
 
-figure
-bin_indx=find(abs(t_bins3sec-t_spot)==min(abs(t_bins3sec-t_spot))); 
-EEG3sec_n=size(EEG3sec,1);
-for k=1:16
-    y=(EEG3sec(:,k,bin_indx))+.6*k;
-    multicolorloine(round(1:EEG3sec_n)/fs,y,y,.9*jet); hold on
+    % REM:
+    REM_nets=nets(bird).REM_dominant_networks';
+    if ~isempty(REM_nets)
+            codes=[codes  (REM_nets*2.^[0:15]')'];
+    end
+
+    codes_unique=unique(codes); % accounts for redundancies between the networks that appear in several stages
+    network_sizes_new_bird = sum(de2bi(codes_unique),2); % size of the networks
+    network_sizes_adults=[network_sizes_adults network_sizes_new_bird'];
 end
-xlabel('Time (sec)')
-yticklabels({}); ylim([0 16*.6+.5])
 
+
+% for juveniles 
+network_sizes_juveniles=[];
+for bird=4:10 % for the juveniles
+    codes=[]; % decimal equivalent of binary representation of the graphs for each bird
+    % SWS:
+    SWS_nets=nets(bird).SWS_dominant_networks';
+    if ~isempty(SWS_nets)
+            codes=[codes  (SWS_nets*2.^[0:15]')'];
+    end
+
+    % IS:
+    IS_nets=nets(bird).IS_dominant_networks';
+    if ~isempty(IS_nets)
+            codes=[codes  (IS_nets*2.^[0:15]')'];
+    end
+
+    % REM:
+    REM_nets=nets(bird).REM_dominant_networks';
+    if ~isempty(REM_nets)
+            codes=[codes  (REM_nets*2.^[0:15]')'];
+    end
+        if ~isempty(codes)
+    codes_unique=unique(codes); % accounts for redundancies between the networks that appear in several stages
+    network_sizes_new_bird = sum(de2bi(codes_unique),2); % size of the networks
+    network_sizes_juveniles=[network_sizes_juveniles network_sizes_new_bird'];
+        end
+end
