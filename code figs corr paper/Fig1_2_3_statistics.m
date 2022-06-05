@@ -689,6 +689,8 @@ anova_input=[
 
 [~,~,stats] = anova2(anova_input,sum(adu_inds));
 c = multcompare(stats)
+[p,tbl,stats_fried] = friedman(anova_input,sum(adu_inds))
+c = multcompare(stats_fried)
 
 % for juveniles
 % reformatting data for anova2
@@ -709,6 +711,62 @@ anova_input=[
 
 [~,~,stats] = anova2(anova_input,sum(juv_inds));
 c = multcompare(stats)
+[p,tbl,stats_fried] = friedman(anova_input,sum(juv_inds))
+c = multcompare(stats_fried)
+
+%% a comparison across stages in adults over all pairs of channels (regardless of L, R, or LR)
+res_=load('G:\Hamed\zf\P1\labled sleep\batch_corr_mat_change_');
+res=res_.res;
+
+bird_names={'72-00','73-03','72-94','w0009','w0016','w0018','w0020','w0021','w0041','w0043'};
+%  extracting the ID for each bird (1 to 8)
+for bird_n=1:length(res)
+    % finding the name of the bird
+    bird_name_long=res(bird_n).bird; % like '72-94_08_09_2021'
+    bird_name=bird_name_long(1:5); % like '72-94'
+    
+    % finding the bird index (lopping over number of birds)
+    for i=1:length(bird_names)
+        if strcmp(bird_names{i},bird_name)
+            bird_id(bird_n)=i;
+            break
+        end
+    end
+end
+
+% pooling all the pair-wise correlations from adults together
+all_vals_REM=[];
+all_vals_IS=[];
+all_vals_SWS=[];
+all_chnls=1:16;
+mask_mat_=tril(ones(16),-1); % as the corr matrix is symmetric, we take half of it later
+for k=1:length(res)
+    if bird_id(k)<=3 % if adult
+        matrix_corr_REM=res(k).matrix_corr_REM.*mask_mat_;
+        matrix_corr_IS=res(k).matrix_corr_IS.*mask_mat_;
+        matrix_corr_SWS=res(k).matrix_corr_SWS.*mask_mat_;
+        good_chnls=setdiff(all_chnls , res(k).noisy_chnls);
+        matrix_corr_REM_valid=matrix_corr_REM(good_chnls,good_chnls);
+        matrix_corr_IS_valid=matrix_corr_IS(good_chnls,good_chnls);
+        matrix_corr_SWS_valid=matrix_corr_SWS(good_chnls,good_chnls);
+        REM_conn_vals=matrix_corr_REM_valid(find(matrix_corr_REM_valid));
+        IS_conn_vals=matrix_corr_IS_valid(find(matrix_corr_IS_valid));
+        SWS_conn_vals=matrix_corr_SWS_valid(find(matrix_corr_SWS_valid));
+        all_vals_REM= [all_vals_REM; REM_conn_vals];
+        all_vals_IS= [all_vals_IS; IS_conn_vals];
+        all_vals_SWS= [all_vals_SWS; SWS_conn_vals];
+    end
+end
+
+mean_conn_REM=mean(all_vals_REM)
+ste_conn_REM=std(all_vals_REM)/sqrt(length(all_vals_REM))
+mean_conn_IS=mean(all_vals_IS)
+ste_conn_IS=std(all_vals_IS)
+mean_conn_SWS=mean(all_vals_SWS)
+ste_conn_SWS=std(all_vals_SWS)/sqrt(length(all_vals_REM))
+
+        
+    
 
 %% to find which channels have changed mostly during the recording nights
 loaded_res=load('G:\Hamed\zf\P1\labled sleep\batch_corr_mat_change.mat');
