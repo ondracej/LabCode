@@ -135,7 +135,7 @@ while ~isempty(t0_)
 end
 
 hold on
-% overlaying ther state-transition times
+% overlaying the state-transition times
 valid_REM_inds=REM_onsets>light_off_t+20*60 & REM_onsets<light_on_t;
 plot(REM_onsets(valid_REM_inds)/3600,LH_valid_smoo(REM_inds(valid_REM_inds)),'.','markersize',9,'linewidth',1.0,...
     'color',.3*[1 1 1 1]);
