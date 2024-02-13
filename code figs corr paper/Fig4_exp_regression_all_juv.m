@@ -88,15 +88,14 @@ corr_full_LL_part corr_full_LR_part corr_full_RR_part ...
 corr_IS corr_REM corr_low corr_high  corr_low corr_full corr_all
 
 %%
-clear p
 bird_n=1:length(res);
-juv_id=bird_id(bird_n)>3 & bird_id(bird_n)<9 ; % id of all juveniles
+juv_id=bird_id(bird_n)>3  ; % id of all juveniles
 juv_n=1;
 juv_inds=[];
 for bird_n=1:length(res)
     id=bird_id(bird_n);
     % only one of the parenthesis will be logical 1
-    if id==4 | id==5 | id==6 | id==7 | id==8 % if it is a juvenile
+    if id>3 % if it is a juvenile
     juv_exp_day(juv_n,1)=res(bird_n).dph; % age at day of recording
     juv_n=juv_n+1;
     juv_inds=[juv_inds bird_n];
@@ -112,9 +111,6 @@ clear juv_n
 [rr(1)]=corr_low_LL(1,2);
 [rr(2)]=corr_low_RR(1,2);
 [rr(3)]=corr_low_LR(1,2);
-[p(1)]=p_low_LL(1,2);
-[p(2)]=p_low_RR(1,2);
-[p(3)]=p_low_LR(1,2);
 
 % high band
 [corr_high_LL, p_high_LL]=corrcoef(juv_exp_day,conn_high_LL(juv_id))
@@ -124,9 +120,6 @@ clear juv_n
 [rr(4)]=corr_high_LL(1,2);
 [rr(5)]=corr_high_RR(1,2);
 [rr(6)]=corr_high_LR(1,2);
-[p(4)]=p_high_LL(1,2);
-[p(5)]=p_high_RR(1,2);
-[p(6)]=p_high_LR(1,2);
 
 % full band
 [corr_full_LL, p_full_LL]=corrcoef(juv_exp_day,conn_full_LL(juv_id))
@@ -136,12 +129,7 @@ clear juv_n
 [rr(7)]=corr_full_LL(1,2);
 [rr(8)]=corr_full_RR(1,2);
 [rr(9)]=corr_full_LR(1,2);
-[p(7)]=p_full_LL(1,2);
-[p(8)]=p_full_RR(1,2);
-[p(9)]=p_full_LR(1,2);
 
-mean(rr)
-std(rr)
 
 % curve fitting
 fo = fitoptions('Method','NonlinearLeastSquares','Lower',[.7,.7,.01],'Upper',[1.2,1,0.03]);
@@ -165,8 +153,8 @@ for bird_n=1:length(juv_inds)
     i=bird_id(juv_inds(bird_n));
     p=plot(x(bird_n)+40,y(bird_n),'marker',bird_symbols{i},'markersize',5,'LineWidth', 1.5,'color',col(i,:)); hold on
 end
-plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',2);
-xlim([45 70]), ylim([.05 .9])
+plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',1.5);
+xlim([45 90]), ylim([-.05 .9])
 xticks([50 60 ]); xticklabels([50 60 ])
 yticks([0 .2 .4 .6 .8 1]); yticklabels([0 .2 .4 .6 .8 1]) 
 title('L-L EEG connectivity')
@@ -181,8 +169,8 @@ for bird_n=1:length(juv_inds)
     i=bird_id(juv_inds(bird_n));
     p=plot(x(bird_n)+40,y(bird_n),'marker',bird_symbols{i},'markersize',5,'LineWidth', 1.5,'color',col(i,:)); hold on
 end
-plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',2);
-xlim([45 70]), ylim([.05 .9])
+plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',1.5);
+xlim([45 90]), ylim([-.05 .9])
 xticks([50 60 ]); xticklabels([50 60 ])
 yticks([0 .2 .4 .6 .8 1]); yticklabels([0 .2 .4 .6 .8 1]) 
 ylabel('30-49 Hz')
@@ -196,8 +184,8 @@ for bird_n=1:length(juv_inds)
     i=bird_id(juv_inds(bird_n));
     p=plot(x(bird_n)+40,y(bird_n),'marker',bird_symbols{i},'markersize',5,'LineWidth', 1.5,'color',col(i,:)); hold on
 end
-plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',2);
-xlim([45 70]), ylim([.05 .9])
+plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',1.5);
+xlim([45 90]), ylim([-.05 .9])
 xticks([50 60 ]); xticklabels([50 60 ])
 yticks([0 .2 .4 .6 .8 1]); yticklabels([0 .2 .4 .6 .8 1]) 
 ylabel('full band')
@@ -212,8 +200,8 @@ for bird_n=1:length(juv_inds)
     i=bird_id(juv_inds(bird_n));
     p=plot(x(bird_n)+40,y(bird_n),'marker',bird_symbols{i},'markersize',5,'LineWidth', 1.5,'color',col(i,:)); hold on
 end
-plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',2);
-xlim([45 70]), ylim([.05 .9])
+plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',1.5);
+xlim([45 90]), ylim([-.05 .9])
 xticks([50 60 ]); xticklabels([50 60 ])
 yticks([0 .2 .4 .6 .8 1]); yticklabels([0 .2 .4 .6 .8 1]) 
 title('R-R EEG connectivity')
@@ -227,8 +215,8 @@ for bird_n=1:length(juv_inds)
     i=bird_id(juv_inds(bird_n));
     p=plot(x(bird_n)+40,y(bird_n),'marker',bird_symbols{i},'markersize',5,'LineWidth', 1.5,'color',col(i,:)); hold on
 end
-plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',2);
-xlim([45 70]), ylim([.05 .9])
+plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',1.5);
+xlim([45 90]), ylim([-.05 .9])
 xticks([50 60 ]); xticklabels([50 60 ])
 yticks([0 .2 .4 .6 .8 1]); yticklabels([0 .2 .4 .6 .8 1]) 
 tau(5)=1/f0.c;
@@ -241,8 +229,8 @@ for bird_n=1:length(juv_inds)
     i=bird_id(juv_inds(bird_n));
     p=plot(x(bird_n)+40,y(bird_n),'marker',bird_symbols{i},'markersize',5,'LineWidth', 1.5,'color',col(i,:)); hold on
 end
-plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',2);
-xlim([45 70]), ylim([.05 .9])
+plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',1.5);
+xlim([45 90]), ylim([-.05 .9])
 xticks([50 60 ]); xticklabels([50 60 ])
 yticks([0 .2 .4 .6 .8 1]); yticklabels([0 .2 .4 .6 .8 1]) 
 tau(8)=1/f0.c;
@@ -257,8 +245,8 @@ for bird_n=1:length(juv_inds)
     i=bird_id(juv_inds(bird_n));
     p=plot(x(bird_n)+40,y(bird_n),'marker',bird_symbols{i},'markersize',5,'LineWidth', 1.5,'color',col(i,:)); hold on
 end
-plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',2);
-xlim([45 70]), ylim([.05 .9])
+plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',1.5);
+xlim([45 90]), ylim([-.05 .9])
 xticks([50 60 ]); xticklabels([50 60 ])
 yticks([0 .2 .4 .6 .8 1]); yticklabels([0 .2 .4 .6 .8 1]) 
 title('L-R EEG connectivity')
@@ -272,8 +260,8 @@ for bird_n=1:length(juv_inds)
     i=bird_id(juv_inds(bird_n));
     p=plot(x(bird_n)+40,y(bird_n),'marker',bird_symbols{i},'markersize',5,'LineWidth', 1.5,'color',col(i,:)); hold on
 end
-plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',2);
-xlim([45 70]), ylim([.05 .9])
+plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',1.5);
+xlim([45 90]), ylim([-.05 .9])
 xticks([50 60 ]); xticklabels([50 60 ])
 yticks([0 .2 .4 .6 .8 1]); yticklabels([0 .2 .4 .6 .8 1]) 
 tau(6)=1/f0.c;
@@ -286,8 +274,8 @@ for bird_n=1:length(juv_inds)
     i=bird_id(juv_inds(bird_n));
     p=plot(x(bird_n)+40,y(bird_n),'marker',bird_symbols{i},'markersize',5,'LineWidth', 1.5,'color',col(i,:)); hold on
 end
-plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',2);
-xlim([45 70]), ylim([.05 .9])
+plot(xx+40,f0(xx),'-','color',.4*[1 1 1] ,'linewidth',1.5);
+xlim([45 90]), ylim([-.05 .9])
 xticks([50 60 ]); xticklabels([50 60 ])
 yticks([0 .2 .4 .6 .8 1]); yticklabels([0 .2 .4 .6 .8 1]) 
 tau(9)=1/f0.c;
@@ -322,8 +310,8 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile);
 x=47:65; y=slope*x+intercept;
 subplot(3,3,1); hold on
-plot(x,y,':','color',1*[1 .7 .4],'linewidth',2.5);
-text(56.3,.15,['r=' num2str(round(rr(1)*100)/100) '  ' '\tau=' num2str(round(tau(1)*10)/10)]);
+plot(x,y,':','color',1*[0 0 0],'linewidth',1.5);
+text(56.3,.05,['r=' num2str(round(rr(1)*100)/100) '  ' '\tau=' num2str(round(tau(1)*10)/10)]);
 
 x=juv_exp_day; y=juv_LLRRLR_corr_high(:,1);
 cov_xy=cov(x,y);
@@ -333,8 +321,8 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=(47:65); y=slope*x+intercept;
 subplot(3,3,4); hold on
-plot(x,y,':','color',1*[1 .7 .4],'linewidth',2.5);
-text(56.3,.15,['r=' num2str(round(rr(4)*100)/100) '  ' '\tau=' num2str(round(tau(4)*10)/10)]);
+plot(x,y,':','color',1*[0 0 0],'linewidth',1.5);
+text(56.3,.05,['r=' num2str(round(rr(4)*100)/100) '  ' '\tau=' num2str(round(tau(4)*10)/10)]);
  
 x=juv_exp_day; y=juv_LLRRLR_corr_full(:,1);
 cov_xy=cov(x,y);
@@ -344,8 +332,8 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=(47:65); y=slope*x+intercept;
 subplot(3,3,7); hold on
-plot(x,y,':','color',1*[1 .7 .4],'linewidth',2.5);
-text(56.3,.15,['r=' num2str(round(rr(7)*100)/100) '  ' '\tau=' num2str(round(tau(7)*10)/10)]);
+plot(x,y,':','color',1*[0 0 0],'linewidth',1.5);
+text(56.3,.05,['r=' num2str(round(rr(7)*100)/100) '  ' '\tau=' num2str(round(tau(7)*10)/10)]);
 
 % finding the fitting regression line
 % for the RR subplot
@@ -357,8 +345,8 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=(47:65); y=slope*x+intercept;
 subplot(3,3,2); hold on
-plot(x,y,':','color',1*[1 .7 .4],'linewidth',2.5);
-text(56.3,.15,['r=' num2str(round(rr(2)*100)/100) '  ' '\tau=' num2str(round(tau(2)*10)/10)]);
+plot(x,y,':','color',1*[0 0 0],'linewidth',1.5);
+text(56.3,.05,['r=' num2str(round(rr(2)*100)/100) '  ' '\tau=' num2str(round(tau(2)*10)/10)]);
 
 x=juv_exp_day; y=juv_LLRRLR_corr_high(:,2);
 cov_xy=cov(x,y);
@@ -368,8 +356,8 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=(47:65); y=slope*x+intercept;
 subplot(3,3,5); hold on
-plot(x,y,':','color',1*[1 .7 .4],'linewidth',2.5);
-text(56.3,.15,['r=' num2str(round(rr(5)*100)/100) '  ' '\tau=' num2str(round(tau(5)*10)/10)]);
+plot(x,y,':','color',1*[0 0 0],'linewidth',1.5);
+text(56.3,.05,['r=' num2str(round(rr(5)*100)/100) '  ' '\tau=' num2str(round(tau(5)*10)/10)]);
  
 x=juv_exp_day; y=juv_LLRRLR_corr_full(:,2);
 cov_xy=cov(x,y);
@@ -379,8 +367,8 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=(47:65); y=slope*x+intercept;
 subplot(3,3,8); hold on
-plot(x,y,':','color',1*[1 .7 .4],'linewidth',2.5);
-text(56.3,.15,['r=' num2str(round(rr(8)*100)/100) '  ' '\tau=' num2str(round(tau(8)*10)/10)]);
+plot(x,y,':','color',1*[0 0 0],'linewidth',1.5);
+text(56.3,.05,['r=' num2str(round(rr(8)*100)/100) '  ' '\tau=' num2str(round(tau(8)*10)/10)]);
 xlabel('Age (dph)')
 
 % finding the fitting regression line for the LR subplot
@@ -392,8 +380,8 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=(47:65); y=slope*x+intercept;
 subplot(3,3,3); hold on
-plot(x,y,':','color',1*[1 .7 .4],'linewidth',2.5);
-text(56.3,.15,['r=' num2str(round(rr(3)*100)/100) '  ' '\tau=' num2str(round(tau(3)*10)/10)]);
+plot(x,y,':','color',1*[0 0 0],'linewidth',1.5);
+text(56.3,.05,['r=' num2str(round(rr(3)*100)/100) '  ' '\tau=' num2str(round(tau(3)*10)/10)]);
 
 x=juv_exp_day; y=juv_LLRRLR_corr_high(:,3);
 cov_xy=cov(x,y);
@@ -403,8 +391,8 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=(47:65); y=slope*x+intercept;
 subplot(3,3,6); hold on
-plot(x,y,':','color',1*[1 .7 .4],'linewidth',2.5);
-text(56.3,.15,['r=' num2str(round(rr(6)*100)/100) '  ' '\tau=' num2str(round(tau(6)*10)/10)]);
+plot(x,y,':','color',1*[0 0 0],'linewidth',1.5);
+text(56.3,.05,['r=' num2str(round(rr(6)*100)/100) '  ' '\tau=' num2str(round(tau(6)*10)/10)]);
  
 x=juv_exp_day; y=juv_LLRRLR_corr_full(:,3);
 cov_xy=cov(x,y);
@@ -414,6 +402,6 @@ intercept=mean(y)-slope*mean(x);
 figure(f_juvenile)
 x=(47:65); y=slope*x+intercept;
 subplot(3,3,9); hold on
-plot(x,y,':','color',1*[1 .7 .4],'linewidth',2.5);
-text(56.3,.15,['r=' num2str(round(rr(9)*100)/100) '  ' '\tau=' num2str(round(tau(9)*10)/10)]);
+plot(x,y,':','color',1*[0 0 0],'linewidth',1.5);
+text(56.3,.05,['r=' num2str(round(rr(9)*100)/100) '  ' '\tau=' num2str(round(tau(9)*10)/10)]);
 

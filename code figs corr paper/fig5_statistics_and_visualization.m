@@ -1,5 +1,5 @@
 clear;
-res=load('batch_result_dominant_networks');
+res=load('final_result_dominant_networks_10');
 nets=res.network_res;
 % %% visualization of recurring co-active cluster (cliques)
 %
@@ -30,7 +30,6 @@ xy =[
     117.7000  151.7000
     130.4000  168.4000];
 %% plotting the subnetworks for each bird
-% first preparing the color scheme for color-coding the subnetworks by their
 % corresponding ocurrance rate
 for bird=1:length(nets)
     rates=[nets(bird).REM_dominant_networks_incidence;...
@@ -55,7 +54,7 @@ for bird=1:length(nets)
     SWS_inc=mean(nets(bird).SWS_dominant_networks_incidence,2);
     [B,I] = sort(SWS_inc,'descend');
     
-    for k =1:min(9,size(nets(bird).SWS_dominant_networks,2))
+    for k =1:min(9,size(nets(bird).SWS_main_cliques,2))
         % laying out electrode sites
         x0=(max(xy(:,1))/3)*(rem(k-1,3))-min(xy(:,1))/3; % for plotting each sub-network we depict the electrode layout first, scaled for the plot
         y0=(max(xy(:,2))/3)*floor((k-1)/3)-min(xy(:,2))/3;  % for plotting each sub-network we depict the electrode layout first, scaled for the plot
@@ -66,7 +65,7 @@ for bird=1:length(nets)
         end
         
         clique_right_size=false(16,1); % assigning zeroes to the noisy chasnnels, and constructing a 16x1 vector for the subgraph
-        clique_right_size(1:16)=nets(bird).SWS_dominant_networks(:,I(k));
+        clique_right_size(1:16)=nets(bird).SWS_main_cliques(:,I(k));
         sub=subgraph(Gcorr,clique_right_size);
         h=plot(sub,'EdgeAlpha',.6,'markersize',5,'NodeColor',[1 .6 .5]); hold on
         XData=xy(logical(clique_right_size),1);  YData=xy(logical(clique_right_size),2);
@@ -91,7 +90,7 @@ for bird=1:length(nets)
     IS_inc=mean(nets(bird).IS_dominant_networks_incidence,2);
     [B,I] = sort(IS_inc,'descend');
     
-    for k =1:min(9,size(nets(bird).IS_dominant_networks,2))
+    for k =1:min(9,size(nets(bird).IS_main_cliques,2))
         % laying out electrode sites
         x0=(max(xy(:,1))/3)*(rem(k-1,3))-min(xy(:,1))/3; % for plotting each sub-network we depict the electrode layout first, scaled for the plot
         y0=(max(xy(:,2))/3)*floor((k-1)/3)-min(xy(:,2))/3;  % for plotting each sub-network we depict the electrode layout first, scaled for the plot
@@ -102,7 +101,7 @@ for bird=1:length(nets)
         end
         
         clique_right_size=false(16,1); % assigning zeroes to the noisy chasnnels, and constructing a 16x1 vector for the subgraph
-        clique_right_size(1:16)=nets(bird).IS_dominant_networks(:,I(k));
+        clique_right_size(1:16)=nets(bird).IS_main_cliques(:,I(k));
         sub=subgraph(Gcorr,clique_right_size);
         h=plot(sub,'EdgeAlpha',.6,'markersize',5,'NodeColor',[1 .6 .5]); hold on
         XData=xy(logical(clique_right_size),1);  YData=xy(logical(clique_right_size),2);
@@ -126,7 +125,7 @@ for bird=1:length(nets)
     REM_inc=mean(nets(bird).REM_dominant_networks_incidence,2);
     [B,I] = sort(REM_inc,'descend');
     
-    for k =1:min(9,size(nets(bird).REM_dominant_networks,2))
+    for k =1:min(9,size(nets(bird).REM_main_cliques,2))
         % laying out electrode sites
         x0=(max(xy(:,1))/3)*(rem(k-1,3))-min(xy(:,1))/3; % for plotting each sub-network we depict the electrode layout first, scaled for the plot
         y0=(max(xy(:,2))/3)*floor((k-1)/3)-min(xy(:,2))/3;  % for plotting each sub-network we depict the electrode layout first, scaled for the plot
@@ -137,7 +136,7 @@ for bird=1:length(nets)
         end
         
         clique_right_size=false(16,1); % assigning zeroes to the noisy chasnnels, and constructing a 16x1 vector for the subgraph
-        clique_right_size(1:16)=nets(bird).REM_dominant_networks(:,I(k));
+        clique_right_size(1:16)=nets(bird).REM_main_cliques(:,I(k));
         sub=subgraph(Gcorr,clique_right_size);
         h=plot(sub,'EdgeAlpha',.6,'markersize',5,'NodeColor',[1 .6 .5]); hold on
         XData=xy(logical(clique_right_size),1);  YData=xy(logical(clique_right_size),2);
@@ -170,7 +169,7 @@ REM_adult_incidence_count=zeros(1,16);
 
 for bird=1:3 % for the adults
     % SWS:
-    SWS_nets_bird=nets(bird).SWS_dominant_networks;
+    SWS_nets_bird=nets(bird).SWS_main_cliques;
     if ~isempty(SWS_nets_bird)
         for nn=1:size(SWS_nets_bird,2)
             net_size=sum(SWS_nets_bird(:,nn));
@@ -182,7 +181,7 @@ for bird=1:3 % for the adults
     
     
     % IS:
-    IS_nets_bird=nets(bird).IS_dominant_networks;
+    IS_nets_bird=nets(bird).IS_main_cliques;
     if ~isempty(IS_nets_bird)
         for nn=1:size(IS_nets_bird,2)
             net_size=sum(IS_nets_bird(:,nn));
@@ -194,7 +193,7 @@ for bird=1:3 % for the adults
     
     
     % REM:
-    REM_nets_bird=nets(bird).REM_dominant_networks;
+    REM_nets_bird=nets(bird).REM_main_cliques;
     if ~isempty(REM_nets_bird)
         for nn=1:size(REM_nets_bird,2)
             net_size=sum(REM_nets_bird(:,nn));
@@ -226,7 +225,7 @@ REM_juv_incidence_count=zeros(1,16);
 % for juveniles
 for bird=4:10 % for the juveniles
     % SWS:
-    SWS_nets_bird=nets(bird).SWS_dominant_networks;
+    SWS_nets_bird=nets(bird).SWS_main_cliques;
     if ~isempty(SWS_nets_bird)
         for nn=1:size(SWS_nets_bird,2)
             net_size=sum(SWS_nets_bird(:,nn));
@@ -237,7 +236,7 @@ for bird=4:10 % for the juveniles
     SWS_juv_incidence_count=SWS_juv_incidence_count+3;
     
     % IS:
-    IS_nets_bird=nets(bird).IS_dominant_networks;
+    IS_nets_bird=nets(bird).IS_main_cliques;
     if ~isempty(IS_nets_bird)
         for nn=1:size(IS_nets_bird,2)
             net_size=sum(IS_nets_bird(:,nn));
@@ -248,7 +247,7 @@ for bird=4:10 % for the juveniles
     IS_juv_incidence_count=IS_juv_incidence_count+3;
     
     % REM:
-    REM_nets_bird=nets(bird).REM_dominant_networks;
+    REM_nets_bird=nets(bird).REM_main_cliques;
     if ~isempty(REM_nets_bird)
         for nn=1:size(REM_nets_bird,2)
             net_size=sum(REM_nets_bird(:,nn));
@@ -437,8 +436,8 @@ std_network_sizes_juveniles=std(network_sizes_juveniles)
 
 % number of subnetworks per bird
 networks_per_adult=length(network_sizes_adults)/3;
-networks_per_juv=length(network_sizes_juveniles)/3;
-number_of_networks
+networks_per_juv=length(network_sizes_juveniles)/5;
+% number_of_networks
 number_of_nets_adult_mean=mean(number_of_networks(1:3))
 number_of_nets_adult_std=std(number_of_networks(1:3))
 number_of_nets_juv_mean=mean(number_of_networks([4 5 8 9 10]))
@@ -465,9 +464,9 @@ clique_SWS=false(16,size(SWS_main_cliques,2));
 clique_SWS(1:16,:)=SWS_main_cliques;
 res(n).SWS_main_cliques=clique_SWS;
 
-res(n).REM_clique_occurance=REM_clique_occurance_sorted;
-res(n).IS_clique_occurance=IS_clique_occurance_sorted;
-res(n).SWS_clique_occurance=SWS_clique_occurance_sorted;
+res(n).REM_dominant_networks_incidence=REM_dominant_networks_incidence_sorted;
+res(n).IS_dominant_networks_incidence=IS_dominant_networks_incidence_sorted;
+res(n).SWS_dominant_networks_incidence=SWS_dominant_networks_incidence_sorted;
 
 res(n).REM_bins=length(REM_valid_inds);
 res(n).IS_bins=length(IS_valid_inds);

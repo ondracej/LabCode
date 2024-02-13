@@ -52,7 +52,7 @@
 % chnl_order=[1 2 3 4 5 7 6 8 9 10 11 12 13 16 14 15 ]; 
 % f0=7490; %1st frame
 % fn=882890;%%%%%%%  ceil(vid.FrameRate*vid.Duration/file_dev)-1000;  %%%%%%%%%% last frame %%%%%%%%% /10
-% load_EEG_video_without_ADC;
+load_EEG_video_without_ADC;
 % 
 % clear;
 % saving_name='w043-22-12-2021_scoring'; %%%%%%%%%%%% saving name in the local computer

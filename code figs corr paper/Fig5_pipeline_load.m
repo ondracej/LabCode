@@ -1,7 +1,15 @@
-% creating the saving variable
 
-% res(1).state_transitions=[];
-% save('G:\Hamed\zf\P1\labled sleep\conn_diff_bands.mat','res','-nocompression')
+% initiation of the saved variable
+clear 
+
+
+
+% creating the saving variable
+res(49).experiment=[];
+save('G:\Hamed\zf\P1_16chnl_EEG\EEGdata_corr_paper\batch_results_Fig5_pipeline_15perc.mat','res','-nocompression')
+loaded_res=load('G:\Hamed\zf\P1_16chnl_EEG\EEGdata_corr_paper\batch_results_Fig5_pipeline_15perc.mat');
+res=loaded_res.res;
+
 n=1
 fname='72-94_29_05_scoring';   % load data
 load(fname);
@@ -9,8 +17,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=28772/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=892778/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % non-noisy channels
-sleep_staging_;
-clear;
+Fig5_pipeline;
 
 n=2
 fname='73-03_09_03_scoring';
@@ -19,7 +26,7 @@ image_layout='Z:\zoologie\HamedData\P1\73-03\73-03 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=31000/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=889160/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=1:16; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 n=3
@@ -29,7 +36,7 @@ image_layout='Z:\zoologie\HamedData\P1\73-03\73-03 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=5980/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=837500/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=1:16; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 n=4
@@ -39,127 +46,127 @@ image_layout='Z:\zoologie\HamedData\P1\73-03\73-03 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=746290/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=1:16; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=5;
+n=5
 fname='w0009_01-05_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=872000/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=6;
+n=6
 fname='w0016_08-08_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=690/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=871900/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=7;
+n=7
 fname='72-00_26_03_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=842000/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=8;
+n=8
 fname='72-00_02-04_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=884675/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=9;
+n=9
 fname='72-00_03-04_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=851777/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=10;
+n=10
 fname='72-00_05-04_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=843130/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=11;
+n=11
 fname='72-00_06-04_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=854300/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=12;
+n=12
 fname='72-00_07-04_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=842350/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=13  %%%%%%% didn't work the scoring
+n=13
 fname='w0009_27-04_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=7000/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=857860/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=14;
+n=14
 fname='w0009_28-04_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1780/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=851500/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=15 %%%%%%% didn't work the scoring
+n=15
 fname='w0018_14-08_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=19040/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=881362/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=16; %%%%%%% didn't work the scoring
+n=16
 fname='w0020_25_09_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=35580/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=900200/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 n=17
@@ -169,58 +176,58 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=22100/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=885580/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=18; %%%%%%% didn't work the scoring
+n=18
 fname='72-00_09-04_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=840700/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=19 %%%%%%% didn't work the scoring
+n=19
 fname='72-00_18-03_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=847160/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=20; %%%%%%% didn't work the scoring
+n=20
 fname='72-00_24-03_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=7370/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=919130/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=21; %%%%%%% didn't work the scoring
+n=21
 fname='72-00_25-03_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=832800/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
-n=22; 
+n=22
 fname='72-00_29-03_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=810000/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
@@ -231,7 +238,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-00\72-00 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=804670/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:5 7:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 n=24
@@ -241,38 +248,38 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=52530/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=916540/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
-n=25 %%%%%%% didn't work the scoring
+n=25
 fname='72-94_11-06_scoring';   % load data
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=135300/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=1000300/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=26;
+n=26
 fname='72-94_28-05_scoring';   % load data
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=106800/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=989716/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-n=27 %%%%%%% didn't work the scoring
+n=27
 fname='72-94_30-05_scoring';   % load data
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=2970/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=867190/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
@@ -283,7 +290,7 @@ image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=6715/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=871390/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
@@ -294,7 +301,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=855300/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 n=30
@@ -304,11 +311,9 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=879920/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % non-noisy channels
-sleep_staging_;
+Fig5_pipeline;
 clear
 
-
-tic
 n=31
 fname='w0009_05-05_scoring';
 load(fname);
@@ -316,9 +321,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=837890/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % non-noisy channels
-beep
-sleep_staging_;
-toc
+Fig5_pipeline;
 clear
 
 n=32
@@ -328,8 +331,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0009 juv\w0009 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=820590/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:8 10:16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
@@ -340,8 +342,7 @@ image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%
 light_off_t=32120/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=897280/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
@@ -352,56 +353,51 @@ image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%
 light_off_t=1580/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=866430/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
-n=35  %%%%%%% didn't work the scoring
+n=35
 fname='w0016_11-08_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0016 juv\w0016 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=16560/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=881111/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
-n=36  %%%%%%% didn't work the scoring
+n=36
 fname='w0021_17-08_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=8630/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=873750/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
-n=37   %%%%%%% didn't work the scoring
+n=37
 fname='w0021_18-08_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=53200/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=917500/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
-n=38   %%%%%%% didn't work the scoring
+n=38
 fname='w0021_19-08_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=33050/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=897180/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
@@ -412,20 +408,18 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=22100/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=885570/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
-n=40 %%%%%%% didn't work the scoring
+n=40
 fname='w0021_22-08_scoring';
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=23390/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=887300/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
@@ -436,24 +430,22 @@ image_layout='Z:\zoologie\HamedData\P1\w0021 juv\w0021 layout.jpg'; %%%%%%%%%%%%
 light_off_t=84520/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=947970/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:6 8:10 12 13 15 16]; % non-noisy channels
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear
 
 
 n=42
-fname='72-94_08-06_scoring';  
+fname='72-94_08-06_scoring';   % load data
 load(fname);
 image_layout='Z:\zoologie\HamedData\P1\72-94\72-94 layout.jpg'; %%%%%%%%%%%%%%
 light_off_t=19130/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=883360/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[1:10 12:16]; % non-noisy channels
-beep
-sleep_staging_;
-clear
+Fig5_pipeline;
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 % these are the ones without ADC. For EEG-video alighnment, the difference between the srtarting time is used.
 
 n=43
@@ -464,8 +456,7 @@ light_off_t=750/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=869900/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[2:16]; % non-noisy channels
 t_diff=177; % time in secons from the start of Ephys recording till start of video
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear;
 
 n=44
@@ -476,8 +467,7 @@ light_off_t=27920/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=895800/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[2:16]; % non-noisy channels
 t_diff=16; % time in secons from the start of Ephys recording till start of video
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear;
 
 n=45
@@ -488,11 +478,10 @@ light_off_t=20490/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=890370/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[2:16]; % non-noisy channels
 t_diff=20; % time in secons from the start of Ephys recording till start of video
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear;
 
-n=46 %% really really awesome sharp stages!!!!!!!!!
+n=46
 fname='w0041-08-01-2022_scoring';   % load data
 load(fname);
 image_layout='Z:\hameddata2\16 chnl EEG\w041 and w043\ephys\w041 layout.jpg'; %%%%%%%%%%%%%%
@@ -500,11 +489,10 @@ light_off_t=7490/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=882890/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[2:16]; % non-noisy channels
 t_diff=13; % time in secons from the start of Ephys recording till start of video
-beep;
-sleep_staging_;
+Fig5_pipeline;
 clear;
 
-n=47 %% not good in staging
+n=47
 fname='w0043-22-12-2021_scoring';   % load data
 load(fname);
 image_layout='Z:\hameddata2\16 chnl EEG\w041 and w043\ephys\w043 layout.jpg'; %%%%%%%%%%%%%%
@@ -512,11 +500,10 @@ light_off_t=18840/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=888050/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[2:16]; % non-noisy channels
 t_diff=6; % time in secons from the start of Ephys recording till start of video
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear;
 
-n=48; % data not so good
+n=48;
 fname='w0043-25-12-2021_scoring';   % load data
 load(fname);
 image_layout='Z:\hameddata2\16 chnl EEG\w041 and w043\ephys\w043 layout.jpg'; %%%%%%%%%%%%%%
@@ -524,8 +511,7 @@ light_off_t=17750/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=886245/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[2:16]; % non-noisy channels
 t_diff=15; % time in secons from the start of Ephys recording till start of video
-beep
-sleep_staging_;
+Fig5_pipeline;
 clear;
 
 n=49
@@ -536,7 +522,6 @@ light_off_t=24790/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=893940/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 valid_chnls=[2:16]; % non-noisy channels
 t_diff=26; % time in secons from the start of Ephys recording till start of video
-beep
-sleep_staging_;
-clear;
+Fig5_pipeline;
+
 

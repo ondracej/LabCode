@@ -1,5 +1,5 @@
 clear; clc;
-loaded_res=load('G:\Hamed\zf\P1\labled sleep\state_transition_result.mat');
+loaded_res=load('G:\Hamed\zf\P1_16chnl_EEG\EEGdata_corr_paper\state_transition_result.mat');
 res=loaded_res.res;
 
 bird_names={'72-00','73-03','72-94','w0009','w0016','w0018','w0020','w0021','w0041','w0043'};

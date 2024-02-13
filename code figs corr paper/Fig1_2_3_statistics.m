@@ -2,7 +2,7 @@ clear;
 % data=load('G:\Hamed\zf\P1\labled sleep\batch_results1'); % the file containing the batch result of all birds
 % res=data.res; % the variable containing the results
 
-data=load('G:\Hamed\zf\P1\labled sleep\batch_results3with_dph_Fig_1_2_3'); % the file containing the batch result of all birds
+data=load('G:\Hamed\zf\P1_16chnl_EEG\EEGdata_corr_paper\batch_results3with_dph_Fig_1_2_3'); % the file containing the batch result of all birds
 res=data.res; % the variable containing the results
 res=res(1:49);
 
@@ -27,6 +27,31 @@ for bird_n=1:length(res)
     end
 end
 
+% adding sex field to data structure
+for k=1:length(res)
+    res(k).sex={'m'};
+end
+
+for k=[6 15, 17, 33:44]
+    res(k).sex={'f'};
+end
+%% 2-way unbalanced anova on the effect of age and sex on DOS
+age_group=[res.dph]>90;
+sex=[res.sex];
+LH=[res.median_LH];
+[p,~,stats] = anovan(LH,{age_group,sex})
+
+%% 2-way unbalanced anova on the effect of age and sex on low-freq power 
+age_group=[res.dph]>90;
+sex=[res.sex];
+L=[data.res.median_L];
+[p,~,stats] = anovan(L,{age_group(1:49),sex})
+
+%% 2-way unbalanced anova on the effect of age and sex on high-freq power
+age_group=[res.dph]>90;
+sex=[res.sex];
+H=[res.median_H];
+[p,~,stats] = anovan(H,{age_group(1:49),sex})
 %% figure for the mean of depth variable and the error bars
 figure;
 for bird_n=1:49
@@ -203,6 +228,61 @@ iqr_corr_local_wave_and_depth_juv=iqr([res(juv_inds).corr_local_wave_and_depth])
 iqr_corr_local_wave_and_depth_adu=iqr([res(adu_inds).corr_local_wave_and_depth])
 
 [p,h]=ranksum([res(adu_inds).corr_local_wave_and_depth],[res(juv_inds).corr_local_wave_and_depth])
+
+%% corr betrween DOS and local waves
+% for juves
+local_wavs=[];
+LH=[];
+for k=1:length(res)
+    if res(k).dph<90
+        local_wavs_=res(k).local_wave_perSec_perChnl_mean;
+        LH_=res(k).median_LH_per_chnl;
+        inds=~isnan(local_wavs_);
+        local_wavs=[local_wavs  local_wavs_(inds)'];
+        LH=[LH LH_(inds)'];
+    end
+end
+[rho_juv,pval] = corr(LH', local_wavs')
+
+% for adults
+local_wavs=[];
+LH=[];
+for k=1:length(res)
+    if res(k).dph>90
+        local_wavs_=res(k).local_wave_perSec_perChnl_mean;
+        LH_=res(k).median_LH_per_chnl;
+        inds=~isnan(local_wavs_);
+        local_wavs=[local_wavs  local_wavs_(inds)'];
+        LH=[LH LH_(inds)'];
+    end
+end
+[rho_adul,pval] = corr(LH', local_wavs')
+%% ANOVA2 for local waves
+% producing the vector for sex:
+% adding sex field to data structure
+for k=1:length(res)
+    res(k).sex=0;
+end
+for k=[6 15, 17, 33:44]
+    res(k).sex=1;
+end
+local_wave_f=[res([res(1:49).sex]==1).local_wave_perSec_perChnl_mean];
+local_wave_m=[res([res(1:49).sex]==0).local_wave_perSec_perChnl_mean];
+sex_f=ones(size(local_wave_f(~isnan(local_wave_f))));
+sex_m=zeros(size(local_wave_m(~isnan(local_wave_m))));
+
+sex_=[]; % 1: f, 0: m
+age_=[]; % 0: juv, 1: adul
+local_wavs=[];
+for k=1:length(res)
+   % sex, age, local wave count  
+   local_wavs_=res(k).local_wave_perSec_perChnl_mean;
+   local_wavs=[local_wavs , local_wavs_(~isnan(local_wavs_))'];
+   sex_=[sex_ , repmat(res(k).sex,size(local_wavs_(~isnan(local_wavs_))'))];
+   age_=[age_ repmat(res(k).dph>90,size(local_wavs_(~isnan(local_wavs_))'))];
+end
+
+[p,~,stats] = anovan(local_wavs,{age_,sex_})
 %%  Fig. 3 plot of the inter/intra-hemispheric correlations during different stages in adult group
 % for the adult
 rng(355);
@@ -216,7 +296,7 @@ f_adult=figure;
 for bird_n=1:length(res)
     % plotting
     i=bird_id(bird_n);
-    age=780*(i==1)+686*(i==2)+780*(i==3)+50*(i==4)+51*(i==5)+51*(i==6)+54*(i==7)+52*(i==8)+83*(i==9)+69*(i==10); % depending on the bird ID, only one of the parenthesis will ...
+    age_group=780*(i==1)+686*(i==2)+780*(i==3)+50*(i==4)+51*(i==5)+51*(i==6)+54*(i==7)+52*(i==8)+83*(i==9)+69*(i==10); % depending on the bird ID, only one of the parenthesis will ...
     % be logically correct. That 1, multiplied by the age of the
     % corresponding bird, gives the age of the bird.
     if i<=3 % for adults
@@ -224,13 +304,13 @@ for bird_n=1:length(res)
         % LL corr
         subplot(1,3,1) %  SWS
         x=res(bird_n).dph;
-        plot( (x-age),res(bird_n).LLRRLR_corr_SWS(1),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( (x-age_group),res(bird_n).LLRRLR_corr_SWS(1),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,1) %  IS
-        plot( (x-age)+30,res(bird_n).LLRRLR_corr_IS(1),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( (x-age_group)+30,res(bird_n).LLRRLR_corr_IS(1),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,1) %  REM
-        plot( (x-age)+60,res(bird_n).LLRRLR_corr_REM(1),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( (x-age_group)+60,res(bird_n).LLRRLR_corr_REM(1),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         ylim([0 .95]); xlim(30*[-.2 2.8]);  ylabel('corr coef')
         xticks([0 1 2]*30);  xticklabels({'SWS','IS','REM'});
@@ -238,13 +318,13 @@ for bird_n=1:length(res)
         
         % RR corr
         subplot(1,3,2) %  SWS
-        plot( 0+(x-age),res(bird_n).LLRRLR_corr_SWS(2),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 0+(x-age_group),res(bird_n).LLRRLR_corr_SWS(2),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,2) %  IS
-        plot( 30+(x-age),res(bird_n).LLRRLR_corr_IS(2),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 30+(x-age_group),res(bird_n).LLRRLR_corr_IS(2),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,2) %  REM
-        plot( 60+(x-age),res(bird_n).LLRRLR_corr_REM(2),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 60+(x-age_group),res(bird_n).LLRRLR_corr_REM(2),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         ylim([0 .95]); xlim(30*[-.2 2.8]);
         xticks([0 1 2]*30);  xticklabels({'SWS','IS','REM'});
@@ -252,13 +332,13 @@ for bird_n=1:length(res)
         
         % RL corr
         subplot(1,3,3) %  SWS
-        plot( 0+(x-age),res(bird_n).LLRRLR_corr_SWS(3),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 0+(x-age_group),res(bird_n).LLRRLR_corr_SWS(3),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,3) %  IS
-        plot( 30+(x-age),res(bird_n).LLRRLR_corr_IS(3),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 30+(x-age_group),res(bird_n).LLRRLR_corr_IS(3),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,3) %  REM
-        plot( 60+(x-age),res(bird_n).LLRRLR_corr_REM(3),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 60+(x-age_group),res(bird_n).LLRRLR_corr_REM(3),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         ylim([0 .95]); xlim(30*[-.2 2.8]);
         xticks([0 1 2]*30);  xticklabels({'SWS','IS','REM'});
@@ -275,18 +355,18 @@ for bird_n=1:length(res)
 
     if i>3 % for adults
     x=res(bird_n).dph;
-    age=780*(i==1)+686*(i==2)+780*(i==3)+50*(i==4)+51*(i==5)+51*(i==6)+54*(i==7)+52*(i==8)+83*(i==9)+69*(i==10); % depending on the bird ID, only one of the parenthesis will ...
+    age_group=780*(i==1)+686*(i==2)+780*(i==3)+50*(i==4)+51*(i==5)+51*(i==6)+54*(i==7)+52*(i==8)+83*(i==9)+69*(i==10); % depending on the bird ID, only one of the parenthesis will ...
     % be logically correct. That 1, multiplied by the age of the
     % corresponding bird, gives the age of the bird.    
         % LL corr
         subplot(1,3,1) %  SWS
-        plot( 0+(x-age),res(bird_n).LLRRLR_corr_SWS(1),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 0+(x-age_group),res(bird_n).LLRRLR_corr_SWS(1),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,1) %  IS
-        plot( 30+(x-age),res(bird_n).LLRRLR_corr_IS(1),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 30+(x-age_group),res(bird_n).LLRRLR_corr_IS(1),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,1) %  REM
-        plot( 60+(x-age),res(bird_n).LLRRLR_corr_REM(1),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 60+(x-age_group),res(bird_n).LLRRLR_corr_REM(1),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         ylim([0 .95]); xlim(30*[-.2 2.8]); ylabel('corr coef')
         xticks(30*[0 1 2]);  xticklabels({'SWS','IS','REM'});
@@ -294,13 +374,13 @@ for bird_n=1:length(res)
         
         % RR corr
         subplot(1,3,2) %  SWS
-        plot( 0+(x-age),res(bird_n).LLRRLR_corr_SWS(2),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 0+(x-age_group),res(bird_n).LLRRLR_corr_SWS(2),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,2) %  IS
-        plot( 30+(x-age),res(bird_n).LLRRLR_corr_IS(2),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 30+(x-age_group),res(bird_n).LLRRLR_corr_IS(2),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,2) %  REM
-        plot( 60+(x-age),res(bird_n).LLRRLR_corr_REM(2),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 60+(x-age_group),res(bird_n).LLRRLR_corr_REM(2),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         ylim([0 .95]); xlim(30*[-.2 2.8]);
         xticks(30*[0 1 2]);  xticklabels({'SWS','IS','REM'});
@@ -308,13 +388,13 @@ for bird_n=1:length(res)
         
         % RL corr
         subplot(1,3,3) %  SWS
-        plot( 0+(x-age),res(bird_n).LLRRLR_corr_SWS(3),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 0+(x-age_group),res(bird_n).LLRRLR_corr_SWS(3),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,3) %  IS
-        plot( 30+(x-age),res(bird_n).LLRRLR_corr_IS(3),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 30+(x-age_group),res(bird_n).LLRRLR_corr_IS(3),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         subplot(1,3,3) %  REM
-        plot( 60+(x-age),res(bird_n).LLRRLR_corr_REM(3),'marker',bird_symbols{i},'color',col(i,:),...
+        plot( 60+(x-age_group),res(bird_n).LLRRLR_corr_REM(3),'marker',bird_symbols{i},'color',col(i,:),...
             'LineWidth',1); hold on
         ylim([0 .95]); xlim(30*[-.2 2.8]);
         xticks(30*[0 1 2]);  xticklabels({'SWS','IS','REM'});
@@ -342,33 +422,35 @@ for bird_n=1:length(res)
     end
 end
 % LL, RR, and LR for SWS:
-[corr_SWS_LL, p_SWS_LL]=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,1))
-[corr_SWS_RR , p_SWS_RR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,2))
-[corr_SWS_LR, p_SWS_LR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,3))
+[conn_SWS_LL, p_SWS_LL]=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,1));
+[conn_SWS_RR , p_SWS_RR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,2));
+[conn_SWS_LR, p_SWS_LR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_SWS(:,3));
 
-[corr_SWS_LL]=corr_SWS_LL(1,2)
-[corr_SWS_RR]=corr_SWS_RR(1,2)
-[corr_SWS_LR]=corr_SWS_LR(1,2)
+[corr_SWS_LL]=conn_SWS_LL(1,2)
+[corr_SWS_RR]=conn_SWS_RR(1,2)
+[corr_SWS_LR]=conn_SWS_LR(1,2)
 
 % LL, RR, and LR for IS:
 [conn_IS_LL p_IS_LL]=corrcoef(juv_exp_day,juv_LLRRLR_corr_IS(:,1))
 [conn_IS_RR p_IS_RR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_IS(:,2))
 [conn_IS_LR p_IS_LR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_IS(:,3))
 
-corr_IS_LL=corr_IS_LL(1,2)
-corr_IS_RR=corr_IS_RR(1,2)
-corr_IS_LR=corr_IS_LR(1,2)
+corr_IS_LL=conn_IS_LL(1,2)
+corr_IS_RR=conn_IS_RR(1,2)
+corr_IS_LR=conn_IS_LR(1,2)
 
 % LL, RR, and LR for REM:
 [conn_REM_LL p_REM_LL]=corrcoef(juv_exp_day,juv_LLRRLR_corr_REM(:,1))
 [conn_REM_RR p_REM_RR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_REM(:,2))
 [conn_REM_LR p_REM_LR]=corrcoef(juv_exp_day,juv_LLRRLR_corr_REM(:,3))
 
-corr_REM_LL=corr_REM_LL(1,2)
-corr_REM_RR=corr_REM_RR(1,2)
-corr_REM_LR=corr_REM_LR(1,2)
+corr_REM_LL=conn_REM_LL(1,2)
+corr_REM_RR=conn_REM_RR(1,2)
+corr_REM_LR=conn_REM_LR(1,2)
 
-% adult
+mean([corr_SWS_LL corr_SWS_RR corr_SWS_LR corr_REM_LL corr_REM_RR corr_REM_LR...
+    corr_IS_LL corr_IS_RR corr_IS_LR])
+%% adult
 clear  adult_LLRRLR_corr_SWS  adult_LLRRLR_corr_IS  adult_LLRRLR_corr_REM  adult_exp_day
 bird_n=1:length(res);
 adult_id=(bird_id(bird_n)==1 | bird_id(bird_n)==2 | bird_id(bird_n)==3); % id of all juveniles
@@ -412,7 +494,7 @@ corr_REM_LL=conn_REM_LL(1,2)
 corr_REM_RR=conn_REM_RR(1,2)
 corr_REM_LR=conn_REM_LR(1,2)
 
-% finding the fitting regression line
+%% finding the fitting regression line
 % for the LL subplot
 x=adult_exp_day; y=adult_LLRRLR_corr_SWS(:,1);
 cov_xy=cov(x,y);
@@ -647,9 +729,9 @@ anova_input=[corr_SWS(1:3:end)',...
     corr_REM(2:3:end)',...
     corr_REM(3:3:end)'];
 
-[~,~,stats] = anova2(anova_input,sum(adu_inds));
+[p,tbl,stats] = anova2(anova_input,sum(adu_inds));
 c = multcompare(stats)
-
+%%
 % for juveniles
 % formatting data for anova2
 corr_SWS=[res(juv_inds).LLRRLR_corr_SWS];
@@ -666,7 +748,7 @@ anova_input=[corr_SWS(1:3:end)',...
     corr_REM(2:3:end)',...
     corr_REM(3:3:end)'];
 
-[~,~,stats] = anova2(anova_input,sum(juv_inds));
+[p,tbl,stats] = anova2(anova_input,sum(juv_inds));
 c = multcompare(stats)
 
 %% ANOVA2 for checking a possible significant difference in connectivity across the stages
@@ -715,7 +797,7 @@ c = multcompare(stats)
 c = multcompare(stats_fried)
 
 %% a comparison across stages in adults over all pairs of channels (regardless of L, R, or LR)
-res_=load('G:\Hamed\zf\P1\labled sleep\batch_corr_mat_change_');
+res_=load('G:\Hamed\zf\P1_16chnl_EEG\EEGdata_corr_paper\batch_corr_mat_change_');
 res=res_.res;
 
 bird_names={'72-00','73-03','72-94','w0009','w0016','w0018','w0020','w0021','w0041','w0043'};

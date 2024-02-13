@@ -6,7 +6,7 @@ load(fname);
 light_off_t=31000/20; %%%%%%%%%%% frame number devided by rate of acquisition
 light_on_t=889160/20;  %%%%%%%%%%% frame number devided by rate of acquisition
 
-% fname='w0020_25_09_scoring';
+% fname='w0020_25_09_scoring'; 
 % load(fname);
 % light_off_t=35580/20; %%%%%%%%%%% frame number devided by rate of acquisition
 % light_on_t=900200/20;  %%%%%%%%%%% frame number devided by rate of acquisition
