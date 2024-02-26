@@ -1,5 +1,5 @@
 %% visualization of the temporal dynamics of congruence duirng SWS between DVR and base channel
-t_lim=t_dark; % 5 minutes before and after for the window that counts the bins fro congruence calculation
+t_lim=t_dark; % 5 minutes before and after for the window that counts the bins for congruence calculation
 clear t_bin_center_ref t_bin_center_lfp SWS_prob_ref SWS_prob_lfp sws_congruence sws_bins
 h=figure;
 

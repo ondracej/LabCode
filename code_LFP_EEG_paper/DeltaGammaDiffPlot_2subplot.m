@@ -30,7 +30,7 @@ end
 
 h=figure
 set(h,'position',[100 300 1000 580]);
-subplot(3,1,1)
+subplot(2,1,1)
 plot(t_bin_label/60,100*(DG-min(DG))/range(DG), 'color',.8*[0 0 1], 'linewidth',2 ); hold on
 plot(t_bin_label_ref/60,normalization_factor*100*(DG_ref-min(DG_ref))/range(DG_ref), 'color',.8*[1 0 0], 'linewidth',2); hold on
 ylabel({'Normalized';'Delta/Gamma (%)'})
@@ -63,19 +63,22 @@ end
 title('w027, smoothed d/g with 30 sec win,    blue:LFP,  red:ref,     top labels:LFP,  bottom labels:ref');
 
 %
-subplot(3,1,2)
-plot(DG_diff_t/60,abs(DG_diff)*100, 'color',0*[1 1 1], 'linewidth',2); hold on
-ylabel({'Delta/Gamma difference';' (%)'})
-
-ylim([0 50])
+subplot(2,1,2)
 xlim(t_lim/60)
 %
-subplot(3,1,3)
+subplot(2,1,2)
 ones_indices = find(~label_equal);
 
 % Plot barcode using stem function
-stem(DG_diff_t(ones_indices)/60, ~label_equal(ones_indices),'Color', [.5 .5 .5 .8],  'Marker', 'none'...
-    ,'linewidth',.2);
-xlim(t_lim/60)
+stem(DG_diff_t(ones_indices)/60, ~label_equal(ones_indices)*100,'Color', .7*[1 1 1],  'Marker', 'none'...
+    ,'linewidth',3); hold on
+stem(DG_diff_t(ones_indices)/60, ~label_equal(ones_indices)*-100,'Color', .7*[1 1 1],  'Marker', 'none'...
+    ,'linewidth',3);
+plot(DG_diff_t/60,DG_diff*100, 'color',0*[1 1 1], 'linewidth',.4); hold on
+ylabel({'Delta/Gamma difference';' (%)'})
+
+ylim([-70 50])
+xlim(t_lim/60);
+ylim([-40 40])
 xlabel('Time (min)');
 ylabel('Non-match labels');

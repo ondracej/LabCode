@@ -3,7 +3,7 @@
 clear;
 data_dir='Z:\HamedData\LocalSWPaper\PaperData';
 
-% loading dat from all birds and averaging on each hour
+% loading data from all birds and averaging on each hour
 load ([data_dir '\' 'w027_cong_temporal']);
 
 % average cong along the night

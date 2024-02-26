@@ -1,143 +1,129 @@
 clc;
 % colors for each stage
-r=.9*[1 .4 .4 ]; 
+r=[ 253 145 33]/255; 
 s=[.4 .4 1]; 
 i=[.2 1 1]; 
-w=[.9 .9 .3];
 %bar plot for the percentage of each stage
-figure('position',[300 600 800 200])
+figure('position',[300 200 300 700])
 
 % SWS
-subplot(1,3,1) 
+subplot(3,1,1) 
 x=1:5; % for 4 recording sites
-y = [0.1695	0.161	0.1673	0.260133333	0.51965
+y = [22.33333333	20	24	32	32
 ];
-err = [0.15401106	0.105862458	0.140319017	0.095866852	0.154065306
-]/2; % division by 2 for ste
-errorbar(x, y*100, err*100, '-','MarkerSize', 10,...
+err = [2.886751346	5.291502622	6.08276253	2.828427125	2.645751311
+
+]/sqrt(3); % division by 2 for ste
+errorbar(x, y, err, '-','MarkerSize', 10,...
     'MarkerEdgeColor',s,'MarkerFaceColor',s,'linestyle','none','color','k'); hold on
-bar(x,y*100,'FaceColor',s);
-plot(1,100* 0.07,'kx','MarkerSize',10);
-plot(1,100* 0.389,'ko','MarkerSize',10);
-plot(1,100* 0.083,'k+','MarkerSize',10);
-plot(1,100* 0.14,'kd','MarkerSize',8);
+bar(x,y,'FaceColor',s,'EdgeColor','none','BarWidth',.7);
+plot(1,100* 0.249,'ko','MarkerSize',10);
+plot(1,100* 0.193,'k+','MarkerSize',10);
+plot(1,100* 0.24,'kd','MarkerSize',8);
 
-plot(2,100* 0.271,'kx','MarkerSize',10);
-plot(2,100* 0.07,'ko','MarkerSize',10);
-plot(2,100* 0.088,'k+','MarkerSize',10);
-plot(2,100* 0.223,'kd','MarkerSize',8);
+plot(2,100* 0.26,'ko','MarkerSize',10);
+plot(2,100* 0.188,'k+','MarkerSize',10);
+plot(2,100* 0.163,'kd','MarkerSize',8);
 
-plot(3,100* 0.20,'kx','MarkerSize',10);
-plot(3,100* 0.082,'ko','MarkerSize',10);
-plot(3,100* 0.05,'k+','MarkerSize',10);
-plot(3,100* 0.356,'kd','MarkerSize',8);
+plot(3,100* 0.312,'ko','MarkerSize',10);
+plot(3,100* 0.215,'k+','MarkerSize',10);
+plot(3,100* 0.206,'kd','MarkerSize',8);
 
-plot(4,100* 0.256,'kx','MarkerSize',10);
-plot(4,100* 0.162,'ko','MarkerSize',10);
-plot(4,100* 0.3816,'kd','MarkerSize',8);
+plot(4,100* 0.342,'ko','MarkerSize',10);
+plot(4,100* 0.306,'kd','MarkerSize',8);
 
-plot(5,100* 0.626,'kx','MarkerSize',10);
-plot(5,100* 0.542,'ko','MarkerSize',10);
-plot(5,100* 0.33,'k+','MarkerSize',10);
-plot(5,100* 0.566,'kd','MarkerSize',8);
+plot(5,100* 0.352,'ko','MarkerSize',10);
+plot(5,100* 0.31,'k+','MarkerSize',10);
+plot(5,100* 0.30,'kd','MarkerSize',8);
 
 xlim([.3 5.7]);
-ylim([0 73])
+ylim([0 62])
 box off
 xticks([1 2 3 4 5])
-xticklabels({'L front EEG','R front EEG','R caudal EEG','L caudal EEG','DVR'})
+xticklabels({'L front EEG','R front EEG','R post EEG','L post EEG','DVR'})
 xtickangle(-30)
-title('SWS')
-ylabel('Time (%)')
+ylabel('SWS (%)')
 
 % IS
-subplot(1,3,2) 
+subplot(3,1,3) 
 x=1:5; % for 4 recording sites
-y = [0.4123	0.4925	0.425525	0.262	0.202925
-
+y = [55	46	44.66666667	46	40.33333333
 ];
-err = [0.186826872	0.138570728	0.265744305	0.14857658	0.020795733
-]/2; % division by 2 for ste
-errorbar(x, y*100, err*100, '-','MarkerSize', 10,...
+err = [6.08276253	6.08276253	8.386497084	11.3137085	11.01514109
+
+]/sqrt(3); % division by 2 for ste
+errorbar(x, y, err, '-','MarkerSize', 10,...
     'MarkerEdgeColor',i,'MarkerFaceColor',i,'linestyle','none','color','k'); hold on
 
-bar(x,y*100,'FaceColor',i);
-plot(1,100* 0.48,'kx','MarkerSize',10);
-plot(1,100* 0.149,'ko','MarkerSize',10);
-plot(1,100* 0.433,'k+','MarkerSize',10);
-plot(1,100* 0.58,'kd','MarkerSize',8);
+bar(x,y,'FaceColor',i,'EdgeColor','none','BarWidth',.7);
+plot(1,100* 0.51,'ko','MarkerSize',10);
+plot(1,100* 0.52,'k+','MarkerSize',10);
+plot(1,100* 0.62,'kd','MarkerSize',8);
 
-plot(2,100* 0.301,'kx','MarkerSize',10);
-plot(2,100* 0.62,'ko','MarkerSize',10);
-plot(2,100* 0.568,'k+','MarkerSize',10);
-plot(2,100* 0.483,'kd','MarkerSize',8);
+plot(2,100* 0.42,'ko','MarkerSize',10);
+plot(2,100* 0.43,'k+','MarkerSize',10);
+plot(2,100* 0.53,'kd','MarkerSize',8);
 
-plot(3,100* 0.38,'kx','MarkerSize',10);
-plot(3,100* 0.492,'ko','MarkerSize',10);
-plot(3,100* 0.73,'k+','MarkerSize',10);
-plot(3,100* 0.106,'kd','MarkerSize',8);
+plot(3,100* 0.50,'ko','MarkerSize',10);
+plot(3,100* 0.49,'k+','MarkerSize',10);
+plot(3,100* 0.35,'kd','MarkerSize',8);
 
-plot(4,100* 0.326,'kx','MarkerSize',10);
-plot(4,100* 0.362,'ko','MarkerSize',10);
-plot(4,100* 0.1016,'kd','MarkerSize',8);
+plot(4,100* 0.54,'ko','MarkerSize',10);
+plot(4,100* 0.38,'kd','MarkerSize',8);
 
-plot(5,100* 0.196,'kx','MarkerSize',10);
-plot(5,100* 0.182,'ko','MarkerSize',10);
-plot(5,100* 0.23,'k+','MarkerSize',10);
-plot(5,100* 0.226,'kd','MarkerSize',8);
+plot(5,100* 0.35,'ko','MarkerSize',10);
+plot(5,100* 0.33,'k+','MarkerSize',10);
+plot(5,100* 0.53,'kd','MarkerSize',8);
 
 xlim([.3 5.7]);
-ylim([0 73.1])
+ylim([0 62])
 box off
 xticks([1 2 3 4 5])
-xticklabels({'L front EEG','R front EEG','R caudal EEG','L caudal EEG','DVR'})
+xticklabels({'L front EEG','R front EEG','R post EEG','L post EEG','DVR'})
 xtickangle(-30)
-yticklabels([])
-title('IS')
+
+ylabel('IS (%)')
 
 % REM
-subplot(1,3,3) 
+subplot(3,1,2) 
 x=1:5; % for 4 recording sites
-y = [0.3288	0.2441	0.328225	0.415766667	0.2708
+y = [22.33333333	32.66666667	30.33333333	21	26.33333333
+
 ];
-err = [0.138067809	0.09211681	0.153861894	0.046901741	0.086342303
-]/2; % division by 2 for ste
-errorbar(x, y*100, err*100, '-','MarkerSize', 10,...
+err = [7.637626158	4.618802154	13.0511813	14.14213562	9.609023537
+
+]/sqrt(3); % division by 2 for ste
+errorbar(x, y, err, '-','MarkerSize', 10,...
     'MarkerEdgeColor',r,'MarkerFaceColor',r,'linestyle','none','color','k'); hold on
-bar(x,y*100,'FaceColor',r);
+bar(x,y,'FaceColor',r,'EdgeColor','none','BarWidth',.7);
 
-plot(1,100* 0.40,'kx','MarkerSize',10);
-plot(1,100* 0.41,'ko','MarkerSize',10);
-plot(1,100* 0.373,'k+','MarkerSize',10);
-plot(1,100* 0.12,'kd','MarkerSize',8);
+plot(1,100* 0.24,'ko','MarkerSize',10);
+plot(1,100* 0.29,'k+','MarkerSize',10);
+plot(1,100* 0.14,'kd','MarkerSize',8);
 
-plot(2,100* 0.371,'kx','MarkerSize',10);
-plot(2,100* 0.15,'ko','MarkerSize',10);
-plot(2,100* 0.228,'k+','MarkerSize',10);
-plot(2,100* 0.223,'kd','MarkerSize',8);
+plot(2,100* 0.30,'ko','MarkerSize',10);
+plot(2,100* 0.38,'k+','MarkerSize',10);
+plot(2,100* 0.30,'kd','MarkerSize',8);
 
-plot(3,100* 0.36,'kx','MarkerSize',10);
-plot(3,100* 0.362,'ko','MarkerSize',10);
-plot(3,100* 0.11,'k+','MarkerSize',10);
-plot(3,100* 0.476,'kd','MarkerSize',8);
+plot(3,100* 0.182,'ko','MarkerSize',10);
+plot(3,100* 0.293,'k+','MarkerSize',10);
+plot(3,100* 0.446,'kd','MarkerSize',8);
 
-plot(4,100* 0.36,'kx','MarkerSize',10);
-plot(4,100* 0.422,'ko','MarkerSize',10);
-plot(4,100* 0.4516,'kd','MarkerSize',8);
+plot(4,100* 0.112,'ko','MarkerSize',10);
+plot(4,100* 0.31,'kd','MarkerSize',8);
 
-plot(5,100* 0.166,'kx','MarkerSize',10);
-plot(5,100* 0.342,'ko','MarkerSize',10);
-plot(5,100* 0.33,'k+','MarkerSize',10);
-plot(5,100* 0.226,'kd','MarkerSize',8);
+plot(5,100* 0.282,'ko','MarkerSize',10);
+plot(5,100* 0.35,'k+','MarkerSize',10);
+plot(5,100* 0.16,'kd','MarkerSize',8);
 
 xlim([.3 5.7]);
-ylim([0 73])
+ylim([0 62])
 box off
 xticks([1 2 3 4 5])
-xticklabels({'L front EEG','R front EEG','R caudal EEG','L caudal EEG','DVR'})
+xticklabels({'L front EEG','R front EEG','R post EEG','L post EEG','DVR'})
 xtickangle(-30)
-yticklabels([])
-title('REM')
+
+ylabel('REM (%)')
 
 %% statistical tests regarding comparison of SWS across sites
 DVR_perc=[0.6296    0.5483  0.3346  0.5661];

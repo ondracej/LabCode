@@ -1,4 +1,4 @@
-function [REM_congruence, REM_bins_ref, REM_bins] = moving_cngruence(t_feat,t_bin_center,valid_bin_inds,valid_bin_ref_inds,...
+function [REM_congruence, REM_bins_ref, REM_bins] = moving_cngruence_rem(t_feat,t_bin_center,...
     bin_label_ref,bin_label,t_bin_label_ref,t_bin_label)
 
 counter_bin=0;
@@ -37,4 +37,7 @@ end
 REM_congruence=cong_REM/REM_bins_ref;
 if REM_bins_ref==0
     REM_congruence=0;
+    
+    
+end
 end
